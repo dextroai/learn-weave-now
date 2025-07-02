@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Bell, Search, Plus, MoreVertical, User } from "lucide-react";
+import { Menu, Search, RefreshCw, Settings, Apps, Plus, MoreVertical, User } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -117,136 +116,146 @@ const Index = () => {
   );
 
   return (
-    <div className="dark">
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-slate-900">
-          <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
-          
-          <main className="flex-1 overflow-auto">
-            {/* Header */}
-            <header className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-sm border-b border-slate-700">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
-                  <SidebarTrigger className="text-white" />
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-yellow-400 rounded flex items-center justify-center">
-                      <span className="text-sm font-bold">📝</span>
-                    </div>
-                  </div>
-                </div>
-                
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-white">
+        <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
+        
+        <main className="flex-1 overflow-auto">
+          {/* Header - Exact Google Keep Style */}
+          <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
+            <div className="flex items-center h-16 px-6">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="text-gray-600 hover:bg-gray-100 rounded-full p-3" />
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search your notes..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 w-80 rounded-lg border border-slate-700 bg-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">📝</span>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2 border-slate-700 bg-slate-800 text-white hover:bg-slate-700">
-                    <User className="h-4 w-4" />
-                    Account
-                  </Button>
+                  <span className="text-xl text-gray-700 font-normal">Keep</span>
                 </div>
               </div>
-            </header>
+              
+              <div className="flex-1 flex justify-center px-8">
+                <div className="relative max-w-2xl w-full">
+                  <Search className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gray-100 hover:bg-white hover:shadow-md focus:bg-white focus:shadow-md rounded-lg border-0 text-base text-gray-900 placeholder:text-gray-500 focus:outline-none transition-all duration-200"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" className="h-10 w-10 p-0 rounded-full hover:bg-gray-100">
+                  <RefreshCw className="h-5 w-5 text-gray-600" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-10 w-10 p-0 rounded-full hover:bg-gray-100">
+                  <Settings className="h-5 w-5 text-gray-600" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-10 w-10 p-0 rounded-full hover:bg-gray-100">
+                  <Apps className="h-5 w-5 text-gray-600" />
+                </Button>
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center ml-2">
+                  <span className="text-white text-sm font-medium">A</span>
+                </div>
+              </div>
+            </div>
+          </header>
 
-            {/* Main Content */}
-            <div className="p-6">
-              {/* Quick Add Note - Small and Centered */}
-              <div className="mb-6 flex justify-center">
-                <Card className="w-96 bg-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-text border-slate-700">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-3">
-                      <Plus className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-400">Take a note...</span>
+          {/* Main Content */}
+          <div className="p-6">
+            {/* Quick Add Note - Small and Centered */}
+            <div className="mb-6 flex justify-center">
+              <Card className="w-96 bg-white shadow-sm hover:shadow-md transition-shadow cursor-text border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Plus className="h-4 w-4 text-gray-500" />
+                    <span className="text-base text-gray-500">Take a note...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Masonry Grid Layout */}
+            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+              {filteredBlogs.map((blog) => (
+                <Card 
+                  key={blog.id} 
+                  className={`break-inside-avoid ${blog.height} bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 ${
+                    !blog.isRead ? 'ring-2 ring-orange-400' : ''
+                  }`}
+                >
+                  <CardContent className="p-4 h-full flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
+                          {blog.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-gray-500">
+                            {blog.source}
+                          </span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-400">
+                            {blog.createdAt}
+                          </span>
+                          {!blog.isRead && (
+                            <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200 text-xs px-2 py-0 ml-auto">
+                              New
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600">
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    {/* Blog Summary */}
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                      {blog.summary}
+                    </p>
+
+                    {/* User Notes Area */}
+                    <div className="flex-1 flex flex-col">
+                      <Textarea
+                        placeholder="Write your notes here..."
+                        value={notes[blog.id] || ''}
+                        onChange={(e) => handleNotesChange(blog.id, e.target.value)}
+                        className="flex-1 text-xs resize-none border-0 focus-visible:ring-0 p-0 bg-transparent placeholder:text-gray-400 text-gray-700"
+                        style={{ minHeight: '60px' }}
+                      />
+                    </div>
+
+                    {/* Labels */}
+                    <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-200">
+                      {blog.labels.map((label) => (
+                        <Badge 
+                          key={label} 
+                          variant="outline" 
+                          className="text-xs px-2 py-0 bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
+                        >
+                          {label}
+                        </Badge>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Masonry Grid Layout */}
-              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-                {filteredBlogs.map((blog) => (
-                  <Card 
-                    key={blog.id} 
-                    className={`break-inside-avoid ${blog.height} bg-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border-slate-700 ${
-                      !blog.isRead ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                  >
-                    <CardContent className="p-4 h-full flex flex-col">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white text-sm line-clamp-2 mb-1">
-                            {blog.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs text-slate-400">
-                              {blog.source}
-                            </span>
-                            <span className="text-xs text-slate-500">•</span>
-                            <span className="text-xs text-slate-500">
-                              {blog.createdAt}
-                            </span>
-                            {!blog.isRead && (
-                              <Badge className="bg-blue-500 hover:bg-blue-600 text-xs px-1 py-0 ml-auto">
-                                New
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-white">
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </div>
-
-                      {/* Blog Summary */}
-                      <p className="text-xs text-slate-300 mb-3 line-clamp-2">
-                        {blog.summary}
-                      </p>
-
-                      {/* User Notes Area */}
-                      <div className="flex-1 flex flex-col">
-                        <Textarea
-                          placeholder="Write your notes here..."
-                          value={notes[blog.id] || ''}
-                          onChange={(e) => handleNotesChange(blog.id, e.target.value)}
-                          className="flex-1 text-xs resize-none border-0 focus-visible:ring-0 p-0 bg-transparent placeholder:text-slate-500 text-slate-200"
-                          style={{ minHeight: '60px' }}
-                        />
-                      </div>
-
-                      {/* Labels */}
-                      <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-slate-700">
-                        {blog.labels.map((label) => (
-                          <Badge 
-                            key={label} 
-                            variant="outline" 
-                            className="text-xs px-1 py-0 bg-slate-700 text-slate-300 border-slate-600"
-                          >
-                            {label}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {filteredBlogs.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-slate-400">No notes found matching your search.</p>
-                </div>
-              )}
+              ))}
             </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    </div>
+
+            {filteredBlogs.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No notes found matching your search.</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
