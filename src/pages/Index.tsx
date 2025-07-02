@@ -1,14 +1,15 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, Book, Clock, TrendingUp } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Bell, Book, Clock, TrendingUp, Save } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [notes, setNotes] = useState("");
 
   // Mock data for demonstration
   const recentInsights = [
@@ -61,6 +62,12 @@ const Index = () => {
     }
   ];
 
+  const handleSaveNotes = () => {
+    // Here you would typically save to backend
+    console.log("Saving notes:", notes);
+    // You could add a toast notification here later
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-slate-50 dark:bg-slate-900">
@@ -92,8 +99,8 @@ const Index = () => {
           </header>
 
           {/* Main Content */}
-          <div className="p-6 space-y-8">
-            {/* Today's Insights */}
+          <div className="p-6 space-y-6">
+            {/* Today's Insights - Compact Version */}
             <section>
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="h-5 w-5 text-blue-600" />
@@ -103,49 +110,69 @@ const Index = () => {
                 <Badge variant="secondary">3 new</Badge>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-3">
                 {recentInsights.map((insight) => (
-                  <Card key={insight.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-sm bg-white dark:bg-slate-800">
-                    <div className="relative">
-                      <img 
-                        src={insight.image} 
-                        alt={insight.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
-                      />
-                      {insight.isNew && (
-                        <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600">
-                          New
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {insight.title}
-                        </CardTitle>
-                      </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {insight.source} • {insight.readTime}
-                      </p>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-slate-700 dark:text-slate-300 mb-3 line-clamp-3">
-                        {insight.summary}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-1">
-                        {insight.labels.map((label) => (
-                          <Badge key={label} variant="outline" className="text-xs">
-                            {label}
+                  <Card key={insight.id} className="group hover:shadow-md transition-all duration-300 cursor-pointer border-0 shadow-sm bg-white dark:bg-slate-800">
+                    <div className="flex gap-3 p-3">
+                      <div className="relative flex-shrink-0">
+                        <img 
+                          src={insight.image} 
+                          alt={insight.title}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        {insight.isNew && (
+                          <Badge className="absolute -top-1 -right-1 bg-green-500 hover:bg-green-600 text-xs px-1 py-0">
+                            New
                           </Badge>
-                        ))}
+                        )}
                       </div>
-                    </CardContent>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {insight.title}
+                        </h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
+                          {insight.source} • {insight.readTime}
+                        </p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 mb-2 line-clamp-2">
+                          {insight.summary}
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {insight.labels.map((label) => (
+                            <Badge key={label} variant="outline" className="text-xs px-1 py-0">
+                              {label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
+            </section>
+
+            {/* Mental Notes Section */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Mental Notes
+                </h2>
+                <Button onClick={handleSaveNotes} size="sm" className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Save Notes
+                </Button>
+              </div>
+              
+              <Card className="bg-white dark:bg-slate-800">
+                <CardContent className="p-4">
+                  <Textarea
+                    placeholder="Write down your thoughts, key takeaways, or action items from the blogs you've read..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="min-h-[200px] resize-none border-0 focus-visible:ring-0 text-sm"
+                  />
+                </CardContent>
+              </Card>
             </section>
 
             {/* Reading Recommendations */}
