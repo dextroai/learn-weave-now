@@ -32,7 +32,8 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
   const [searchQuery, setSearchQuery] = useState("");
 
   const mainItems = [
