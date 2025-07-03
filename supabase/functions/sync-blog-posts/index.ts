@@ -87,6 +87,59 @@ serve(async (req) => {
         throw insertError;
       }
 
+      // Auto-predict topics for new posts
+      if (insertedPosts && insertedPosts.length > 0) {
+        console.log('Starting topic prediction for new posts...');
+        
+        // Get user topics for the blog owner
+        const { data: userTopics, error: topicsError } = await supabase
+          .from('user_topics')
+          .select('*')
+          .eq('user_id', blog.user_id);
+
+        if (!topicsError && userTopics && userTopics.length > 0) {
+          // Simple dummy prediction logic
+          const predictTopic = (postTitle: string) => {
+            const title = postTitle.toLowerCase();
+            
+            if (title.includes('nlp') || title.includes('language') || title.includes('text')) {
+              return userTopics.find(t => t.name.toLowerCase().includes('nlp'));
+            }
+            if (title.includes('mlops') || title.includes('deployment') || title.includes('pipeline')) {
+              return userTopics.find(t => t.name.toLowerCase().includes('mlops'));
+            }
+            if (title.includes('vision') || title.includes('image') || title.includes('cnn')) {
+              return userTopics.find(t => t.name.toLowerCase().includes('vision'));
+            }
+            if (title.includes('machine learning') || title.includes('ml') || title.includes('regression')) {
+              return userTopics.find(t => t.name.toLowerCase().includes('traditional') || t.name.toLowerCase().includes('ml'));
+            }
+            
+            // Default to first available topic
+            return userTopics[0];
+          };
+
+          // Assign predicted topics to posts
+          for (const post of insertedPosts) {
+            const predictedTopic = predictTopic(post.title);
+            if (predictedTopic) {
+              const { error: assignError } = await supabase
+                .from('post_topics')
+                .insert({
+                  post_id: post.id,
+                  topic_id: predictedTopic.id
+                });
+
+              if (assignError) {
+                console.error(`Error assigning topic to post ${post.id}:`, assignError);
+              } else {
+                console.log(`Assigned topic "${predictedTopic.name}" to post "${post.title}"`);
+              }
+            }
+          }
+        }
+      }
+
       // Update blog's last_checked timestamp
       const { error: updateError } = await supabase
         .from('blogs')

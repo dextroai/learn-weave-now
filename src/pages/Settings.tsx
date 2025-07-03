@@ -1,564 +1,273 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useBlogs, useAddBlog, useUpdateBlog, useDeleteBlog } from "@/hooks/useBlogs";
+import { useUserTopics } from "@/hooks/useUserTopics";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Globe, Bell, Tag, Upload } from "lucide-react";
-import { useBlogs, useAddBlog, useDeleteBlog, useUpdateBlog } from "@/hooks/useBlogs";
-import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
+import { TopicPredictionButton } from '@/components/TopicPredictionButton';
+
+interface BlogForm {
+  name: string;
+  url: string;
+  category: string;
+}
 
 const Settings = () => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newBlog, setNewBlog] = useState<BlogForm>({ name: '', url: '', category: '' });
+  const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
+  const [editedBlog, setEditedBlog] = useState<Partial<BlogForm>>({});
   const navigate = useNavigate();
-  const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
-  const { data: userTopics = [] } = useUserTopics();
+
+  const { data: blogs, isLoading, refetch } = useBlogs();
+  const { data: userTopics } = useUserTopics();
   const addBlogMutation = useAddBlog();
-  const deleteBlogMutation = useDeleteBlog();
   const updateBlogMutation = useUpdateBlog();
-  const addTopicMutation = useAddUserTopic();
-  const { toast } = useToast();
+  const deleteBlogMutation = useDeleteBlog();
 
-  const [newBlog, setNewBlog] = useState({ name: "", url: "", category: "" });
-  const [newTopic, setNewTopic] = useState("");
-  const [bulkBlogs, setBulkBlogs] = useState("");
-  const [bulkImporting, setBulkImporting] = useState(false);
-  const [notifications, setNotifications] = useState({
-    dailyDigest: true,
-    newInsights: true,
-    weeklyReport: false,
-  });
+  useEffect(() => {
+    if (!isLoading) {
+      refetch();
+    }
+  }, [isLoading, refetch]);
 
-  // Debug logging
-  console.log('Blogs data:', blogs);
-  console.log('Blogs loading:', blogsLoading);
-  console.log('Blogs error:', blogsError);
+  const handleAddBlog = async () => {
+    if (!newBlog.name || !newBlog.url || !newBlog.category) {
+      toast.error('Please fill in all fields');
+      return;
+    }
 
-  const categoryOptions = [
-    { value: 'nlp', label: 'NLP' },
-    { value: 'mlops', label: 'MLOps' },
-    { value: 'traditional-ml', label: 'Traditional ML' },
-    { value: 'computer-vision', label: 'Computer Vision' },
-  ];
-
-  const getCategoryLabel = (category: string) => {
-    const option = categoryOptions.find(opt => opt.value === category);
-    return option ? option.label : category;
+    addBlogMutation.mutate(newBlog, {
+      onSuccess: () => {
+        toast.success('Blog added successfully!');
+        setNewBlog({ name: '', url: '', category: '' });
+        setIsAdding(false);
+      },
+      onError: (error: any) => {
+        toast.error(`Failed to add blog: ${error.message}`);
+      },
+    });
   };
 
-  const handleSaveSettings = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your settings have been saved successfully.",
+  const handleEditBlog = (blogId: string, blog: any) => {
+    setEditingBlogId(blogId);
+    setEditedBlog({ ...blog });
+  };
+
+  const handleUpdateBlog = async () => {
+    if (!editingBlogId) return;
+
+    updateBlogMutation.mutate({ id: editingBlogId, ...editedBlog }, {
+      onSuccess: () => {
+        toast.success('Blog updated successfully!');
+        setEditingBlogId(null);
+        setEditedBlog({});
+      },
+      onError: (error: any) => {
+        toast.error(`Failed to update blog: ${error.message}`);
+      },
     });
+  };
+
+  const handleDeleteBlog = async (id: string) => {
+    deleteBlogMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Blog deleted successfully!');
+      },
+      onError: (error: any) => {
+        toast.error(`Failed to delete blog: ${error.message}`);
+      },
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBlogId(null);
+    setEditedBlog({});
+  };
+
+  const navigateToHome = () => {
     navigate('/');
   };
 
-  const addBlog = async () => {
-    if (!newBlog.name.trim() || !newBlog.url.trim() || !newBlog.category) {
-      toast({
-        title: "Error",
-        description: "Please enter blog name, URL, and select a category.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check for duplicate URL
-    const existingBlog = blogs.find(blog => blog.url.toLowerCase() === newBlog.url.trim().toLowerCase());
-    if (existingBlog) {
-      toast({
-        title: "Duplicate Blog",
-        description: `This blog URL is already being monitored as "${existingBlog.name}".`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      console.log('Attempting to add blog:', newBlog);
-      await addBlogMutation.mutateAsync({
-        name: newBlog.name.trim(),
-        url: newBlog.url.trim(),
-        category: newBlog.category as 'nlp' | 'mlops' | 'traditional-ml' | 'computer-vision',
-      });
-      setNewBlog({ name: "", url: "", category: "" });
-      toast({
-        title: "Blog Added",
-        description: "Blog source has been added successfully.",
-      });
-    } catch (error) {
-      console.error('Failed to add blog:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add blog source. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const bulkAddBlogs = async () => {
-    if (!bulkBlogs.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter blog information in the format specified.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setBulkImporting(true);
-    const lines = bulkBlogs.trim().split('\n').filter(line => line.trim());
-    let successCount = 0;
-    let errorCount = 0;
-    let duplicateCount = 0;
-    const failedBlogs: string[] = [];
-    const duplicateBlogs: string[] = [];
-
-    // Create a set of existing URLs for faster lookup
-    const existingUrls = new Set(blogs.map(blog => blog.url.toLowerCase()));
-
-    for (const line of lines) {
-      try {
-        // Support formats: "Name | URL | Category" or "Name, URL, Category" or just "URL" (use domain as name, default to nlp)
-        let name = "";
-        let url = "";
-        let category = "nlp"; // default category
-
-        if (line.includes('|')) {
-          const parts = line.split('|').map(p => p.trim());
-          name = parts[0];
-          url = parts[1];
-          if (parts[2]) {
-            const categoryInput = parts[2].toLowerCase().replace(/\s+/g, '-');
-            if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(categoryInput)) {
-              category = categoryInput;
-            }
-          }
-        } else if (line.includes(',')) {
-          const parts = line.split(',').map(p => p.trim());
-          name = parts[0];
-          url = parts[1];
-          if (parts[2]) {
-            const categoryInput = parts[2].toLowerCase().replace(/\s+/g, '-');
-            if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(categoryInput)) {
-              category = categoryInput;
-            }
-          }
-        } else {
-          // Just URL provided, extract domain as name
-          url = line.trim();
-          try {
-            const domain = new URL(url).hostname.replace('www.', '');
-            name = domain.charAt(0).toUpperCase() + domain.slice(1);
-          } catch {
-            name = url;
-          }
-        }
-
-        if (!name || !url) {
-          errorCount++;
-          failedBlogs.push(line.trim());
-          continue;
-        }
-
-        // Check for duplicate URL
-        if (existingUrls.has(url.toLowerCase())) {
-          duplicateCount++;
-          duplicateBlogs.push(`${name} (${url})`);
-          continue;
-        }
-
-        await addBlogMutation.mutateAsync({
-          name: name.trim(),
-          url: url.trim(),
-          category: category as 'nlp' | 'mlops' | 'traditional-ml' | 'computer-vision',
-        });
-        
-        // Add to existing URLs set to prevent duplicates within the same batch
-        existingUrls.add(url.toLowerCase());
-        successCount++;
-      } catch (error) {
-        console.error('Failed to add blog:', error);
-        errorCount++;
-        failedBlogs.push(line.trim());
-      }
-    }
-
-    setBulkImporting(false);
-    setBulkBlogs("");
-
-    // Show detailed results
-    let toastMessage = `Successfully added ${successCount} blog(s).`;
-    if (duplicateCount > 0) {
-      toastMessage += ` ${duplicateCount} duplicate(s) skipped.`;
-    }
-    if (errorCount > 0) {
-      toastMessage += ` ${errorCount} failed.`;
-    }
-
-    if (successCount > 0 || duplicateCount > 0) {
-      toast({
-        title: "Bulk Import Complete",
-        description: toastMessage,
-      });
-    } else {
-      toast({
-        title: "Import Failed",
-        description: "No blogs were successfully added. Please check the format.",
-        variant: "destructive",
-      });
-    }
-
-    // Log details for debugging
-    if (duplicateBlogs.length > 0) {
-      console.log('Duplicate blogs skipped:', duplicateBlogs);
-    }
-    if (failedBlogs.length > 0) {
-      console.log('Failed blogs:', failedBlogs);
-    }
-  };
-
-  const removeBlog = async (id: string) => {
-    try {
-      await deleteBlogMutation.mutateAsync(id);
-      toast({
-        title: "Blog Removed",
-        description: "Blog source has been removed successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to remove blog source.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleBlog = async (id: string, currentState: boolean) => {
-    try {
-      await updateBlogMutation.mutateAsync({
-        id,
-        is_active: !currentState,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update blog status.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addTopic = async () => {
-    if (newTopic.trim()) {
-      try {
-        await addTopicMutation.mutateAsync({
-          name: newTopic.trim(),
-        });
-        setNewTopic("");
-        toast({
-          title: "Topic Added",
-          description: "New topic has been added successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to add topic.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Settings
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Manage your blog sources, notifications, and preferences
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+          <p className="text-gray-600 mt-2">Manage your blog sources and topics</p>
         </div>
 
-        {/* Debug Info */}
-        {blogsError && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600">Error loading blogs: {blogsError.message}</p>
-          </div>
-        )}
-
-        {/* Blog Sources */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-blue-600" />
-              <CardTitle>Blog Sources</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Add Single Source */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+        <div className="space-y-8">
+          {/* Topic Prediction Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <Label htmlFor="blogName">Blog Name</Label>
-                <Input
-                  id="blogName"
-                  placeholder="e.g., React Blog"
-                  value={newBlog.name}
-                  onChange={(e) =>
-                    setNewBlog({ ...newBlog, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="blogUrl">URL</Label>
-                <Input
-                  id="blogUrl"
-                  placeholder="https://example.com"
-                  value={newBlog.url}
-                  onChange={(e) =>
-                    setNewBlog({ ...newBlog, url: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="blogCategory">Category</Label>
-                <Select
-                  value={newBlog.category}
-                  onValueChange={(value) =>
-                    setNewBlog({ ...newBlog, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button 
-                  onClick={addBlog} 
-                  className="w-full gap-2"
-                  disabled={addBlogMutation.isPending}
-                >
-                  <Plus className="h-4 w-4" />
-                  {addBlogMutation.isPending ? "Adding..." : "Add Source"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Bulk Import Section */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="mb-3">
-                <Label htmlFor="bulkBlogs" className="text-blue-900 dark:text-blue-100 font-medium">
-                  Bulk Import Blogs
-                </Label>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                  Add multiple blogs at once. Use one of these formats per line:
+                <h2 className="text-xl font-semibold text-gray-900">Topic Prediction</h2>
+                <p className="text-gray-600 text-sm mt-1">
+                  Automatically predict and assign topics to your blog posts
                 </p>
-                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 space-y-1">
-                  <div>• <code>Blog Name | https://example.com | nlp</code></div>
-                  <div>• <code>Blog Name, https://example.com, mlops</code></div>
-                  <div>• <code>https://example.com</code> (uses domain as name, defaults to NLP)</div>
-                </div>
               </div>
-              <Textarea
-                id="bulkBlogs"
-                placeholder={`React Blog | https://react.dev/blog | nlp
-Vue News, https://news.vuejs.org, traditional-ml
-https://blog.angular.io`}
-                value={bulkBlogs}
-                onChange={(e) => setBulkBlogs(e.target.value)}
-                className="min-h-[120px] mb-3"
-              />
-              <Button 
-                onClick={bulkAddBlogs}
-                disabled={bulkImporting || !bulkBlogs.trim()}
-                className="gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                {bulkImporting ? "Importing..." : "Import Blogs"}
+              <TopicPredictionButton />
+            </div>
+          </div>
+
+          {/* Blog Sources Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="md:flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Blog Sources</h2>
+              <Button onClick={() => setIsAdding(true)} size="sm">
+                Add Blog Source
               </Button>
             </div>
 
-            {/* Existing Sources */}
-            <div className="space-y-3">
-              {blogsLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="p-4 border border-slate-200 rounded-lg">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                      <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                    </div>
-                  ))}
+            {isAdding && (
+              <div className="mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      type="text"
+                      id="name"
+                      value={newBlog.name}
+                      onChange={(e) => setNewBlog({ ...newBlog, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="url">URL</Label>
+                    <Input
+                      type="text"
+                      id="url"
+                      value={newBlog.url}
+                      onChange={(e) => setNewBlog({ ...newBlog, url: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      type="text"
+                      id="category"
+                      value={newBlog.category}
+                      onChange={(e) => setNewBlog({ ...newBlog, category: e.target.value })}
+                    />
+                  </div>
                 </div>
-              ) : blogs.length > 0 ? (
-                blogs.map((blog) => (
-                  <div
-                    key={blog.id}
-                    className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Switch
-                        checked={blog.is_active}
-                        onCheckedChange={() => toggleBlog(blog.id, blog.is_active)}
-                      />
-                      <div>
-                        <h3 className="font-medium text-slate-900 dark:text-white">
-                          {blog.name}
-                        </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {blog.url}
-                        </p>
-                      </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setIsAdding(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddBlog}>Add</Button>
+                </div>
+              </div>
+            )}
+
+            {blogs && blogs.length > 0 ? (
+              <Table>
+                <TableCaption>A list of your blog sources.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {blogs.map((blog) => (
+                    <TableRow key={blog.id}>
+                      <TableCell>{editingBlogId === blog.id ? (
+                        <Input
+                          type="text"
+                          value={editedBlog.name || blog.name}
+                          onChange={(e) => setEditedBlog({ ...editedBlog, name: e.target.value })}
+                        />
+                      ) : blog.name}</TableCell>
+                      <TableCell>{editingBlogId === blog.id ? (
+                        <Input
+                          type="text"
+                          value={editedBlog.url || blog.url}
+                          onChange={(e) => setEditedBlog({ ...editedBlog, url: e.target.value })}
+                        />
+                      ) : blog.url}</TableCell>
+                      <TableCell>{editingBlogId === blog.id ? (
+                        <Input
+                          type="text"
+                          value={editedBlog.category || blog.category}
+                          onChange={(e) => setEditedBlog({ ...editedBlog, category: e.target.value })}
+                        />
+                      ) : blog.category}</TableCell>
+                      <TableCell className="text-right">
+                        {editingBlogId === blog.id ? (
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleUpdateBlog}>
+                              Update
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEditBlog(blog.id, blog)}>
+                              Edit
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteBlog(blog.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      {/* You can add pagination or additional information here */}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            ) : (
+              <div className="text-gray-500">No blog sources added yet.</div>
+            )}
+          </div>
+
+          {/* Topics Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Topics</h2>
+            {userTopics && userTopics.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userTopics.map((topic) => (
+                  <div key={topic.id} className="flex items-center justify-between p-3 rounded-md shadow-sm border border-gray-200">
+                    <div>
+                      <span className="font-medium text-gray-700">{topic.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {getCategoryLabel(blog.category)}
-                      </Badge>
-                      <Badge variant={blog.is_active ? "default" : "secondary"}>
-                        {blog.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeBlog(blog.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        disabled={deleteBlogMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div>
+                      <Switch id={`topic-active-${topic.id}`} checked={topic.is_active} />
+                      <Label htmlFor={`topic-active-${topic.id}`} className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Active
+                      </Label>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-slate-500">No blog sources added yet</p>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Add your first blog source above to start monitoring
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-purple-600" />
-              <CardTitle>Notifications</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-slate-900 dark:text-white">
-                    Daily Digest
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Get a summary of new insights every day
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.dailyDigest}
-                  onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, dailyDigest: checked })
-                  }
-                />
+                ))}
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-slate-900 dark:text-white">
-                    New Insights
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Get notified when new insights are available
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.newInsights}
-                  onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, newInsights: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-slate-900 dark:text-white">
-                    Weekly Report
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Receive a weekly summary of your learning progress
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.weeklyReport}
-                  onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, weeklyReport: checked })
-                  }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Topics Management */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Tag className="h-5 w-5 text-green-600" />
-              <CardTitle>Topic Management</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add new topic (e.g., React, AI/ML)"
-                value={newTopic}
-                onChange={(e) => setNewTopic(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTopic()}
-              />
-              <Button onClick={addTopic} disabled={addTopicMutation.isPending}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {userTopics.map((topic) => (
-                <div
-                  key={topic.id}
-                  className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg text-center hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <Badge variant="outline">{topic.name}</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSaveSettings} className="gap-2">
-            Save Settings
-          </Button>
+            ) : (
+              <div className="text-gray-500">No topics created yet.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
