@@ -18,12 +18,17 @@ const Index = () => {
   const getTopicIdFromTab = (tabId: string) => {
     if (tabId === "all-posts") return undefined;
     const topic = userTopics.find(t => `topic-${t.topic_id}` === tabId);
-    return topic?.topic_id?.toString(); // Convert number to string
+    return topic?.topic_id?.toString();
   };
   
   const topicId = getTopicIdFromTab(selectedTab);
-  const { data: blogPosts = [], isLoading } = useBlogPosts(topicId);
+  const { data: allBlogPosts = [], isLoading } = useBlogPosts();
   const markPostAsReadMutation = useMarkPostAsRead();
+
+  // Filter posts based on selected topic
+  const filteredPosts = selectedTab === "all-posts" 
+    ? allBlogPosts 
+    : allBlogPosts.filter(post => post.label_id?.toString() === topicId);
 
   const handleMarkAsRead = (postId: string) => {
     markPostAsReadMutation.mutate(postId);
@@ -31,11 +36,11 @@ const Index = () => {
 
   // Build tabs array
   const tabs = [
-    { id: "all-posts", label: "All Posts", count: blogPosts.length },
+    { id: "all-posts", label: "All Posts", count: allBlogPosts.length },
     ...userTopics.map(topic => ({
       id: `topic-${topic.topic_id}`,
       label: topic.name,
-      count: blogPosts.filter(post => post.label_id === topic.topic_id).length
+      count: allBlogPosts.filter(post => post.label_id === topic.topic_id).length
     }))
   ];
 
@@ -45,18 +50,10 @@ const Index = () => {
   };
 
   const renderContent = () => {
-    // Show notes editor for topic tabs
-    if (selectedTab.startsWith("topic-")) {
-      const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
-      if (topic) {
-        return <NotesEditor category={topic.name.toLowerCase().replace(' ', '-')} />;
-      }
-    }
-
     // Show individual blog post content
     if (selectedTab.startsWith("post-")) {
       const postId = selectedTab.replace("post-", "");
-      const post = blogPosts.find(p => p.id === postId);
+      const post = allBlogPosts.find(p => p.id === postId);
       
       if (post) {
         return (
@@ -113,10 +110,10 @@ const Index = () => {
       );
     }
 
-    // Show blog posts grid for "all-posts" or specific topics
+    // Show filtered blog posts grid for all tabs (including topic-specific ones)
     return (
       <BlogPostGrid 
-        posts={blogPosts}
+        posts={filteredPosts}
         isLoading={isLoading}
         onMarkAsRead={handleMarkAsRead}
       />
