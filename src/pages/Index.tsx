@@ -10,6 +10,20 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("blogs");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLabel, setSelectedLabel] = useState("Quick Notes");
+
+  // Label categories with colors
+  const labels = [
+    { name: "Quick Notes", color: "bg-yellow-400" },
+    { name: "CITI", color: "bg-red-400" },
+    { name: "RAG", color: "bg-blue-400" },
+    { name: "NLP", color: "bg-purple-400" },
+    { name: "MLOPS", color: "bg-orange-400" },
+    { name: "LLMs", color: "bg-violet-400" },
+    { name: "Agents", color: "bg-gray-400" },
+    { name: "Reinforcement", color: "bg-green-400" },
+    { name: "ML", color: "bg-pink-400" },
+  ];
 
   // Mock data for blogs with different sizes and read status
   const blogNotes = [
@@ -19,7 +33,6 @@ const Index = () => {
       source: "React Blog",
       summary: "New patterns emerging in React development including Server Components and Concurrent Features",
       userNotes: "Key takeaways:\n- Server Components reduce bundle size\n- Concurrent features improve UX\n- Need to refactor current project",
-      labels: ["React", "Frontend"],
       isNew: true,
       isRead: false,
       height: "h-64",
@@ -31,7 +44,6 @@ const Index = () => {
       source: "AI Weekly",
       summary: "Understanding the basics of ML algorithms and their practical applications",
       userNotes: "Important concepts:\n- Supervised vs Unsupervised learning\n- Feature engineering is crucial\n- Start with simple models first\n\nNext steps: Practice with scikit-learn",
-      labels: ["AI", "Machine Learning"],
       isNew: true,
       isRead: false,
       height: "h-80",
@@ -43,7 +55,6 @@ const Index = () => {
       source: "CSS Tricks",
       summary: "Advanced grid layouts and responsive design patterns",
       userNotes: "Grid vs Flexbox:\n- Grid for 2D layouts\n- Flexbox for 1D layouts\n- Use grid-template-areas for complex layouts",
-      labels: ["CSS", "Design"],
       isNew: false,
       isRead: true,
       height: "h-48",
@@ -55,7 +66,6 @@ const Index = () => {
       source: "TypeScript Handbook",
       summary: "Essential TypeScript patterns for better code quality",
       userNotes: "Best practices noted:\n- Use strict mode\n- Leverage union types\n- Avoid 'any' type\n- Use utility types effectively\n\nTODO: Apply these to current project",
-      labels: ["TypeScript", "Best Practices"],
       isNew: false,
       isRead: true,
       height: "h-72",
@@ -67,7 +77,6 @@ const Index = () => {
       source: "Node Weekly",
       summary: "Techniques to improve Node.js application performance",
       userNotes: "Performance tips:\n- Use clustering\n- Implement caching\n- Optimize database queries\n- Monitor memory usage",
-      labels: ["Node.js", "Performance"],
       isNew: true,
       isRead: false,
       height: "h-56",
@@ -79,7 +88,6 @@ const Index = () => {
       source: "DevOps Weekly",
       summary: "Security best practices for containerized applications",
       userNotes: "Security checklist:\n- Use minimal base images\n- Don't run as root\n- Scan for vulnerabilities\n- Implement proper secrets management",
-      labels: ["Docker", "Security"],
       isNew: false,
       isRead: true,
       height: "h-60",
@@ -111,8 +119,7 @@ const Index = () => {
 
   const filteredBlogs = sortedBlogs.filter(blog =>
     blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+    blog.summary.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -160,6 +167,28 @@ const Index = () => {
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center ml-2">
                   <span className="text-white text-sm font-medium">A</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Labels Section */}
+            <div className="px-6 pb-4">
+              <div className="flex gap-2 flex-wrap">
+                {labels.map((label) => (
+                  <button
+                    key={label.name}
+                    onClick={() => setSelectedLabel(label.name)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      selectedLabel === label.name
+                        ? `${label.color} text-white shadow-md`
+                        : `${label.color} bg-opacity-20 text-gray-700 hover:${label.color} hover:bg-opacity-30`
+                    }`}
+                  >
+                    {label.name}
+                  </button>
+                ))}
+                <button className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors">
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </header>
