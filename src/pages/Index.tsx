@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +189,19 @@ const Index = () => {
                   }`}
                 >
                   <CardContent className="p-4 h-full flex flex-col">
+                    {/* Labels moved to top */}
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {blog.labels.map((label) => (
+                        <Badge 
+                          key={label} 
+                          variant="outline" 
+                          className="text-xs px-2 py-0 bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
+                        >
+                          {label}
+                        </Badge>
+                      ))}
+                    </div>
+
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0">
@@ -219,28 +233,15 @@ const Index = () => {
                       {blog.summary}
                     </p>
 
-                    {/* User Notes Area */}
+                    {/* User Notes Area - removed scrollbar */}
                     <div className="flex-1 flex flex-col">
                       <Textarea
                         placeholder="Write your notes here..."
                         value={notes[blog.id] || ''}
                         onChange={(e) => handleNotesChange(blog.id, e.target.value)}
-                        className="flex-1 text-xs resize-none border-0 focus-visible:ring-0 p-0 bg-transparent placeholder:text-gray-400 text-gray-700"
+                        className="flex-1 text-xs resize-none border-0 focus-visible:ring-0 p-0 bg-transparent placeholder:text-gray-400 text-gray-700 overflow-hidden"
                         style={{ minHeight: '60px' }}
                       />
-                    </div>
-
-                    {/* Labels */}
-                    <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-200">
-                      {blog.labels.map((label) => (
-                        <Badge 
-                          key={label} 
-                          variant="outline" 
-                          className="text-xs px-2 py-0 bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-                        >
-                          {label}
-                        </Badge>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>
