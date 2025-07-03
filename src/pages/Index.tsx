@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { TabNavigation } from "@/components/TabNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { NotesEditor } from "@/components/NotesEditor";
+import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
 
@@ -110,7 +111,31 @@ const Index = () => {
       );
     }
 
-    // Show filtered blog posts grid for all tabs (including topic-specific ones)
+    // Show filtered blog posts grid for topic tabs with notes section
+    if (selectedTab.startsWith("topic-")) {
+      const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
+      
+      return (
+        <div className="space-y-6">
+          <BlogPostGrid 
+            posts={filteredPosts}
+            isLoading={isLoading}
+            onMarkAsRead={handleMarkAsRead}
+          />
+          
+          <Separator className="my-6" />
+          
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Notes - {topic?.name || 'Topic'}
+            </h2>
+            <NotesEditor category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
+          </div>
+        </div>
+      );
+    }
+
+    // Show filtered blog posts grid for "all-posts"
     return (
       <BlogPostGrid 
         posts={filteredPosts}
@@ -126,12 +151,9 @@ const Index = () => {
         <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
         <SidebarInset className="flex-1">
           <div className="flex justify-center w-full">
-            <div className="max-w-2xl w-full mx-auto px-6 py-6">
-              <header className="flex h-12 shrink-0 items-center gap-2 mb-4">
+            <div className="max-w-2xl w-full mx-auto px-6 py-4">
+              <header className="flex h-8 shrink-0 items-center gap-2 mb-4">
                 <SidebarTrigger className="-ml-1" />
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>LearnWeave</span>
-                </div>
               </header>
               
               <TabNavigation
