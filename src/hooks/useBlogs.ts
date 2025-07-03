@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -10,12 +9,17 @@ export const useBlogs = () => {
   return useQuery({
     queryKey: ['blogs'],
     queryFn: async () => {
+      console.log('Fetching blogs...');
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching blogs:', error);
+        throw error;
+      }
+      console.log('Fetched blogs:', data);
       return data;
     },
   });
@@ -25,10 +29,16 @@ export const useAddBlog = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (blog: Omit<BlogInsert, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (blog: Omit<BlogInsert, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'added_date'>) => {
+      console.log('Adding blog:', blog);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('User not authenticated');
+        throw new Error('User not authenticated');
+      }
 
+      console.log('User authenticated:', user.id);
+      
       const { data, error } = await supabase
         .from('blogs')
         .insert([{
@@ -38,11 +48,19 @@ export const useAddBlog = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding blog:', error);
+        throw error;
+      }
+      console.log('Blog added successfully:', data);
       return data;
     },
     onSuccess: () => {
+      console.log('Invalidating blogs query');
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
+    },
+    onError: (error) => {
+      console.error('Failed to add blog:', error);
     },
   });
 };

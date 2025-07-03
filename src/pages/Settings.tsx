@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const { data: blogs = [], isLoading: blogsLoading } = useBlogs();
+  const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
   const { data: userTopics = [] } = useUserTopics();
   const addBlogMutation = useAddBlog();
   const deleteBlogMutation = useDeleteBlog();
@@ -28,25 +27,39 @@ const Settings = () => {
     weeklyReport: false,
   });
 
+  // Debug logging
+  console.log('Blogs data:', blogs);
+  console.log('Blogs loading:', blogsLoading);
+  console.log('Blogs error:', blogsError);
+
   const addBlog = async () => {
-    if (newBlog.name && newBlog.url) {
-      try {
-        await addBlogMutation.mutateAsync({
-          name: newBlog.name,
-          url: newBlog.url,
-        });
-        setNewBlog({ name: "", url: "" });
-        toast({
-          title: "Blog Added",
-          description: "Blog source has been added successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to add blog source.",
-          variant: "destructive",
-        });
-      }
+    if (!newBlog.name.trim() || !newBlog.url.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter both blog name and URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('Attempting to add blog:', newBlog);
+      await addBlogMutation.mutateAsync({
+        name: newBlog.name.trim(),
+        url: newBlog.url.trim(),
+      });
+      setNewBlog({ name: "", url: "" });
+      toast({
+        title: "Blog Added",
+        description: "Blog source has been added successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to add blog:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add blog source. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -114,6 +127,13 @@ const Settings = () => {
             Manage your blog sources, notifications, and preferences
           </p>
         </div>
+
+        {/* Debug Info */}
+        {blogsError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600">Error loading blogs: {blogsError.message}</p>
+          </div>
+        )}
 
         {/* Blog Sources */}
         <Card>
