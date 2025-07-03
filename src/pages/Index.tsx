@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,10 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("blogs");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLabel, setSelectedLabel] = useState("all");
+
+  // Extract unique labels from blog notes
+  const allLabels = ["React", "Frontend", "AI", "Machine Learning", "CSS", "Design", "TypeScript", "Best Practices", "Node.js", "Performance", "Docker", "Security"];
 
   // Mock data for blogs with different sizes and read status
   const blogNotes = [
@@ -110,11 +115,15 @@ const Index = () => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  const filteredBlogs = sortedBlogs.filter(blog =>
-    blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredBlogs = sortedBlogs.filter(blog => {
+    const matchesSearch = blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesLabel = selectedLabel === "all" || blog.labels.some(label => label.toLowerCase() === selectedLabel.toLowerCase());
+    
+    return matchesSearch && matchesLabel;
+  });
 
   return (
     <SidebarProvider>
@@ -165,20 +174,41 @@ const Index = () => {
             </div>
           </header>
 
+          {/* Label Tabs at Top */}
+          <div className="bg-white border-b border-gray-200 px-6 py-3">
+            <div className="flex gap-2 overflow-x-auto">
+              <Button
+                variant={selectedLabel === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedLabel("all")}
+                className={`rounded-full px-4 py-2 text-sm whitespace-nowrap ${
+                  selectedLabel === "all" 
+                    ? "bg-yellow-400 text-black hover:bg-yellow-500" 
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                All Notes
+              </Button>
+              {allLabels.map((label) => (
+                <Button
+                  key={label}
+                  variant={selectedLabel === label ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedLabel(label)}
+                  className={`rounded-full px-4 py-2 text-sm whitespace-nowrap ${
+                    selectedLabel === label 
+                      ? "bg-yellow-400 text-black hover:bg-yellow-500" 
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {/* Main Content */}
           <div className="p-6">
-            {/* Quick Add Note - Small and Centered */}
-            <div className="mb-6 flex justify-center">
-              <Card className="w-96 bg-white shadow-sm hover:shadow-md transition-shadow cursor-text border border-gray-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Plus className="h-4 w-4 text-gray-500" />
-                    <span className="text-base text-gray-500">Take a note...</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Masonry Grid Layout */}
             <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
               {filteredBlogs.map((blog) => (
@@ -261,3 +291,4 @@ const Index = () => {
 };
 
 export default Index;
+
