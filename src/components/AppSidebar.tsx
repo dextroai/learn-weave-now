@@ -6,7 +6,7 @@ import {
   Archive,
   Plus
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +28,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
   const { state } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
   const mainItems = [
@@ -39,6 +40,10 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
   ];
 
   const isActive = (id: string) => selectedTab === id;
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
+  };
 
   return (
     <Sidebar className={`${collapsed ? "w-16" : "w-64"} transition-all duration-300 bg-white border-r border-gray-200`}>
@@ -126,12 +131,8 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
         {/* Settings */}
         <div className="mt-auto p-3 border-t border-gray-200">
           <SidebarMenuButton
-            onClick={() => onTabChange("settings")}
-            className={`w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-50 text-sm rounded-lg ${
-              isActive("settings") 
-                ? "bg-orange-50 text-orange-800" 
-                : ""
-            }`}
+            onClick={handleSettingsClick}
+            className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-50 text-sm rounded-lg"
           >
             <Settings className={`h-4 w-4 ${collapsed ? "mx-auto" : "mr-3"} text-gray-500`} />
             {!collapsed && <span className="text-sm font-medium">Settings</span>}
