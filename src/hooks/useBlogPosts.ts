@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -25,10 +24,17 @@ export const useBlogPosts = (category?: string) => {
 
       // Filter by label_id if category corresponds to a topic label
       if (category && category !== 'blogs' && category !== 'archive') {
-        // Convert category to label_id (assuming categories map to numeric labels)
-        const labelId = parseInt(category.replace('topic-', ''));
-        if (!isNaN(labelId)) {
-          query = query.eq('label_id', labelId);
+        // Convert category to topic_id (assuming categories map to numeric labels)
+        const topicMap: Record<string, number> = {
+          'nlp': 1,
+          'mlops': 2,
+          'traditional-ml': 3,
+          'computer-vision': 4
+        };
+        
+        const topicId = topicMap[category];
+        if (topicId) {
+          query = query.eq('label_id', topicId);
         }
       }
 

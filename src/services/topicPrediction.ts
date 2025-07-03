@@ -20,16 +20,17 @@ export class TopicPredictionService {
       { keywords: ['vision', 'image', 'opencv', 'cnn', 'detection', 'segmentation', 'yolo'] }
     ];
 
-    // Check for keyword matches and return corresponding label (1-indexed)
+    // Check for keyword matches and return corresponding topic_id from userTopics
     for (let i = 0; i < predictions.length && i < userTopics.length; i++) {
       const hasKeyword = predictions[i].keywords.some(keyword => blogText.includes(keyword));
       if (hasKeyword) {
-        return i + 1; // Return 1-indexed label
+        return userTopics[i].topic_id; // Return the actual topic_id from user_topics
       }
     }
 
-    // If no specific match, return a random label between 1 and number of topics
-    return Math.floor(Math.random() * userTopics.length) + 1;
+    // If no specific match, return a random topic_id from available topics
+    const randomIndex = Math.floor(Math.random() * userTopics.length);
+    return userTopics[randomIndex].topic_id;
   }
 
   static async predictAndAssignTopics() {
@@ -42,12 +43,12 @@ export class TopicPredictionService {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Get user topics ordered by creation date for consistent labeling
+      // Get user topics ordered by topic_id for consistent labeling
       const { data: userTopics, error: topicsError } = await supabase
         .from('user_topics')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('topic_id', { ascending: true });
 
       if (topicsError) {
         console.error('Error fetching user topics:', topicsError);
@@ -79,9 +80,9 @@ export class TopicPredictionService {
 
       // Process each blog's posts
       for (const blog of blogs) {
-        const predictedLabel = this.predictTopicLabelForBlog(blog, userTopics);
+        const predictedTopicId = this.predictTopicLabelForBlog(blog, userTopics);
         
-        if (predictedLabel) {
+        if (predictedTopicId) {
           // Get posts from this blog that don't have a label_id yet
           const { data: posts, error: postsError } = await supabase
             .from('blog_posts')
@@ -95,10 +96,10 @@ export class TopicPredictionService {
           }
 
           if (posts && posts.length > 0) {
-            // Update posts with the predicted label
+            // Update posts with the predicted topic_id as label_id
             const { error: updateError } = await supabase
               .from('blog_posts')
-              .update({ label_id: predictedLabel })
+              .update({ label_id: predictedTopicId })
               .eq('blog_id', blog.id)
               .is('label_id', null);
 
@@ -106,7 +107,8 @@ export class TopicPredictionService {
               console.error(`Error updating posts for blog ${blog.id}:`, updateError);
             } else {
               predictionsCount += posts.length;
-              console.log(`Assigned label ${predictedLabel} to ${posts.length} posts from blog "${blog.name}"`);
+              const topicName = userTopics.find(t => t.topic_id === predictedTopicId)?.name || 'Unknown';
+              console.log(`Assigned label ${predictedTopicId} (${topicName}) to ${posts.length} posts from blog "${blog.name}"`);
             }
           }
         }

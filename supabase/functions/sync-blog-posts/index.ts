@@ -89,19 +89,19 @@ serve(async (req) => {
       if (insertedPosts && insertedPosts.length > 0) {
         console.log('Starting label prediction for new posts...');
         
-        // Get user topics for the blog owner, ordered by creation date for consistent labeling
+        // Get user topics for the blog owner, ordered by topic_id for consistent labeling
         const { data: userTopics, error: topicsError } = await supabase
           .from('user_topics')
           .select('*')
           .eq('user_id', blog.user_id)
-          .order('created_at', { ascending: true });
+          .order('topic_id', { ascending: true });
 
         if (!topicsError && userTopics && userTopics.length > 0) {
           // Simple dummy prediction logic based on post title
           const predictLabel = (postTitle: string): number => {
             const title = postTitle.toLowerCase();
             
-            // Define keyword patterns for each label (1-indexed)
+            // Define keyword patterns for each topic type
             const patterns = [
               ['nlp', 'language', 'text', 'natural', 'processing'],
               ['mlops', 'deployment', 'pipeline', 'kubernetes', 'docker'],
@@ -109,31 +109,32 @@ serve(async (req) => {
               ['machine learning', 'ml', 'regression', 'classification']
             ];
 
-            // Check each pattern and return corresponding label
+            // Check each pattern and return corresponding topic_id
             for (let i = 0; i < patterns.length && i < userTopics.length; i++) {
               if (patterns[i].some(keyword => title.includes(keyword))) {
-                return i + 1; // Return 1-indexed label
+                return userTopics[i].topic_id; // Return the actual topic_id
               }
             }
             
-            // Default to random label between 1 and number of topics
-            return Math.floor(Math.random() * userTopics.length) + 1;
+            // Default to random topic_id from available topics
+            const randomIndex = Math.floor(Math.random() * userTopics.length);
+            return userTopics[randomIndex].topic_id;
           };
 
           // Assign predicted labels to posts
           for (const post of insertedPosts) {
-            const predictedLabel = predictLabel(post.title);
+            const predictedTopicId = predictLabel(post.title);
             
             const { error: assignError } = await supabase
               .from('blog_posts')
-              .update({ label_id: predictedLabel })
+              .update({ label_id: predictedTopicId })
               .eq('id', post.id);
 
             if (assignError) {
               console.error(`Error assigning label to post ${post.id}:`, assignError);
             } else {
-              const topicName = userTopics[predictedLabel - 1]?.name || 'Unknown';
-              console.log(`Assigned label ${predictedLabel} (${topicName}) to post "${post.title}"`);
+              const topicName = userTopics.find(t => t.topic_id === predictedTopicId)?.name || 'Unknown';
+              console.log(`Assigned label ${predictedTopicId} (${topicName}) to post "${post.title}"`);
             }
           }
         }
