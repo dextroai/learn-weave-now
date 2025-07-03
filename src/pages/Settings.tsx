@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
   const { data: userTopics = [] } = useUserTopics();
   const addBlogMutation = useAddBlog();
@@ -31,6 +33,14 @@ const Settings = () => {
   console.log('Blogs data:', blogs);
   console.log('Blogs loading:', blogsLoading);
   console.log('Blogs error:', blogsError);
+
+  const handleSaveSettings = () => {
+    toast({
+      title: "Settings Saved",
+      description: "Your settings have been saved successfully.",
+    });
+    navigate('/');
+  };
 
   const addBlog = async () => {
     if (!newBlog.name.trim() || !newBlog.url.trim()) {
@@ -339,7 +349,7 @@ const Settings = () => {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button className="gap-2">
+          <Button onClick={handleSaveSettings} className="gap-2">
             Save Settings
           </Button>
         </div>
