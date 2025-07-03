@@ -4,19 +4,7 @@ import {
   Book, 
   Settings, 
   Archive,
-  Plus,
-  Square,
-  Circle,
-  Triangle,
-  Star,
-  Heart,
-  Coffee,
-  Bookmark,
-  Calendar,
-  Users,
-  ShoppingBag,
-  Shield,
-  Code
+  Plus
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
@@ -44,20 +32,6 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
 
   const mainItems = [
     { title: "All Blogs", id: "blogs", icon: Book, badge: "12" },
-  ];
-
-  const labels = [
-    { name: "Art of conversation", count: 2, color: "bg-red-500", icon: Circle },
-    { name: "Bucket List", count: 5, color: "bg-purple-500", icon: Square },
-    { name: "Chai Cafe", count: 3, color: "bg-yellow-500", icon: Coffee },
-    { name: "comics/book", count: 8, color: "bg-green-500", icon: Bookmark },
-    { name: "Daily 5 Min. Journal", count: 12, color: "bg-orange-500", icon: Calendar },
-    { name: "Dating To Marriage Ideas", count: 4, color: "bg-pink-500", icon: Heart },
-    { name: "Family", count: 6, color: "bg-cyan-500", icon: Users },
-    { name: "Fashion + Fashion Influence...", count: 7, color: "bg-indigo-500", icon: ShoppingBag },
-    { name: "Ideas Bank Implementation", count: 9, color: "bg-teal-500", icon: Star },
-    { name: "Inshorts Type. GitHub Proje...", count: 3, color: "bg-lime-500", icon: Code },
-    { name: "Insurance For Healthy Food...", count: 2, color: "bg-emerald-500", icon: Shield },
   ];
 
   const archiveItems = [
@@ -115,33 +89,6 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Labels Section */}
-        {!collapsed && (
-          <SidebarGroup>
-            <div className="flex items-center justify-between px-2">
-              <SidebarGroupLabel className="text-gray-600">Labels</SidebarGroupLabel>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {labels.map((label) => (
-                  <SidebarMenuItem key={label.name}>
-                    <SidebarMenuButton className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                      <label.icon className={`w-3 h-3 mr-3 text-white`} style={{ color: label.color.replace('bg-', '').replace('-500', '') }} />
-                      <span className="flex-1 text-xs">{label.name}</span>
-                      <Badge variant="outline" className="ml-auto text-xs bg-gray-100 text-gray-600 border-gray-300">
-                        {label.count}
-                      </Badge>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
 
         {/* Archive Section */}
         <SidebarGroup>
