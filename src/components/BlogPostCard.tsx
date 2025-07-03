@@ -5,7 +5,11 @@ import { ExternalLink, Clock } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 
 type BlogPost = Tables<'blog_posts'> & {
-  blogs: Tables<'blogs'> | null;
+  blogs: {
+    id: string;
+    name: string;
+    url: string;
+  } | null;
 };
 
 interface BlogPostCardProps {
