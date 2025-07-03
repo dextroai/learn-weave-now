@@ -38,7 +38,14 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
   const { data: blogPosts = [] } = useBlogPosts();
 
   const mainItems = [
-    { title: "All Blogs", id: "blogs", icon: Book, badge: "12" },
+    { title: "All Posts", id: "blogs", icon: Book, badge: "12" },
+  ];
+
+  const categoryItems = [
+    { title: "NLP", id: "nlp", icon: Book, badge: null },
+    { title: "MLOps", id: "mlops", icon: Book, badge: null },
+    { title: "Traditional ML", id: "traditional-ml", icon: Book, badge: null },
+    { title: "Computer Vision", id: "computer-vision", icon: Book, badge: null },
   ];
 
   const archiveItems = [
@@ -126,7 +133,7 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
         </SidebarGroup>
 
         {/* Individual Blog Posts Section */}
-        {!isCollapsed && recentPosts.length > 0 && (
+        {!isCollapsed && recentPosts.length > 0 && selectedTab === "blogs" && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -172,6 +179,36 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Category Labels */}
+        <SidebarGroup>
+          {!isCollapsed && <SidebarGroupLabel className="text-gray-600 text-xs font-medium px-4 py-2">Categories</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {categoryItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onTabChange(item.id)}
+                    isActive={isActive(item.id)}
+                    tooltip={isCollapsed ? item.title : undefined}
+                    className={`w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-50 text-sm mx-2 rounded-lg ${
+                      isActive(item.id) 
+                        ? "bg-orange-50 text-orange-800 border-r-2 border-orange-500" 
+                        : ""
+                    }`}
+                  >
+                    <item.icon className={`h-4 w-4 ${isCollapsed ? "mx-auto" : "mr-3"} text-blue-500`} />
+                    {!isCollapsed && (
+                      <>
+                        <span className="flex-1 text-sm font-medium">{item.title}</span>
+                      </>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         {/* Archive Section */}
         <SidebarGroup>

@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useBlogPosts, useNewBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics, useToggleTopicActive } from "@/hooks/useUserTopics";
 import { BlogPostCard } from "@/components/BlogPostCard";
+import { NotesEditor } from "@/components/NotesEditor";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -72,6 +73,110 @@ const Index = () => {
   const readPosts = filteredPosts
     .filter(post => !post.is_new)
     .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+
+  const renderMainContent = () => {
+    // Show notes editor for category tabs
+    if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(selectedTab)) {
+      return <NotesEditor category={selectedTab} />;
+    }
+
+    // Show blog posts for other tabs
+    return (
+      <>
+        {/* Topic Tags */}
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <Badge
+            variant="default"
+            className="px-4 py-2 text-sm font-medium cursor-pointer bg-yellow-400 text-black hover:bg-yellow-500"
+          >
+            All Posts
+          </Badge>
+          {userTopics.map((topic) => (
+            <Badge
+              key={topic.id}
+              variant={topic.is_active ? "default" : "secondary"}
+              className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
+                topic.is_active 
+                  ? "bg-blue-500 text-white hover:bg-blue-600" 
+                  : `${topic.color} text-gray-700 hover:bg-gray-200`
+              }`}
+              onClick={() => handleToggleTopic(topic.id, topic.is_active)}
+            >
+              {topic.name}
+            </Badge>
+          ))}
+          <Button variant="ghost" size="sm" className="rounded-full w-8 h-8 p-0">
+            +
+          </Button>
+        </div>
+
+        {/* Blog Posts Grid */}
+        {postsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i} className="border-2 border-gray-200 h-48">
+                <CardHeader className="pb-3">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (unreadPosts.length > 0 || readPosts.length > 0) ? (
+          <div className="space-y-8">
+            {/* Unread Posts Section */}
+            {unreadPosts.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                  Unread Posts ({unreadPosts.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                  {unreadPosts.map((post) => (
+                    <BlogPostCard
+                      key={post.id}
+                      post={post}
+                      onMarkAsRead={handleMarkAsRead}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Read Posts Section */}
+            {readPosts.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                  Read Posts ({readPosts.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                  {readPosts.map((post) => (
+                    <BlogPostCard
+                      key={post.id}
+                      post={post}
+                      onMarkAsRead={handleMarkAsRead}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">No blog posts found</p>
+            <p className="text-sm text-gray-400">
+              Add some blogs to monitor in the Settings page to see posts here.
+            </p>
+          </div>
+        )}
+      </>
+    );
+  };
 
   if (!user) {
     return (
@@ -254,97 +359,7 @@ const Index = () => {
 
             {/* Main Content */}
             <main className="flex-1 p-6">
-              {/* Topic Tags */}
-              <div className="flex items-center gap-2 mb-6 flex-wrap">
-                <Badge
-                  variant="default"
-                  className="px-4 py-2 text-sm font-medium cursor-pointer bg-yellow-400 text-black hover:bg-yellow-500"
-                >
-                  All Posts
-                </Badge>
-                {userTopics.map((topic) => (
-                  <Badge
-                    key={topic.id}
-                    variant={topic.is_active ? "default" : "secondary"}
-                    className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                      topic.is_active 
-                        ? "bg-blue-500 text-white hover:bg-blue-600" 
-                        : `${topic.color} text-gray-700 hover:bg-gray-200`
-                    }`}
-                    onClick={() => handleToggleTopic(topic.id, topic.is_active)}
-                  >
-                    {topic.name}
-                  </Badge>
-                ))}
-                <Button variant="ghost" size="sm" className="rounded-full w-8 h-8 p-0">
-                  +
-                </Button>
-              </div>
-
-              {/* Blog Posts Grid */}
-              {postsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {[...Array(8)].map((_, i) => (
-                    <Card key={i} className="border-2 border-gray-200 h-48">
-                      <CardHeader className="pb-3">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                        <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
-                        <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (unreadPosts.length > 0 || readPosts.length > 0) ? (
-                <div className="space-y-8">
-                  {/* Unread Posts Section */}
-                  {unreadPosts.length > 0 && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                        Unread Posts ({unreadPosts.length})
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {unreadPosts.map((post) => (
-                          <BlogPostCard
-                            key={post.id}
-                            post={post}
-                            onMarkAsRead={handleMarkAsRead}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Read Posts Section */}
-                  {readPosts.length > 0 && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                        Read Posts ({readPosts.length})
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {readPosts.map((post) => (
-                          <BlogPostCard
-                            key={post.id}
-                            post={post}
-                            onMarkAsRead={handleMarkAsRead}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 mb-4">No blog posts found</p>
-                  <p className="text-sm text-gray-400">
-                    Add some blogs to monitor in the Settings page to see posts here.
-                  </p>
-                </div>
-              )}
+              {renderMainContent()}
             </main>
           </div>
         </div>
