@@ -41,7 +41,7 @@ export const BlogPostCard = ({ post, onMarkAsRead, className }: BlogPostCardProp
   return (
     <Card 
       className={cn(
-        `cursor-pointer transition-all hover:shadow-md ${
+        `cursor-pointer transition-all hover:shadow-md h-full ${
           post.is_new ? 'border-orange-200 bg-orange-50/50' : 'border-gray-200'
         }`,
         className

@@ -40,26 +40,21 @@ const Index = () => {
     });
   };
 
-  // Filter and sort posts: unread first, then read
-  const filteredAndSortedPosts = blogPosts
-    .filter(post =>
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      // Sort by is_new first (unread posts at top)
-      if (a.is_new && !b.is_new) return -1;
-      if (!a.is_new && b.is_new) return 1;
-      // Then by detected_at (newest first)
-      return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
-    });
+  // Filter and separate unread/read posts
+  const filteredPosts = blogPosts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Create varying heights for masonry effect
-  const getCardHeight = (index: number) => {
-    const heights = ['h-48', 'h-56', 'h-44', 'h-52', 'h-40', 'h-60'];
-    return heights[index % heights.length];
-  };
+  // Separate unread and read posts, then sort each group by date
+  const unreadPosts = filteredPosts
+    .filter(post => post.is_new)
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  
+  const readPosts = filteredPosts
+    .filter(post => !post.is_new)
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
 
   if (!user) {
     return (
@@ -269,11 +264,11 @@ const Index = () => {
                 </Button>
               </div>
 
-              {/* Masonry Blog Posts Grid */}
+              {/* Blog Posts Grid */}
               {postsLoading ? (
-                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {[...Array(8)].map((_, i) => (
-                    <Card key={i} className={`border-2 border-gray-200 break-inside-avoid mb-4 ${getCardHeight(i)}`}>
+                    <Card key={i} className="border-2 border-gray-200 h-48">
                       <CardHeader className="pb-3">
                         <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                         <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
@@ -285,17 +280,45 @@ const Index = () => {
                     </Card>
                   ))}
                 </div>
-              ) : filteredAndSortedPosts.length > 0 ? (
-                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
-                  {filteredAndSortedPosts.map((post, index) => (
-                    <div key={post.id} className="break-inside-avoid mb-4">
-                      <BlogPostCard
-                        post={post}
-                        onMarkAsRead={handleMarkAsRead}
-                        className={getCardHeight(index)}
-                      />
+              ) : (unreadPosts.length > 0 || readPosts.length > 0) ? (
+                <div className="space-y-8">
+                  {/* Unread Posts Section */}
+                  {unreadPosts.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                        Unread Posts ({unreadPosts.length})
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {unreadPosts.map((post) => (
+                          <BlogPostCard
+                            key={post.id}
+                            post={post}
+                            onMarkAsRead={handleMarkAsRead}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Read Posts Section */}
+                  {readPosts.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                        Read Posts ({readPosts.length})
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {readPosts.map((post) => (
+                          <BlogPostCard
+                            key={post.id}
+                            post={post}
+                            onMarkAsRead={handleMarkAsRead}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
