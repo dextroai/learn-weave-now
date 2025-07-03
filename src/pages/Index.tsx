@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Menu, Search, RefreshCw, Settings, Apps, Plus, MoreVertical, User } from "lucide-react";
+import { Menu, Search, RefreshCw, Settings, Grid3X3, Plus, MoreVertical, User } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -155,7 +155,7 @@ const Index = () => {
                   <Settings className="h-5 w-5 text-gray-600" />
                 </Button>
                 <Button variant="ghost" size="sm" className="h-10 w-10 p-0 rounded-full hover:bg-gray-100">
-                  <Apps className="h-5 w-5 text-gray-600" />
+                  <Grid3X3 className="h-5 w-5 text-gray-600" />
                 </Button>
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center ml-2">
                   <span className="text-white text-sm font-medium">A</span>
