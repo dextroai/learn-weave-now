@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -18,7 +17,7 @@ const Index = () => {
   const getTopicIdFromTab = (tabId: string) => {
     if (tabId === "all-posts") return undefined;
     const topic = userTopics.find(t => `topic-${t.topic_id}` === tabId);
-    return topic?.topic_id;
+    return topic?.topic_id?.toString(); // Convert number to string
   };
   
   const topicId = getTopicIdFromTab(selectedTab);
