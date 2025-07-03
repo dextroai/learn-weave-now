@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBlogs } from "@/hooks/useBlogs";
+import { useBlogPosts } from "@/hooks/useBlogPosts";
 
 interface AppSidebarProps {
   selectedTab: string;
@@ -33,9 +33,9 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const isCollapsed = state === "collapsed";
-  const [showAllBlogs, setShowAllBlogs] = useState(false);
+  const [showAllPosts, setShowAllPosts] = useState(false);
   
-  const { data: blogs = [] } = useBlogs();
+  const { data: blogPosts = [] } = useBlogPosts();
 
   const mainItems = [
     { title: "All Blogs", id: "blogs", icon: Book, badge: "12" },
@@ -51,11 +51,17 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
     navigate('/settings');
   };
 
-  const handleBlogClick = (blogId: string) => {
-    onTabChange(`blog-${blogId}`);
+  const handlePostClick = (postId: string) => {
+    onTabChange(`post-${postId}`);
   };
 
-  const displayedBlogs = showAllBlogs ? blogs : blogs.slice(0, 5);
+  // Get recent blog posts (new ones first)
+  const recentPosts = blogPosts
+    .filter(post => post.is_new)
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
+    .slice(0, 10); // Limit to 10 most recent
+
+  const displayedPosts = showAllPosts ? recentPosts : recentPosts.slice(0, 5);
 
   return (
     <Sidebar 
@@ -119,40 +125,45 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Individual Blogs Section */}
-        {!isCollapsed && blogs.length > 0 && (
+        {/* Individual Blog Posts Section */}
+        {!isCollapsed && recentPosts.length > 0 && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {displayedBlogs.map((blog) => (
-                  <SidebarMenuItem key={blog.id}>
+                {displayedPosts.map((post) => (
+                  <SidebarMenuItem key={post.id}>
                     <SidebarMenuButton
-                      onClick={() => handleBlogClick(blog.id)}
-                      isActive={isActive(`blog-${blog.id}`)}
+                      onClick={() => handlePostClick(post.id)}
+                      isActive={isActive(`post-${post.id}`)}
                       className={`w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-xs mx-2 rounded-lg pl-8 ${
-                        isActive(`blog-${blog.id}`) 
+                        isActive(`post-${post.id}`) 
                           ? "bg-orange-50 text-orange-800 border-r-2 border-orange-500" 
                           : ""
                       }`}
                     >
-                      <span className="flex-1 text-xs truncate">{blog.name}</span>
+                      <span className="flex-1 text-xs truncate" title={post.title}>
+                        {post.title}
+                      </span>
+                      {post.is_new && (
+                        <span className="w-2 h-2 bg-orange-500 rounded-full ml-2 flex-shrink-0"></span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
                 
-                {blogs.length > 5 && (
+                {recentPosts.length > 5 && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => setShowAllBlogs(!showAllBlogs)}
+                      onClick={() => setShowAllPosts(!showAllPosts)}
                       className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-xs mx-2 rounded-lg pl-8"
                     >
-                      {showAllBlogs ? (
+                      {showAllPosts ? (
                         <ChevronDown className="h-3 w-3 mr-2" />
                       ) : (
                         <ChevronRight className="h-3 w-3 mr-2" />
                       )}
                       <span className="text-xs">
-                        {showAllBlogs ? 'Show Less' : `View All (${blogs.length})`}
+                        {showAllPosts ? 'Show Less' : `View All (${recentPosts.length})`}
                       </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

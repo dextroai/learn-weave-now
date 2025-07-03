@@ -44,18 +44,20 @@ const Index = () => {
   const getFilteredPosts = () => {
     let filtered = blogPosts;
     
-    // Filter by selected blog if a specific blog is selected
-    if (selectedTab.startsWith('blog-')) {
-      const blogId = selectedTab.replace('blog-', '');
-      filtered = blogPosts.filter(post => post.blog_id === blogId);
+    // Filter by selected post if a specific post is selected
+    if (selectedTab.startsWith('post-')) {
+      const postId = selectedTab.replace('post-', '');
+      filtered = blogPosts.filter(post => post.id === postId);
     }
     
     // Filter by search query
-    filtered = filtered.filter(post =>
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    if (searchQuery) {
+      filtered = filtered.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
     
     return filtered;
   };
