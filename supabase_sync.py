@@ -8,7 +8,12 @@ Syncs detected blog changes with Supabase database
 import requests
 import json
 import os
+import ssl
+import urllib3
 from datetime import datetime
+
+# Disable SSL warnings for self-signed certificates
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class SupabaseSync:
     def __init__(self, supabase_url, supabase_anon_key):
@@ -30,12 +35,27 @@ class SupabaseSync:
                 'Content-Type': 'application/json'
             }
             
-            response = requests.post(
-                self.edge_function_url,
-                headers=headers,
-                json=change_record,
-                timeout=30
-            )
+            # Try with SSL verification first
+            try:
+                response = requests.post(
+                    self.edge_function_url,
+                    headers=headers,
+                    json=change_record,
+                    timeout=30,
+                    verify=True
+                )
+            except requests.exceptions.SSLError as ssl_error:
+                print(f"⚠️  SSL verification failed, retrying without SSL verification...")
+                print(f"SSL Error: {ssl_error}")
+                
+                # Retry without SSL verification
+                response = requests.post(
+                    self.edge_function_url,
+                    headers=headers,
+                    json=change_record,
+                    timeout=30,
+                    verify=False  # Disable SSL verification
+                )
             
             if response.status_code == 200:
                 result = response.json()
@@ -50,6 +70,12 @@ class SupabaseSync:
                 print(f"Response: {response.text}")
                 return False
                 
+        except requests.exceptions.ConnectionError as conn_error:
+            print(f"❌ Connection error syncing {change_record['blog_name']}: {str(conn_error)}")
+            return False
+        except requests.exceptions.Timeout as timeout_error:
+            print(f"❌ Timeout error syncing {change_record['blog_name']}: {str(timeout_error)}")
+            return False
         except Exception as e:
             print(f"❌ Error syncing {change_record['blog_name']}: {str(e)}")
             return False
