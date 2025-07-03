@@ -40,12 +40,27 @@ const Index = () => {
     });
   };
 
-  // Filter and separate unread/read posts
-  const filteredPosts = blogPosts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter posts based on selected tab and search query
+  const getFilteredPosts = () => {
+    let filtered = blogPosts;
+    
+    // Filter by selected blog if a specific blog is selected
+    if (selectedTab.startsWith('blog-')) {
+      const blogId = selectedTab.replace('blog-', '');
+      filtered = blogPosts.filter(post => post.blog_id === blogId);
+    }
+    
+    // Filter by search query
+    filtered = filtered.filter(post =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    return filtered;
+  };
+
+  const filteredPosts = getFilteredPosts();
 
   // Separate unread and read posts, then sort each group by date
   const unreadPosts = filteredPosts
