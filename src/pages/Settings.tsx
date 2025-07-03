@@ -55,6 +55,17 @@ const Settings = () => {
       return;
     }
 
+    // Check for duplicate URL
+    const existingBlog = blogs.find(blog => blog.url.toLowerCase() === newBlog.url.trim().toLowerCase());
+    if (existingBlog) {
+      toast({
+        title: "Duplicate Blog",
+        description: `This blog URL is already being monitored as "${existingBlog.name}".`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       console.log('Attempting to add blog:', newBlog);
       await addBlogMutation.mutateAsync({
@@ -90,6 +101,12 @@ const Settings = () => {
     const lines = bulkBlogs.trim().split('\n').filter(line => line.trim());
     let successCount = 0;
     let errorCount = 0;
+    let duplicateCount = 0;
+    const failedBlogs: string[] = [];
+    const duplicateBlogs: string[] = [];
+
+    // Create a set of existing URLs for faster lookup
+    const existingUrls = new Set(blogs.map(blog => blog.url.toLowerCase()));
 
     for (const line of lines) {
       try {
@@ -118,6 +135,14 @@ const Settings = () => {
 
         if (!name || !url) {
           errorCount++;
+          failedBlogs.push(line.trim());
+          continue;
+        }
+
+        // Check for duplicate URL
+        if (existingUrls.has(url.toLowerCase())) {
+          duplicateCount++;
+          duplicateBlogs.push(`${name} (${url})`);
           continue;
         }
 
@@ -125,20 +150,33 @@ const Settings = () => {
           name: name.trim(),
           url: url.trim(),
         });
+        
+        // Add to existing URLs set to prevent duplicates within the same batch
+        existingUrls.add(url.toLowerCase());
         successCount++;
       } catch (error) {
         console.error('Failed to add blog:', error);
         errorCount++;
+        failedBlogs.push(line.trim());
       }
     }
 
     setBulkImporting(false);
     setBulkBlogs("");
 
-    if (successCount > 0) {
+    // Show detailed results
+    let toastMessage = `Successfully added ${successCount} blog(s).`;
+    if (duplicateCount > 0) {
+      toastMessage += ` ${duplicateCount} duplicate(s) skipped.`;
+    }
+    if (errorCount > 0) {
+      toastMessage += ` ${errorCount} failed.`;
+    }
+
+    if (successCount > 0 || duplicateCount > 0) {
       toast({
         title: "Bulk Import Complete",
-        description: `Successfully added ${successCount} blog(s). ${errorCount > 0 ? `${errorCount} failed.` : ''}`,
+        description: toastMessage,
       });
     } else {
       toast({
@@ -146,6 +184,14 @@ const Settings = () => {
         description: "No blogs were successfully added. Please check the format.",
         variant: "destructive",
       });
+    }
+
+    // Log details for debugging
+    if (duplicateBlogs.length > 0) {
+      console.log('Duplicate blogs skipped:', duplicateBlogs);
+    }
+    if (failedBlogs.length > 0) {
+      console.log('Failed blogs:', failedBlogs);
     }
   };
 
