@@ -9,6 +9,125 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          blog_id: string
+          content: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          is_new: boolean
+          link: string | null
+          published_date: string | null
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          blog_id: string
+          content?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          is_new?: boolean
+          link?: string | null
+          published_date?: string | null
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          blog_id?: string
+          content?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          is_new?: boolean
+          link?: string | null
+          published_date?: string | null
+          summary?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blogs: {
+        Row: {
+          added_date: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_checked: string | null
+          name: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          added_date?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked?: string | null
+          name: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          added_date?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked?: string | null
+          name?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_topics: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          topic_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          topic_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_topics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "user_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -33,6 +152,33 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_topics: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }

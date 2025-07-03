@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,99 +10,43 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useBlogPosts, useNewBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
+import { useUserTopics, useToggleTopicActive } from "@/hooks/useUserTopics";
+import { BlogPostCard } from "@/components/BlogPostCard";
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const [selectedTab, setSelectedTab] = useState("blogs");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch real data from Supabase
+  const { data: blogPosts = [], isLoading: postsLoading } = useBlogPosts();
+  const { data: newBlogPosts = [] } = useNewBlogPosts();
+  const { data: userTopics = [] } = useUserTopics();
+  const markAsReadMutation = useMarkPostAsRead();
+  const toggleTopicMutation = useToggleTopicActive();
+
   const handleSignOut = async () => {
     await signOut();
   };
 
-  const topics = [
-    { name: "Quick Notes", active: true, color: "bg-yellow-400" },
-    { name: "CITI", active: false, color: "bg-red-100" },
-    { name: "RAG", active: false, color: "bg-blue-100" },
-    { name: "NLP", active: false, color: "bg-purple-100" },
-    { name: "MLOPS", active: false, color: "bg-orange-100" },
-    { name: "LLMs", active: false, color: "bg-gray-100" },
-    { name: "Agents", active: false, color: "bg-green-100" },
-    { name: "Reinforcement", active: false, color: "bg-teal-100" },
-    { name: "ML", active: false, color: "bg-indigo-100" },
-  ];
+  const handleMarkAsRead = (postId: string) => {
+    markAsReadMutation.mutate(postId);
+  };
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: "Advanced React Patterns for 2024",
-      category: "React Blog",
-      timeAgo: "2 hours ago",
-      isNew: true,
-      content: "New patterns emerging in React development including Server...",
-      keyTakeaways: [
-        "Server Components reduce bundle size",
-        "Concurrent features improve UX",
-        "Need to refactor current project"
-      ]
-    },
-    {
-      id: 2,
-      title: "Machine Learning Fundamentals",
-      category: "AI Weekly",
-      timeAgo: "4 hours ago",
-      isNew: true,
-      content: "Understanding the basics of ML algorithms and their practical...",
-      keyTakeaways: [
-        "Supervised vs Unsupervised learning",
-        "Feature engineering is crucial",
-        "Start with simple models first"
-      ],
-      nextSteps: "Practice with scikit-learn"
-    },
-    {
-      id: 3,
-      title: "Node.js Performance Optimization",
-      category: "Node Weekly",
-      timeAgo: "6 hours ago",
-      isNew: true,
-      content: "Techniques to improve Node.js application performance...",
-      keyTakeaways: [
-        "Use clustering",
-        "Implement caching",
-        "Optimize database queries"
-      ]
-    }
-  ];
+  const handleToggleTopic = (topicId: string, currentState: boolean) => {
+    toggleTopicMutation.mutate({ 
+      id: topicId, 
+      is_active: !currentState 
+    });
+  };
 
-  const sidebarItems = [
-    {
-      id: 4,
-      title: "TypeScript Best Practices",
-      category: "TypeScript Handbook",
-      timeAgo: "2 days ago",
-      content: "Essential TypeScript patterns for better code quality",
-      keyTakeaways: [
-        "Use strict mode",
-        "Leverage union types",
-        "Avoid 'any' type",
-        "Use utility types effectively"
-      ],
-      todo: "Apply these to current project"
-    },
-    {
-      id: 5,
-      title: "Docker Container Security",
-      category: "DevOps Weekly",
-      timeAgo: "3 days ago",
-      content: "Security best practices for containerized applications",
-      keyTakeaways: [
-        "Use minimal base images",
-        "Scan for vulnerabilities",
-        "Implement proper secrets management"
-      ]
-    }
-  ];
+  // Filter posts based on search query
+  const filteredPosts = blogPosts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!user) {
     return (
@@ -257,7 +200,7 @@ const Index = () => {
                   <div className="relative flex-1 max-w-md ml-8">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="Search"
+                      placeholder="Search posts..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-gray-50 border-gray-200"
@@ -288,15 +231,22 @@ const Index = () => {
             <main className="flex-1 p-6">
               {/* Topic Tags */}
               <div className="flex items-center gap-2 mb-6 flex-wrap">
-                {topics.map((topic) => (
+                <Badge
+                  variant="default"
+                  className="px-4 py-2 text-sm font-medium cursor-pointer bg-yellow-400 text-black hover:bg-yellow-500"
+                >
+                  All Posts
+                </Badge>
+                {userTopics.map((topic) => (
                   <Badge
-                    key={topic.name}
-                    variant={topic.active ? "default" : "secondary"}
+                    key={topic.id}
+                    variant={topic.is_active ? "default" : "secondary"}
                     className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                      topic.active 
-                        ? "bg-yellow-400 text-black hover:bg-yellow-500" 
+                      topic.is_active 
+                        ? "bg-blue-500 text-white hover:bg-blue-600" 
                         : `${topic.color} text-gray-700 hover:bg-gray-200`
                     }`}
+                    onClick={() => handleToggleTopic(topic.id, topic.is_active)}
                   >
                     {topic.name}
                   </Badge>
@@ -310,87 +260,67 @@ const Index = () => {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Main Content Area */}
                 <div className="lg:col-span-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {blogPosts.map((post) => (
-                      <Card key={post.id} className="border-2 border-orange-200 hover:border-orange-300 transition-colors cursor-pointer">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
-                                {post.title}
-                              </CardTitle>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <span>{post.category}</span>
-                                <span>•</span>
-                                <span>{post.timeAgo}</span>
-                                {post.isNew && (
-                                  <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600 text-xs px-2 py-1">
-                                    New
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-gray-600 text-sm mb-3">{post.content}</p>
-                          
-                          {post.keyTakeaways && (
-                            <div className="mb-3">
-                              <p className="text-sm font-medium text-gray-700 mb-2">Key takeaways:</p>
-                              <ul className="text-sm text-gray-600 space-y-1">
-                                {post.keyTakeaways.map((takeaway, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="mr-2">-</span>
-                                    <span>{takeaway}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          
-                          {post.nextSteps && (
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">Next steps:</span> {post.nextSteps}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  {postsLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {[...Array(6)].map((_, i) => (
+                        <Card key={i} className="border-2 border-gray-200">
+                          <CardHeader className="pb-3">
+                            <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : filteredPosts.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {filteredPosts.map((post) => (
+                        <BlogPostCard
+                          key={post.id}
+                          post={post}
+                          onMarkAsRead={handleMarkAsRead}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500 mb-4">No blog posts found</p>
+                      <p className="text-sm text-gray-400">
+                        Add some blogs to monitor in the Settings page to see posts here.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Sidebar Content */}
+                {/* Sidebar Content - New Posts */}
                 <div className="lg:col-span-1 space-y-4">
-                  {sidebarItems.map((item) => (
-                    <div key={item.id} className="bg-white p-4 rounded-lg border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
-                      <div className="text-xs text-gray-500 mb-2">
-                        {item.category} • {item.timeAgo}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-3">Latest Updates</h3>
+                    {newBlogPosts.length > 0 ? (
+                      <div className="space-y-3">
+                        {newBlogPosts.slice(0, 5).map((post) => (
+                          <div key={post.id} className="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
+                            <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1">
+                              {post.title}
+                            </h4>
+                            <div className="text-xs text-gray-500 mb-2">
+                              {post.blogs?.name} • {new Date(post.detected_at).toLocaleDateString()}
+                            </div>
+                            {post.summary && (
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {post.summary.slice(0, 100)}...
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">{item.content}</p>
-                      
-                      {item.keyTakeaways && (
-                        <div className="mb-3">
-                          <p className="text-xs font-medium text-gray-700 mb-1">Best practices noted:</p>
-                          <ul className="text-xs text-gray-600 space-y-1">
-                            {item.keyTakeaways.map((takeaway, index) => (
-                              <li key={index} className="flex items-start">
-                                <span className="mr-1">-</span>
-                                <span>{takeaway}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {item.todo && (
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">TODO:</span> {item.todo}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    ) : (
+                      <p className="text-sm text-gray-500">No new posts available</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </main>

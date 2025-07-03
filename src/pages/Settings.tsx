@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,46 +7,99 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Globe, Bell, Tag } from "lucide-react";
+import { useBlogs, useAddBlog, useDeleteBlog, useUpdateBlog } from "@/hooks/useBlogs";
+import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const [blogSources, setBlogSources] = useState([
-    { id: 1, name: "React Blog", url: "https://react.dev/blog", active: true },
-    { id: 2, name: "CSS Tricks", url: "https://css-tricks.com", active: true },
-    { id: 3, name: "Smashing Magazine", url: "https://smashingmagazine.com", active: false },
-  ]);
+  const { data: blogs = [], isLoading: blogsLoading } = useBlogs();
+  const { data: userTopics = [] } = useUserTopics();
+  const addBlogMutation = useAddBlog();
+  const deleteBlogMutation = useDeleteBlog();
+  const updateBlogMutation = useUpdateBlog();
+  const addTopicMutation = useAddUserTopic();
+  const { toast } = useToast();
 
-  const [newSource, setNewSource] = useState({ name: "", url: "" });
+  const [newBlog, setNewBlog] = useState({ name: "", url: "" });
+  const [newTopic, setNewTopic] = useState("");
   const [notifications, setNotifications] = useState({
     dailyDigest: true,
     newInsights: true,
     weeklyReport: false,
   });
 
-  const addBlogSource = () => {
-    if (newSource.name && newSource.url) {
-      setBlogSources([
-        ...blogSources,
-        {
-          id: Date.now(),
-          name: newSource.name,
-          url: newSource.url,
-          active: true,
-        },
-      ]);
-      setNewSource({ name: "", url: "" });
+  const addBlog = async () => {
+    if (newBlog.name && newBlog.url) {
+      try {
+        await addBlogMutation.mutateAsync({
+          name: newBlog.name,
+          url: newBlog.url,
+        });
+        setNewBlog({ name: "", url: "" });
+        toast({
+          title: "Blog Added",
+          description: "Blog source has been added successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add blog source.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const removeBlogSource = (id: number) => {
-    setBlogSources(blogSources.filter((source) => source.id !== id));
+  const removeBlog = async (id: string) => {
+    try {
+      await deleteBlogMutation.mutateAsync(id);
+      toast({
+        title: "Blog Removed",
+        description: "Blog source has been removed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove blog source.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const toggleSource = (id: number) => {
-    setBlogSources(
-      blogSources.map((source) =>
-        source.id === id ? { ...source, active: !source.active } : source
-      )
-    );
+  const toggleBlog = async (id: string, currentState: boolean) => {
+    try {
+      await updateBlogMutation.mutateAsync({
+        id,
+        is_active: !currentState,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update blog status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addTopic = async () => {
+    if (newTopic.trim()) {
+      try {
+        await addTopicMutation.mutateAsync({
+          name: newTopic.trim(),
+        });
+        setNewTopic("");
+        toast({
+          title: "Topic Added",
+          description: "New topic has been added successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add topic.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
@@ -73,71 +127,94 @@ const Settings = () => {
             {/* Add New Source */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
               <div>
-                <Label htmlFor="sourceName">Blog Name</Label>
+                <Label htmlFor="blogName">Blog Name</Label>
                 <Input
-                  id="sourceName"
+                  id="blogName"
                   placeholder="e.g., React Blog"
-                  value={newSource.name}
+                  value={newBlog.name}
                   onChange={(e) =>
-                    setNewSource({ ...newSource, name: e.target.value })
+                    setNewBlog({ ...newBlog, name: e.target.value })
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="sourceUrl">URL</Label>
+                <Label htmlFor="blogUrl">URL</Label>
                 <Input
-                  id="sourceUrl"
+                  id="blogUrl"
                   placeholder="https://example.com"
-                  value={newSource.url}
+                  value={newBlog.url}
                   onChange={(e) =>
-                    setNewSource({ ...newSource, url: e.target.value })
+                    setNewBlog({ ...newBlog, url: e.target.value })
                   }
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={addBlogSource} className="w-full gap-2">
+                <Button 
+                  onClick={addBlog} 
+                  className="w-full gap-2"
+                  disabled={addBlogMutation.isPending}
+                >
                   <Plus className="h-4 w-4" />
-                  Add Source
+                  {addBlogMutation.isPending ? "Adding..." : "Add Source"}
                 </Button>
               </div>
             </div>
 
             {/* Existing Sources */}
             <div className="space-y-3">
-              {blogSources.map((source) => (
-                <div
-                  key={source.id}
-                  className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <Switch
-                      checked={source.active}
-                      onCheckedChange={() => toggleSource(source.id)}
-                    />
-                    <div>
-                      <h3 className="font-medium text-slate-900 dark:text-white">
-                        {source.name}
-                      </h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {source.url}
-                      </p>
+              {blogsLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="p-4 border border-slate-200 rounded-lg">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : blogs.length > 0 ? (
+                blogs.map((blog) => (
+                  <div
+                    key={blog.id}
+                    className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Switch
+                        checked={blog.is_active}
+                        onCheckedChange={() => toggleBlog(blog.id, blog.is_active)}
+                      />
+                      <div>
+                        <h3 className="font-medium text-slate-900 dark:text-white">
+                          {blog.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {blog.url}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={blog.is_active ? "default" : "secondary"}>
+                        {blog.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBlog(blog.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={deleteBlogMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={source.active ? "default" : "secondary"}>
-                      {source.active ? "Active" : "Inactive"}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeBlogSource(source.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-slate-500">No blog sources added yet</p>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Add your first blog source above to start monitoring
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -206,29 +283,37 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Labels Management */}
+        {/* Topics Management */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Tag className="h-5 w-5 text-green-600" />
-              <CardTitle>Label Management</CardTitle>
+              <CardTitle>Topic Management</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add new topic (e.g., React, AI/ML)"
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addTopic()}
+              />
+              <Button onClick={addTopic} disabled={addTopicMutation.isPending}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {["React", "AI/ML", "Design", "Backend", "DevOps", "Mobile"].map((label) => (
+              {userTopics.map((topic) => (
                 <div
-                  key={label}
-                  className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg text-center hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  key={topic.id}
+                  className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg text-center hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
-                  <Badge variant="outline">{label}</Badge>
+                  <Badge variant="outline">{topic.name}</Badge>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4 gap-2">
-              <Plus className="h-4 w-4" />
-              Add New Label
-            </Button>
           </CardContent>
         </Card>
 
