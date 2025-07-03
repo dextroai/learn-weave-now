@@ -116,32 +116,37 @@ const Index = () => {
       const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
       
       return (
-        <div className="space-y-6">
-          <BlogPostGrid 
-            posts={filteredPosts}
-            isLoading={isLoading}
-            onMarkAsRead={handleMarkAsRead}
-          />
+        <>
+          <div className="max-w-2xl mx-auto px-6">
+            <BlogPostGrid 
+              posts={filteredPosts}
+              isLoading={isLoading}
+              onMarkAsRead={handleMarkAsRead}
+            />
+          </div>
           
-          <Separator className="my-6" />
+          {/* Full-width separator */}
+          <div className="w-full mt-8">
+            <Separator className="w-full" />
+          </div>
           
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Notes - {topic?.name || 'Topic'}
-            </h2>
+          {/* Full-width notes section */}
+          <div className="w-full min-h-screen bg-gray-50">
             <NotesEditor category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
           </div>
-        </div>
+        </>
       );
     }
 
     // Show filtered blog posts grid for "all-posts"
     return (
-      <BlogPostGrid 
-        posts={filteredPosts}
-        isLoading={isLoading}
-        onMarkAsRead={handleMarkAsRead}
-      />
+      <div className="max-w-2xl mx-auto px-6">
+        <BlogPostGrid 
+          posts={filteredPosts}
+          isLoading={isLoading}
+          onMarkAsRead={handleMarkAsRead}
+        />
+      </div>
     );
   };
 
@@ -150,8 +155,8 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
         <SidebarInset className="flex-1">
-          <div className="flex justify-center w-full">
-            <div className="max-w-2xl w-full mx-auto px-6 py-4">
+          <div className="w-full">
+            <div className="max-w-2xl mx-auto px-6 py-4">
               <header className="flex h-8 shrink-0 items-center gap-2 mb-4">
                 <SidebarTrigger className="-ml-1" />
               </header>
@@ -162,11 +167,11 @@ const Index = () => {
                 onTabChange={setSelectedTab}
                 onAddTab={handleAddTab}
               />
-              
-              <main className="mt-4">
-                {renderContent()}
-              </main>
             </div>
+            
+            <main className="mt-4">
+              {renderContent()}
+            </main>
           </div>
         </SidebarInset>
       </div>

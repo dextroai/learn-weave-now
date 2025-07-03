@@ -34,13 +34,13 @@ export function NotesEditor({ category }: NotesEditorProps) {
       case 'computer-vision':
         return 'Computer Vision';
       default:
-        return category;
+        return category.charAt(0).toUpperCase() + category.slice(1);
     }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="border-b border-gray-200 p-4">
+    <div className="w-full min-h-screen bg-white">
+      <div className="px-6 py-4 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900">{getCategoryTitle(category)}</h1>
         <p className="text-gray-600 text-sm mt-1">
           {new Date().toLocaleDateString('en-US', { 
@@ -52,12 +52,12 @@ export function NotesEditor({ category }: NotesEditorProps) {
         </p>
       </div>
       
-      <div className="flex-1 p-4">
+      <div className="w-full">
         <Textarea
           value={notes}
           onChange={(e) => handleNotesChange(e.target.value)}
           placeholder="Start writing your notes here..."
-          className="h-full min-h-[400px] border-none resize-none focus:ring-0 focus:outline-none text-base leading-relaxed"
+          className="w-full min-h-screen border-none resize-none focus:ring-0 focus:outline-none text-base leading-relaxed bg-white rounded-none p-6"
           style={{ fontSize: '16px', lineHeight: '1.6' }}
         />
       </div>
