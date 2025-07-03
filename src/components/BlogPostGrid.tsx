@@ -19,12 +19,10 @@ interface BlogPostGridProps {
 export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
+      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="p-4 border border-gray-200 rounded-lg">
-            <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3 mb-2"></div>
-            <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+          <div key={i} className="p-2 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
           </div>
         ))}
       </div>
@@ -43,7 +41,7 @@ export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridPro
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
       {posts.map((post) => (
         <BlogPostCard
           key={post.id}

@@ -129,8 +129,8 @@ const Index = () => {
         <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
         <SidebarInset className="flex-1">
           <div className="flex justify-center w-full">
-            <div className="max-w-6xl w-full mx-auto px-8">
-              <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-200 bg-white">
+            <div className="max-w-2xl w-full mx-auto px-6 py-6">
+              <header className="flex h-12 shrink-0 items-center gap-2 mb-4">
                 <SidebarTrigger className="-ml-1" />
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span>LearnWeave</span>
@@ -144,7 +144,7 @@ const Index = () => {
                 onAddTab={handleAddTab}
               />
               
-              <main className="bg-white min-h-screen">
+              <main className="mt-4">
                 {renderContent()}
               </main>
             </div>
