@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Globe, Bell, Tag, Upload } from "lucide-react";
 import { useBlogs, useAddBlog, useDeleteBlog, useUpdateBlog } from "@/hooks/useBlogs";
 import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
@@ -22,7 +23,7 @@ const Settings = () => {
   const addTopicMutation = useAddUserTopic();
   const { toast } = useToast();
 
-  const [newBlog, setNewBlog] = useState({ name: "", url: "" });
+  const [newBlog, setNewBlog] = useState({ name: "", url: "", category: "" });
   const [newTopic, setNewTopic] = useState("");
   const [bulkBlogs, setBulkBlogs] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -37,6 +38,18 @@ const Settings = () => {
   console.log('Blogs loading:', blogsLoading);
   console.log('Blogs error:', blogsError);
 
+  const categoryOptions = [
+    { value: 'nlp', label: 'NLP' },
+    { value: 'mlops', label: 'MLOps' },
+    { value: 'traditional-ml', label: 'Traditional ML' },
+    { value: 'computer-vision', label: 'Computer Vision' },
+  ];
+
+  const getCategoryLabel = (category: string) => {
+    const option = categoryOptions.find(opt => opt.value === category);
+    return option ? option.label : category;
+  };
+
   const handleSaveSettings = () => {
     toast({
       title: "Settings Saved",
@@ -46,10 +59,10 @@ const Settings = () => {
   };
 
   const addBlog = async () => {
-    if (!newBlog.name.trim() || !newBlog.url.trim()) {
+    if (!newBlog.name.trim() || !newBlog.url.trim() || !newBlog.category) {
       toast({
         title: "Error",
-        description: "Please enter both blog name and URL.",
+        description: "Please enter blog name, URL, and select a category.",
         variant: "destructive",
       });
       return;
@@ -71,8 +84,9 @@ const Settings = () => {
       await addBlogMutation.mutateAsync({
         name: newBlog.name.trim(),
         url: newBlog.url.trim(),
+        category: newBlog.category as 'nlp' | 'mlops' | 'traditional-ml' | 'computer-vision',
       });
-      setNewBlog({ name: "", url: "" });
+      setNewBlog({ name: "", url: "", category: "" });
       toast({
         title: "Blog Added",
         description: "Blog source has been added successfully.",
@@ -110,18 +124,31 @@ const Settings = () => {
 
     for (const line of lines) {
       try {
-        // Support formats: "Name | URL" or "Name, URL" or just "URL" (use domain as name)
+        // Support formats: "Name | URL | Category" or "Name, URL, Category" or just "URL" (use domain as name, default to nlp)
         let name = "";
         let url = "";
+        let category = "nlp"; // default category
 
         if (line.includes('|')) {
           const parts = line.split('|').map(p => p.trim());
           name = parts[0];
           url = parts[1];
+          if (parts[2]) {
+            const categoryInput = parts[2].toLowerCase().replace(/\s+/g, '-');
+            if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(categoryInput)) {
+              category = categoryInput;
+            }
+          }
         } else if (line.includes(',')) {
           const parts = line.split(',').map(p => p.trim());
           name = parts[0];
           url = parts[1];
+          if (parts[2]) {
+            const categoryInput = parts[2].toLowerCase().replace(/\s+/g, '-');
+            if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(categoryInput)) {
+              category = categoryInput;
+            }
+          }
         } else {
           // Just URL provided, extract domain as name
           url = line.trim();
@@ -149,6 +176,7 @@ const Settings = () => {
         await addBlogMutation.mutateAsync({
           name: name.trim(),
           url: url.trim(),
+          category: category as 'nlp' | 'mlops' | 'traditional-ml' | 'computer-vision',
         });
         
         // Add to existing URLs set to prevent duplicates within the same batch
@@ -277,7 +305,7 @@ const Settings = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Add Single Source */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
               <div>
                 <Label htmlFor="blogName">Blog Name</Label>
                 <Input
@@ -299,6 +327,26 @@ const Settings = () => {
                     setNewBlog({ ...newBlog, url: e.target.value })
                   }
                 />
+              </div>
+              <div>
+                <Label htmlFor="blogCategory">Category</Label>
+                <Select
+                  value={newBlog.category}
+                  onValueChange={(value) =>
+                    setNewBlog({ ...newBlog, category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-end">
                 <Button 
@@ -322,15 +370,15 @@ const Settings = () => {
                   Add multiple blogs at once. Use one of these formats per line:
                 </p>
                 <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 space-y-1">
-                  <div>• <code>Blog Name | https://example.com</code></div>
-                  <div>• <code>Blog Name, https://example.com</code></div>
-                  <div>• <code>https://example.com</code> (uses domain as name)</div>
+                  <div>• <code>Blog Name | https://example.com | nlp</code></div>
+                  <div>• <code>Blog Name, https://example.com, mlops</code></div>
+                  <div>• <code>https://example.com</code> (uses domain as name, defaults to NLP)</div>
                 </div>
               </div>
               <Textarea
                 id="bulkBlogs"
-                placeholder={`React Blog | https://react.dev/blog
-Vue News, https://news.vuejs.org
+                placeholder={`React Blog | https://react.dev/blog | nlp
+Vue News, https://news.vuejs.org, traditional-ml
 https://blog.angular.io`}
                 value={bulkBlogs}
                 onChange={(e) => setBulkBlogs(e.target.value)}
@@ -378,6 +426,9 @@ https://blog.angular.io`}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {getCategoryLabel(blog.category)}
+                      </Badge>
                       <Badge variant={blog.is_active ? "default" : "secondary"}>
                         {blog.is_active ? "Active" : "Inactive"}
                       </Badge>

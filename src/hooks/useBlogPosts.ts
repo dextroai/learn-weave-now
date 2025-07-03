@@ -6,22 +6,30 @@ import { Tables } from '@/integrations/supabase/types';
 type BlogPost = Tables<'blog_posts'>;
 type Blog = Tables<'blogs'>;
 
-export const useBlogPosts = () => {
+export const useBlogPosts = (category?: string) => {
   return useQuery({
-    queryKey: ['blogPosts'],
+    queryKey: ['blogPosts', category],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('blog_posts')
         .select(`
           *,
           blogs:blog_id (
             id,
             name,
-            url
+            url,
+            category
           )
         `)
         .order('detected_at', { ascending: false })
         .limit(20);
+
+      // Filter by category if provided
+      if (category && category !== 'blogs') {
+        query = query.eq('blogs.category', category);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data;
@@ -40,7 +48,8 @@ export const useNewBlogPosts = () => {
           blogs:blog_id (
             id,
             name,
-            url
+            url,
+            category
           )
         `)
         .eq('is_new', true)

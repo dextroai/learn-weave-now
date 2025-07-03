@@ -1,370 +1,172 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Search, Settings, Grid3X3, RefreshCw, User, Brain, BookOpen, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useBlogPosts, useNewBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
-import { useUserTopics, useToggleTopicActive } from "@/hooks/useUserTopics";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { NotesEditor } from "@/components/NotesEditor";
+import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
   const [selectedTab, setSelectedTab] = useState("blogs");
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Fetch real data from Supabase
-  const { data: blogPosts = [], isLoading: postsLoading } = useBlogPosts();
-  const { data: userTopics = [] } = useUserTopics();
-  const markAsReadMutation = useMarkPostAsRead();
-  const toggleTopicMutation = useToggleTopicActive();
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
+  
+  // Extract category from selectedTab for filtering
+  const category = selectedTab === "blogs" ? undefined : selectedTab.replace("-", "-");
+  
+  const { data: blogPosts = [], isLoading } = useBlogPosts(category);
+  const markPostAsReadMutation = useMarkPostAsRead();
 
   const handleMarkAsRead = (postId: string) => {
-    markAsReadMutation.mutate(postId);
+    markPostAsReadMutation.mutate(postId);
   };
 
-  const handleToggleTopic = (topicId: string, currentState: boolean) => {
-    toggleTopicMutation.mutate({ 
-      id: topicId, 
-      is_active: !currentState 
-    });
-  };
-
-  // Filter posts based on selected tab and search query
-  const getFilteredPosts = () => {
-    let filtered = blogPosts;
-    
-    // Filter by selected post if a specific post is selected
-    if (selectedTab.startsWith('post-')) {
-      const postId = selectedTab.replace('post-', '');
-      filtered = blogPosts.filter(post => post.id === postId);
-    }
-    
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    return filtered;
-  };
-
-  const filteredPosts = getFilteredPosts();
-
-  // Separate unread and read posts, then sort each group by date
-  const unreadPosts = filteredPosts
-    .filter(post => post.is_new)
-    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  
-  const readPosts = filteredPosts
-    .filter(post => !post.is_new)
-    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-
-  const renderMainContent = () => {
-    // Show notes editor for category tabs
-    if (['nlp', 'mlops', 'traditional-ml', 'computer-vision'].includes(selectedTab)) {
+  const renderContent = () => {
+    // Show notes editor for category tabs (not "blogs" and not individual posts)
+    if (selectedTab !== "blogs" && !selectedTab.startsWith("post-") && selectedTab !== "archive") {
       return <NotesEditor category={selectedTab} />;
     }
 
-    // Show blog posts for other tabs
+    // Show individual blog post content
+    if (selectedTab.startsWith("post-")) {
+      const postId = selectedTab.replace("post-", "");
+      const post = blogPosts.find(p => p.id === postId);
+      
+      if (post) {
+        return (
+          <div className="p-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{post.title}</h1>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <span>{post.blogs?.name}</span>
+                  <span>•</span>
+                  <span>{new Date(post.detected_at).toLocaleDateString()}</span>
+                  {post.blogs?.category && (
+                    <>
+                      <span>•</span>
+                      <span className="capitalize">{post.blogs.category.replace('-', ' ')}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {post.summary && (
+                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                  <h2 className="font-semibold text-gray-900 mb-2">Summary</h2>
+                  <p className="text-gray-700">{post.summary}</p>
+                </div>
+              )}
+              
+              {post.content && (
+                <div className="prose max-w-none">
+                  <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                </div>
+              )}
+              
+              {post.link && (
+                <div className="mt-6 pt-6 border-t">
+                  <a 
+                    href={post.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                  >
+                    Read full article
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="p-6">
+          <div className="text-center text-gray-500">
+            Post not found
+          </div>
+        </div>
+      );
+    }
+
+    // Show blog posts grid for "blogs" tab or archive
     return (
-      <>
-        {/* Topic Tags */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <Badge
-            variant="default"
-            className="px-4 py-2 text-sm font-medium cursor-pointer bg-yellow-400 text-black hover:bg-yellow-500"
-          >
-            All Posts
-          </Badge>
-          {userTopics.map((topic) => (
-            <Badge
-              key={topic.id}
-              variant={topic.is_active ? "default" : "secondary"}
-              className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                topic.is_active 
-                  ? "bg-blue-500 text-white hover:bg-blue-600" 
-                  : `${topic.color} text-gray-700 hover:bg-gray-200`
-              }`}
-              onClick={() => handleToggleTopic(topic.id, topic.is_active)}
-            >
-              {topic.name}
-            </Badge>
-          ))}
-          <Button variant="ghost" size="sm" className="rounded-full w-8 h-8 p-0">
-            +
-          </Button>
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {selectedTab === "archive" ? "Archive" : "All Posts"}
+          </h1>
+          <p className="text-gray-600">
+            {selectedTab === "archive" 
+              ? "Previously read articles" 
+              : "Latest blog posts from your sources"
+            }
+          </p>
         </div>
 
-        {/* Blog Posts Grid */}
-        {postsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <Card key={i} className="border-2 border-gray-200 h-48">
-                <CardHeader className="pb-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
-                </CardContent>
-              </Card>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-4 border border-gray-200 rounded-lg">
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3 mb-2"></div>
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+              </div>
             ))}
           </div>
-        ) : (unreadPosts.length > 0 || readPosts.length > 0) ? (
-          <div className="space-y-8">
-            {/* Unread Posts Section */}
-            {unreadPosts.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                  Unread Posts ({unreadPosts.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                  {unreadPosts.map((post) => (
-                    <BlogPostCard
-                      key={post.id}
-                      post={post}
-                      onMarkAsRead={handleMarkAsRead}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Read Posts Section */}
-            {readPosts.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                  Read Posts ({readPosts.length})
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                  {readPosts.map((post) => (
-                    <BlogPostCard
-                      key={post.id}
-                      post={post}
-                      onMarkAsRead={handleMarkAsRead}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        ) : blogPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blogPosts.map((post) => (
+              <BlogPostCard
+                key={post.id}
+                post={post}
+                onMarkAsRead={handleMarkAsRead}
+              />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No blog posts found</p>
-            <p className="text-sm text-gray-400">
-              Add some blogs to monitor in the Settings page to see posts here.
-            </p>
+            <div className="text-gray-500 mb-2">No posts found</div>
+            <div className="text-sm text-gray-400">
+              {selectedTab === "archive" 
+                ? "No archived posts yet" 
+                : "No blog posts available. Try adding some blog sources in Settings."
+              }
+            </div>
           </div>
         )}
-      </>
+      </div>
     );
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center gap-2">
-                <Brain className="h-8 w-8 text-blue-600" />
-                <span className="text-xl font-bold text-gray-900">Dextro</span>
-              </div>
-              <Link to="/auth">
-                <Button className="gap-2">
-                  <User className="h-4 w-4" />
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Transform Your Learning
-              <span className="text-blue-600 block">with AI Insights</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Discover personalized insights from your favorite blogs, stay updated with the latest trends, 
-              and accelerate your learning journey with intelligent recommendations.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
-                <Button size="lg" className="gap-2">
-                  <Brain className="h-5 w-5" />
-                  Get Started Free
-                </Button>
-              </Link>
-              <Button variant="outline" size="lg" className="gap-2">
-                <BookOpen className="h-5 w-5" />
-                Learn More
-              </Button>
-            </div>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Brain className="h-6 w-6 text-blue-600" />
-                  <CardTitle>AI-Powered Insights</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Get intelligent summaries and key takeaways from your favorite blogs and articles automatically.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                  <CardTitle>Trend Analysis</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Stay ahead of the curve with real-time analysis of emerging trends in your field of interest.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-6 w-6 text-purple-600" />
-                  <CardTitle>Personalized Learning</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Receive customized content recommendations based on your learning goals and preferences.
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Stats Section */}
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-16">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">10K+</div>
-                <div className="text-gray-600">Articles Analyzed</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
-                <div className="text-gray-600">Active Users</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600 mb-2">95%</div>
-                <div className="text-gray-600">Accuracy Rate</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-orange-600 mb-2">24/7</div>
-                <div className="text-gray-600">Learning Support</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Popular Topics */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Popular Topics</h2>
-            <p className="text-gray-600 mb-8">Explore the most trending topics in technology and innovation</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {["AI & Machine Learning", "Web Development", "Data Science", "Cloud Computing", "Cybersecurity", "DevOps", "Mobile Development", "Blockchain"].map((topic) => (
-                <Badge key={topic} variant="secondary" className="px-3 py-1">
-                  {topic}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <ProtectedRoute>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
-          
-          <div className="flex-1 flex flex-col">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <SidebarTrigger />
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">L</span>
-                    </div>
-                    <span className="font-semibold text-gray-800">LearnWeave</span>
-                  </div>
-                  
-                  <div className="relative flex-1 max-w-md ml-8">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search posts..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-gray-50 border-gray-200"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="sm">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Avatar className="h-8 w-8 bg-green-500">
-                    <AvatarFallback className="bg-green-500 text-white text-sm">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="flex-1 p-6">
-              {renderMainContent()}
-            </main>
-          </div>
-        </div>
-      </SidebarProvider>
-    </ProtectedRoute>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
+        <SidebarInset className="flex-1">
+          <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-gray-200">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>LearnWeave</span>
+              <span>/</span>
+              <span className="capitalize">
+                {selectedTab.startsWith("post-") 
+                  ? "Post" 
+                  : selectedTab === "blogs" 
+                    ? "All Posts" 
+                    : selectedTab.replace("-", " ")
+                }
+              </span>
+            </div>
+          </header>
+          <main className="flex-1">
+            {renderContent()}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

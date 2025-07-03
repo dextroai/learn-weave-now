@@ -59,6 +59,7 @@ export type Database = {
       blogs: {
         Row: {
           added_date: string
+          category: string
           created_at: string
           id: string
           is_active: boolean
@@ -70,6 +71,7 @@ export type Database = {
         }
         Insert: {
           added_date?: string
+          category: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -81,6 +83,7 @@ export type Database = {
         }
         Update: {
           added_date?: string
+          category?: string
           created_at?: string
           id?: string
           is_active?: boolean
