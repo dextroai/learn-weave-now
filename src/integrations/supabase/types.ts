@@ -17,6 +17,7 @@ export type Database = {
           detected_at: string
           id: string
           is_new: boolean
+          label_id: number | null
           link: string | null
           published_date: string | null
           summary: string | null
@@ -29,6 +30,7 @@ export type Database = {
           detected_at?: string
           id?: string
           is_new?: boolean
+          label_id?: number | null
           link?: string | null
           published_date?: string | null
           summary?: string | null
@@ -41,6 +43,7 @@ export type Database = {
           detected_at?: string
           id?: string
           is_new?: boolean
+          label_id?: number | null
           link?: string | null
           published_date?: string | null
           summary?: string | null

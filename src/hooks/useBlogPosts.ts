@@ -17,16 +17,19 @@ export const useBlogPosts = (category?: string) => {
           blogs:blog_id (
             id,
             name,
-            url,
-            category
+            url
           )
         `)
         .order('detected_at', { ascending: false })
         .limit(20);
 
-      // Filter by category if provided
-      if (category && category !== 'blogs') {
-        query = query.eq('blogs.category', category);
+      // Filter by label_id if category corresponds to a topic label
+      if (category && category !== 'blogs' && category !== 'archive') {
+        // Convert category to label_id (assuming categories map to numeric labels)
+        const labelId = parseInt(category.replace('topic-', ''));
+        if (!isNaN(labelId)) {
+          query = query.eq('label_id', labelId);
+        }
       }
 
       const { data, error } = await query;
@@ -48,8 +51,7 @@ export const useNewBlogPosts = () => {
           blogs:blog_id (
             id,
             name,
-            url,
-            category
+            url
           )
         `)
         .eq('is_new', true)

@@ -39,7 +39,7 @@ serve(async (req) => {
       
       console.log(`Processing ${changeRecord.new_posts.length} new posts for ${changeRecord.blog_name}`);
 
-      // Find or create the blog entry
+      // Find the blog entry
       let { data: blog, error: blogError } = await supabase
         .from('blogs')
         .select('*')
@@ -47,8 +47,6 @@ serve(async (req) => {
         .single();
 
       if (blogError && blogError.code === 'PGRST116') {
-        // Blog doesn't exist, we'll need a user_id to create it
-        // For now, skip creating blog if it doesn't exist
         console.log(`Blog ${changeRecord.blog_name} not found in database, skipping...`);
         return new Response(
           JSON.stringify({ 
@@ -87,54 +85,55 @@ serve(async (req) => {
         throw insertError;
       }
 
-      // Auto-predict topics for new posts
+      // Auto-predict labels for new posts
       if (insertedPosts && insertedPosts.length > 0) {
-        console.log('Starting topic prediction for new posts...');
+        console.log('Starting label prediction for new posts...');
         
-        // Get user topics for the blog owner
+        // Get user topics for the blog owner, ordered by creation date for consistent labeling
         const { data: userTopics, error: topicsError } = await supabase
           .from('user_topics')
           .select('*')
-          .eq('user_id', blog.user_id);
+          .eq('user_id', blog.user_id)
+          .order('created_at', { ascending: true });
 
         if (!topicsError && userTopics && userTopics.length > 0) {
-          // Simple dummy prediction logic
-          const predictTopic = (postTitle: string) => {
+          // Simple dummy prediction logic based on post title
+          const predictLabel = (postTitle: string): number => {
             const title = postTitle.toLowerCase();
             
-            if (title.includes('nlp') || title.includes('language') || title.includes('text')) {
-              return userTopics.find(t => t.name.toLowerCase().includes('nlp'));
-            }
-            if (title.includes('mlops') || title.includes('deployment') || title.includes('pipeline')) {
-              return userTopics.find(t => t.name.toLowerCase().includes('mlops'));
-            }
-            if (title.includes('vision') || title.includes('image') || title.includes('cnn')) {
-              return userTopics.find(t => t.name.toLowerCase().includes('vision'));
-            }
-            if (title.includes('machine learning') || title.includes('ml') || title.includes('regression')) {
-              return userTopics.find(t => t.name.toLowerCase().includes('traditional') || t.name.toLowerCase().includes('ml'));
+            // Define keyword patterns for each label (1-indexed)
+            const patterns = [
+              ['nlp', 'language', 'text', 'natural', 'processing'],
+              ['mlops', 'deployment', 'pipeline', 'kubernetes', 'docker'],
+              ['vision', 'image', 'cnn', 'detection', 'segmentation'],
+              ['machine learning', 'ml', 'regression', 'classification']
+            ];
+
+            // Check each pattern and return corresponding label
+            for (let i = 0; i < patterns.length && i < userTopics.length; i++) {
+              if (patterns[i].some(keyword => title.includes(keyword))) {
+                return i + 1; // Return 1-indexed label
+              }
             }
             
-            // Default to first available topic
-            return userTopics[0];
+            // Default to random label between 1 and number of topics
+            return Math.floor(Math.random() * userTopics.length) + 1;
           };
 
-          // Assign predicted topics to posts
+          // Assign predicted labels to posts
           for (const post of insertedPosts) {
-            const predictedTopic = predictTopic(post.title);
-            if (predictedTopic) {
-              const { error: assignError } = await supabase
-                .from('post_topics')
-                .insert({
-                  post_id: post.id,
-                  topic_id: predictedTopic.id
-                });
+            const predictedLabel = predictLabel(post.title);
+            
+            const { error: assignError } = await supabase
+              .from('blog_posts')
+              .update({ label_id: predictedLabel })
+              .eq('id', post.id);
 
-              if (assignError) {
-                console.error(`Error assigning topic to post ${post.id}:`, assignError);
-              } else {
-                console.log(`Assigned topic "${predictedTopic.name}" to post "${post.title}"`);
-              }
+            if (assignError) {
+              console.error(`Error assigning label to post ${post.id}:`, assignError);
+            } else {
+              const topicName = userTopics[predictedLabel - 1]?.name || 'Unknown';
+              console.log(`Assigned label ${predictedLabel} (${topicName}) to post "${post.title}"`);
             }
           }
         }
