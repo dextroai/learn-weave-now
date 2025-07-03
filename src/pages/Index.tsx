@@ -2,27 +2,55 @@
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { BlogPostCard } from "@/components/BlogPostCard";
+import { TabNavigation } from "@/components/TabNavigation";
+import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { NotesEditor } from "@/components/NotesEditor";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
+import { useUserTopics } from "@/hooks/useUserTopics";
 
 const Index = () => {
-  const [selectedTab, setSelectedTab] = useState("blogs");
+  const [selectedTab, setSelectedTab] = useState("all-posts");
+  
+  // Get user topics to build tabs
+  const { data: userTopics = [] } = useUserTopics();
   
   // Extract category from selectedTab for filtering
-  const category = selectedTab === "blogs" ? undefined : selectedTab.replace("-", "-");
+  const getTopicIdFromTab = (tabId: string) => {
+    if (tabId === "all-posts") return undefined;
+    const topic = userTopics.find(t => `topic-${t.topic_id}` === tabId);
+    return topic?.topic_id;
+  };
   
-  const { data: blogPosts = [], isLoading } = useBlogPosts(category);
+  const topicId = getTopicIdFromTab(selectedTab);
+  const { data: blogPosts = [], isLoading } = useBlogPosts(topicId);
   const markPostAsReadMutation = useMarkPostAsRead();
 
   const handleMarkAsRead = (postId: string) => {
     markPostAsReadMutation.mutate(postId);
   };
 
+  // Build tabs array
+  const tabs = [
+    { id: "all-posts", label: "All Posts", count: blogPosts.length },
+    ...userTopics.map(topic => ({
+      id: `topic-${topic.topic_id}`,
+      label: topic.name,
+      count: blogPosts.filter(post => post.label_id === topic.topic_id).length
+    }))
+  ];
+
+  const handleAddTab = () => {
+    // TODO: Implement add new topic functionality
+    console.log("Add new topic");
+  };
+
   const renderContent = () => {
-    // Show notes editor for category tabs (not "blogs" and not individual posts)
-    if (selectedTab !== "blogs" && !selectedTab.startsWith("post-") && selectedTab !== "archive") {
-      return <NotesEditor category={selectedTab} />;
+    // Show notes editor for topic tabs
+    if (selectedTab.startsWith("topic-")) {
+      const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
+      if (topic) {
+        return <NotesEditor category={topic.name.toLowerCase().replace(' ', '-')} />;
+      }
     }
 
     // Show individual blog post content
@@ -85,53 +113,13 @@ const Index = () => {
       );
     }
 
-    // Show blog posts grid for "blogs" tab or archive
+    // Show blog posts grid for "all-posts" or specific topics
     return (
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {selectedTab === "archive" ? "Archive" : "All Posts"}
-          </h1>
-          <p className="text-gray-600">
-            {selectedTab === "archive" 
-              ? "Previously read articles" 
-              : "Latest blog posts from your sources"
-            }
-          </p>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="p-4 border border-gray-200 rounded-lg">
-                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : blogPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {blogPosts.map((post) => (
-              <BlogPostCard
-                key={post.id}
-                post={post}
-                onMarkAsRead={handleMarkAsRead}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-500 mb-2">No posts found</div>
-            <div className="text-sm text-gray-400">
-              {selectedTab === "archive" 
-                ? "No archived posts yet" 
-                : "No blog posts available. Try adding some blog sources in Settings."
-              }
-            </div>
-          </div>
-        )}
-      </div>
+      <BlogPostGrid 
+        posts={blogPosts}
+        isLoading={isLoading}
+        onMarkAsRead={handleMarkAsRead}
+      />
     );
   };
 
@@ -144,17 +132,16 @@ const Index = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>LearnWeave</span>
-              <span>/</span>
-              <span className="capitalize">
-                {selectedTab.startsWith("post-") 
-                  ? "Post" 
-                  : selectedTab === "blogs" 
-                    ? "All Posts" 
-                    : selectedTab.replace("-", " ")
-                }
-              </span>
             </div>
           </header>
+          
+          <TabNavigation
+            tabs={tabs}
+            activeTab={selectedTab}
+            onTabChange={setSelectedTab}
+            onAddTab={handleAddTab}
+          />
+          
           <main className="flex-1">
             {renderContent()}
           </main>
