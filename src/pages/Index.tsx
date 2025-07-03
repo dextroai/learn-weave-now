@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -124,26 +125,30 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
         <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-gray-200">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>LearnWeave</span>
+          <div className="flex justify-center w-full">
+            <div className="max-w-6xl w-full mx-auto px-8">
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-200 bg-white">
+                <SidebarTrigger className="-ml-1" />
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>LearnWeave</span>
+                </div>
+              </header>
+              
+              <TabNavigation
+                tabs={tabs}
+                activeTab={selectedTab}
+                onTabChange={setSelectedTab}
+                onAddTab={handleAddTab}
+              />
+              
+              <main className="bg-white min-h-screen">
+                {renderContent()}
+              </main>
             </div>
-          </header>
-          
-          <TabNavigation
-            tabs={tabs}
-            activeTab={selectedTab}
-            onTabChange={setSelectedTab}
-            onAddTab={handleAddTab}
-          />
-          
-          <main className="flex-1">
-            {renderContent()}
-          </main>
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
