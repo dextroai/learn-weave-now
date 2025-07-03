@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Globe, Bell, Tag } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2, Globe, Bell, Tag, Upload } from "lucide-react";
 import { useBlogs, useAddBlog, useDeleteBlog, useUpdateBlog } from "@/hooks/useBlogs";
 import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,8 @@ const Settings = () => {
 
   const [newBlog, setNewBlog] = useState({ name: "", url: "" });
   const [newTopic, setNewTopic] = useState("");
+  const [bulkBlogs, setBulkBlogs] = useState("");
+  const [bulkImporting, setBulkImporting] = useState(false);
   const [notifications, setNotifications] = useState({
     dailyDigest: true,
     newInsights: true,
@@ -68,6 +71,79 @@ const Settings = () => {
       toast({
         title: "Error",
         description: "Failed to add blog source. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const bulkAddBlogs = async () => {
+    if (!bulkBlogs.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter blog information in the format specified.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBulkImporting(true);
+    const lines = bulkBlogs.trim().split('\n').filter(line => line.trim());
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const line of lines) {
+      try {
+        // Support formats: "Name | URL" or "Name, URL" or just "URL" (use domain as name)
+        let name = "";
+        let url = "";
+
+        if (line.includes('|')) {
+          const parts = line.split('|').map(p => p.trim());
+          name = parts[0];
+          url = parts[1];
+        } else if (line.includes(',')) {
+          const parts = line.split(',').map(p => p.trim());
+          name = parts[0];
+          url = parts[1];
+        } else {
+          // Just URL provided, extract domain as name
+          url = line.trim();
+          try {
+            const domain = new URL(url).hostname.replace('www.', '');
+            name = domain.charAt(0).toUpperCase() + domain.slice(1);
+          } catch {
+            name = url;
+          }
+        }
+
+        if (!name || !url) {
+          errorCount++;
+          continue;
+        }
+
+        await addBlogMutation.mutateAsync({
+          name: name.trim(),
+          url: url.trim(),
+        });
+        successCount++;
+      } catch (error) {
+        console.error('Failed to add blog:', error);
+        errorCount++;
+      }
+    }
+
+    setBulkImporting(false);
+    setBulkBlogs("");
+
+    if (successCount > 0) {
+      toast({
+        title: "Bulk Import Complete",
+        description: `Successfully added ${successCount} blog(s). ${errorCount > 0 ? `${errorCount} failed.` : ''}`,
+      });
+    } else {
+      toast({
+        title: "Import Failed",
+        description: "No blogs were successfully added. Please check the format.",
         variant: "destructive",
       });
     }
@@ -154,7 +230,7 @@ const Settings = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Add New Source */}
+            {/* Add Single Source */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
               <div>
                 <Label htmlFor="blogName">Blog Name</Label>
@@ -188,6 +264,40 @@ const Settings = () => {
                   {addBlogMutation.isPending ? "Adding..." : "Add Source"}
                 </Button>
               </div>
+            </div>
+
+            {/* Bulk Import Section */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="mb-3">
+                <Label htmlFor="bulkBlogs" className="text-blue-900 dark:text-blue-100 font-medium">
+                  Bulk Import Blogs
+                </Label>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Add multiple blogs at once. Use one of these formats per line:
+                </p>
+                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 space-y-1">
+                  <div>• <code>Blog Name | https://example.com</code></div>
+                  <div>• <code>Blog Name, https://example.com</code></div>
+                  <div>• <code>https://example.com</code> (uses domain as name)</div>
+                </div>
+              </div>
+              <Textarea
+                id="bulkBlogs"
+                placeholder={`React Blog | https://react.dev/blog
+Vue News, https://news.vuejs.org
+https://blog.angular.io`}
+                value={bulkBlogs}
+                onChange={(e) => setBulkBlogs(e.target.value)}
+                className="min-h-[120px] mb-3"
+              />
+              <Button 
+                onClick={bulkAddBlogs}
+                disabled={bulkImporting || !bulkBlogs.trim()}
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                {bulkImporting ? "Importing..." : "Import Blogs"}
+              </Button>
             </div>
 
             {/* Existing Sources */}
