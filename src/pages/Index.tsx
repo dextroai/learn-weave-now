@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +10,6 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("blogs");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState("all");
-
-  // Extract unique labels from blog notes
-  const allLabels = ["React", "Frontend", "AI", "Machine Learning", "CSS", "Design", "TypeScript", "Best Practices", "Node.js", "Performance", "Docker", "Security"];
 
   // Mock data for blogs with different sizes and read status
   const blogNotes = [
@@ -115,15 +109,11 @@ const Index = () => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  const filteredBlogs = sortedBlogs.filter(blog => {
-    const matchesSearch = blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesLabel = selectedLabel === "all" || blog.labels.some(label => label.toLowerCase() === selectedLabel.toLowerCase());
-    
-    return matchesSearch && matchesLabel;
-  });
+  const filteredBlogs = sortedBlogs.filter(blog =>
+    blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    blog.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <SidebarProvider>
@@ -174,39 +164,6 @@ const Index = () => {
             </div>
           </header>
 
-          {/* Label Tabs at Top */}
-          <div className="bg-white border-b border-gray-200 px-6 py-3">
-            <div className="flex gap-2 overflow-x-auto">
-              <Button
-                variant={selectedLabel === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedLabel("all")}
-                className={`rounded-full px-4 py-2 text-sm whitespace-nowrap ${
-                  selectedLabel === "all" 
-                    ? "bg-yellow-400 text-black hover:bg-yellow-500" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                All Notes
-              </Button>
-              {allLabels.map((label) => (
-                <Button
-                  key={label}
-                  variant={selectedLabel === label ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedLabel(label)}
-                  className={`rounded-full px-4 py-2 text-sm whitespace-nowrap ${
-                    selectedLabel === label 
-                      ? "bg-yellow-400 text-black hover:bg-yellow-500" 
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
           {/* Main Content */}
           <div className="p-6">
             {/* Masonry Grid Layout */}
@@ -219,19 +176,6 @@ const Index = () => {
                   }`}
                 >
                   <CardContent className="p-4 h-full flex flex-col">
-                    {/* Labels moved to top */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {blog.labels.map((label) => (
-                        <Badge 
-                          key={label} 
-                          variant="outline" 
-                          className="text-xs px-2 py-0 bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-                        >
-                          {label}
-                        </Badge>
-                      ))}
-                    </div>
-
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0">
@@ -291,4 +235,3 @@ const Index = () => {
 };
 
 export default Index;
-
