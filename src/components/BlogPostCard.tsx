@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Clock } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -15,9 +16,10 @@ type BlogPost = Tables<'blog_posts'> & {
 interface BlogPostCardProps {
   post: BlogPost;
   onMarkAsRead?: (postId: string) => void;
+  className?: string;
 }
 
-export const BlogPostCard = ({ post, onMarkAsRead }: BlogPostCardProps) => {
+export const BlogPostCard = ({ post, onMarkAsRead, className }: BlogPostCardProps) => {
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
       onMarkAsRead(post.id);
@@ -38,9 +40,12 @@ export const BlogPostCard = ({ post, onMarkAsRead }: BlogPostCardProps) => {
 
   return (
     <Card 
-      className={`cursor-pointer transition-all hover:shadow-md ${
-        post.is_new ? 'border-orange-200 bg-orange-50/50' : 'border-gray-200'
-      }`}
+      className={cn(
+        `cursor-pointer transition-all hover:shadow-md ${
+          post.is_new ? 'border-orange-200 bg-orange-50/50' : 'border-gray-200'
+        }`,
+        className
+      )}
       onClick={handleClick}
     >
       <CardHeader className="pb-3">
@@ -65,15 +70,15 @@ export const BlogPostCard = ({ post, onMarkAsRead }: BlogPostCardProps) => {
       </CardHeader>
       
       {(post.summary || post.link) && (
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 flex-1">
           {post.summary && (
-            <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+            <p className="text-xs text-gray-600 line-clamp-3 mb-2">
               {post.summary}
             </p>
           )}
           
           {post.link && (
-            <div className="flex items-center gap-1 text-xs text-blue-600">
+            <div className="flex items-center gap-1 text-xs text-blue-600 mt-auto">
               <ExternalLink className="h-3 w-3" />
               <span>Read more</span>
             </div>

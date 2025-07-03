@@ -21,7 +21,6 @@ const Index = () => {
 
   // Fetch real data from Supabase
   const { data: blogPosts = [], isLoading: postsLoading } = useBlogPosts();
-  const { data: newBlogPosts = [] } = useNewBlogPosts();
   const { data: userTopics = [] } = useUserTopics();
   const markAsReadMutation = useMarkPostAsRead();
   const toggleTopicMutation = useToggleTopicActive();
@@ -41,12 +40,26 @@ const Index = () => {
     });
   };
 
-  // Filter posts based on search query
-  const filteredPosts = blogPosts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter and sort posts: unread first, then read
+  const filteredAndSortedPosts = blogPosts
+    .filter(post =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.blogs?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Sort by is_new first (unread posts at top)
+      if (a.is_new && !b.is_new) return -1;
+      if (!a.is_new && b.is_new) return 1;
+      // Then by detected_at (newest first)
+      return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime();
+    });
+
+  // Create varying heights for masonry effect
+  const getCardHeight = (index: number) => {
+    const heights = ['h-48', 'h-56', 'h-44', 'h-52', 'h-40', 'h-60'];
+    return heights[index % heights.length];
+  };
 
   if (!user) {
     return (
@@ -256,73 +269,42 @@ const Index = () => {
                 </Button>
               </div>
 
-              {/* Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Main Content Area */}
-                <div className="lg:col-span-3">
-                  {postsLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {[...Array(6)].map((_, i) => (
-                        <Card key={i} className="border-2 border-gray-200">
-                          <CardHeader className="pb-3">
-                            <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                            <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
-                            <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : filteredPosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {filteredPosts.map((post) => (
-                        <BlogPostCard
-                          key={post.id}
-                          post={post}
-                          onMarkAsRead={handleMarkAsRead}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 mb-4">No blog posts found</p>
-                      <p className="text-sm text-gray-400">
-                        Add some blogs to monitor in the Settings page to see posts here.
-                      </p>
-                    </div>
-                  )}
+              {/* Masonry Blog Posts Grid */}
+              {postsLoading ? (
+                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                  {[...Array(8)].map((_, i) => (
+                    <Card key={i} className={`border-2 border-gray-200 break-inside-avoid mb-4 ${getCardHeight(i)}`}>
+                      <CardHeader className="pb-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="h-3 bg-gray-100 rounded animate-pulse mb-2"></div>
+                        <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-
-                {/* Sidebar Content - New Posts */}
-                <div className="lg:col-span-1 space-y-4">
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-3">Latest Updates</h3>
-                    {newBlogPosts.length > 0 ? (
-                      <div className="space-y-3">
-                        {newBlogPosts.slice(0, 5).map((post) => (
-                          <div key={post.id} className="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
-                            <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1">
-                              {post.title}
-                            </h4>
-                            <div className="text-xs text-gray-500 mb-2">
-                              {post.blogs?.name} • {new Date(post.detected_at).toLocaleDateString()}
-                            </div>
-                            {post.summary && (
-                              <p className="text-xs text-gray-600 line-clamp-2">
-                                {post.summary.slice(0, 100)}...
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No new posts available</p>
-                    )}
-                  </div>
+              ) : filteredAndSortedPosts.length > 0 ? (
+                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
+                  {filteredAndSortedPosts.map((post, index) => (
+                    <div key={post.id} className="break-inside-avoid mb-4">
+                      <BlogPostCard
+                        post={post}
+                        onMarkAsRead={handleMarkAsRead}
+                        className={getCardHeight(index)}
+                      />
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4">No blog posts found</p>
+                  <p className="text-sm text-gray-400">
+                    Add some blogs to monitor in the Settings page to see posts here.
+                  </p>
+                </div>
+              )}
             </main>
           </div>
         </div>
