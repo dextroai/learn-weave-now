@@ -11,6 +11,7 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Get user topics to build tabs
   const { data: userTopics = [] } = useUserTopics();
@@ -30,6 +31,14 @@ const Index = () => {
   const filteredPosts = selectedTab === "all-posts" 
     ? allBlogPosts 
     : allBlogPosts.filter(post => post.label_id?.toString() === topicId);
+
+  // Filter posts based on search query (only for all-posts tab)
+  const searchFilteredPosts = selectedTab === "all-posts" && searchQuery
+    ? filteredPosts.filter(post => 
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.blogs?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : filteredPosts;
 
   const handleMarkAsRead = (postId: string) => {
     markPostAsReadMutation.mutate(postId);
@@ -110,14 +119,17 @@ const Index = () => {
       );
     }
 
-    // Show all posts in simple list format (reverted to original)
+    // Show all posts in simple list format with search bar
     if (selectedTab === "all-posts") {
       return (
         <div className="max-w-4xl mx-auto px-6 py-6">
           <BlogPostGrid 
-            posts={filteredPosts}
+            posts={searchFilteredPosts}
             isLoading={isLoading}
             onMarkAsRead={handleMarkAsRead}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            showSearch={true}
           />
         </div>
       );
