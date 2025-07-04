@@ -34,14 +34,15 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
     localStorage.setItem(`interactive-notes-${category}`, JSON.stringify(boxes));
   };
 
-  const createNewNoteBox = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current) {
+  const createNewNoteBox = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only create note if clicking directly on the container (not on child elements)
+    if (e.target === e.currentTarget && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const newBox: NoteBox = {
         id: Date.now().toString(),
         content: '',
-        x: e.clientX - rect.left - 150,
-        y: e.clientY - rect.top - 50,
+        x: Math.max(0, e.clientX - rect.left - 150),
+        y: Math.max(0, e.clientY - rect.top - 50),
         width: 300,
         height: 100,
       };
@@ -66,13 +67,16 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
   };
 
   const handleMouseDown = (e: React.MouseEvent, boxId: string) => {
-    if ((e.target as HTMLElement).classList.contains('drag-handle')) {
+    if ((e.target as HTMLElement).closest('.drag-handle')) {
+      e.preventDefault();
+      e.stopPropagation();
       setDraggedBox(boxId);
       const box = noteBoxes.find(b => b.id === boxId);
-      if (box) {
+      if (box && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
         setDragOffset({
-          x: e.clientX - box.x,
-          y: e.clientY - box.y,
+          x: e.clientX - rect.left - box.x,
+          y: e.clientY - rect.top - box.y,
         });
       }
     }
@@ -85,8 +89,8 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         box.id === draggedBox
           ? {
               ...box,
-              x: e.clientX - rect.left - dragOffset.x,
-              y: e.clientY - rect.top - dragOffset.y,
+              x: Math.max(0, e.clientX - rect.left - dragOffset.x),
+              y: Math.max(0, e.clientY - rect.top - dragOffset.y),
             }
           : box
       );
@@ -140,6 +144,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         onClick={createNewNoteBox}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         style={{ minHeight: 'calc(100vh - 120px)' }}
       >
         {noteBoxes.map((box) => (
@@ -152,18 +157,18 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
               width: box.width,
               minHeight: box.height,
             }}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => handleMouseDown(e, box.id)}
           >
             <div className="flex items-center justify-between p-2 border-b border-yellow-200 bg-yellow-100 rounded-t-lg">
-              <div 
-                className="drag-handle flex items-center gap-1 cursor-move flex-1"
-                onMouseDown={(e) => handleMouseDown(e, box.id)}
-              >
+              <div className="drag-handle flex items-center gap-1 cursor-move flex-1">
                 <Move className="w-3 h-3 text-gray-500" />
                 <span className="text-xs text-gray-600">Drag to move</span>
               </div>
               <button
-                onClick={() => deleteNoteBox(box.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteNoteBox(box.id);
+                }}
                 className="text-gray-500 hover:text-red-500 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -172,6 +177,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
             <textarea
               value={box.content}
               onChange={(e) => updateNoteContent(box.id, e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               placeholder="Type your notes here..."
               className="w-full min-h-[60px] p-3 bg-transparent border-none resize-none focus:outline-none text-sm leading-relaxed"
               style={{ 
@@ -184,7 +190,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         ))}
         
         {noteBoxes.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-gray-400">
               <Plus className="w-12 h-12 mx-auto mb-2" />
               <p className="text-lg">Click anywhere to create your first note</p>
