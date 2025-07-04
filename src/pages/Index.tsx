@@ -111,54 +111,15 @@ const Index = () => {
       );
     }
 
-    // Show all posts grouped by topics in horizontal layout
+    // Show all posts in simple list format (reverted to original)
     if (selectedTab === "all-posts") {
-      if (isLoading) {
-        return (
-          <div className="py-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="mb-8">
-                <div className="px-6 mb-4">
-                  <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
-                </div>
-                <div className="flex gap-4 px-6">
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="flex-shrink-0 w-80 h-32 bg-gray-200 rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      // Group posts by topics for horizontal display
-      const groupedPosts = userTopics.map(topic => ({
-        topic,
-        posts: allBlogPosts.filter(post => post.label_id === topic.topic_id)
-      })).filter(group => group.posts.length > 0);
-
-      // Posts without topics
-      const unCategorizedPosts = allBlogPosts.filter(post => !post.label_id);
-
       return (
-        <div className="py-6">
-          {groupedPosts.map(({ topic, posts }) => (
-            <HorizontalPostGroup
-              key={topic.id}
-              title={topic.name}
-              posts={posts}
-              onMarkAsRead={handleMarkAsRead}
-            />
-          ))}
-          
-          {unCategorizedPosts.length > 0 && (
-            <HorizontalPostGroup
-              title="Uncategorized"
-              posts={unCategorizedPosts}
-              onMarkAsRead={handleMarkAsRead}
-            />
-          )}
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <BlogPostGrid 
+            posts={filteredPosts}
+            isLoading={isLoading}
+            onMarkAsRead={handleMarkAsRead}
+          />
         </div>
       );
     }
