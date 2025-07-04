@@ -124,16 +124,16 @@ const Index = () => {
       );
     }
 
-    // Show filtered blog posts grid for topic tabs with interactive notes section
+    // Show filtered blog posts in horizontal layout for topic tabs with interactive notes section
     if (selectedTab.startsWith("topic-")) {
       const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
       
       return (
         <>
-          <div className="max-w-4xl mx-auto px-6 py-6">
-            <BlogPostGrid 
+          <div className="py-6">
+            <HorizontalPostGroup
+              title={topic?.name || 'Topic'}
               posts={filteredPosts}
-              isLoading={isLoading}
               onMarkAsRead={handleMarkAsRead}
             />
           </div>
