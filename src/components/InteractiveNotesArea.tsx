@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Plus, X, Move } from 'lucide-react';
 
@@ -29,13 +28,11 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
     }
   }, [category]);
 
-  // Save notes to localStorage
   const saveNotes = (boxes: NoteBox[]) => {
     localStorage.setItem(`interactive-notes-${category}`, JSON.stringify(boxes));
   };
 
   const createNewNoteBox = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only create note if clicking directly on the container (not on child elements)
     if (e.target === e.currentTarget && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const newBox: NoteBox = {
@@ -107,7 +104,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
 
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="px-6 py-3">
+      <div className="px-6 py-2 pb-1">
         <p className="text-gray-600 text-sm">
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
@@ -129,7 +126,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ minHeight: 'calc(100vh - 80px)' }}
+        style={{ minHeight: 'calc(100vh - 60px)' }}
       >
         {noteBoxes.map((box) => (
           <div

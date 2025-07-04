@@ -31,7 +31,7 @@ export const BlogPostCard = ({ post, onMarkAsRead, className, variant = 'default
     return (
       <div 
         className={cn(
-          "flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow",
+          "flex-shrink-0 w-80 h-32 bg-white rounded-lg border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow flex flex-col",
           className
         )}
         onClick={handleClick}
@@ -53,13 +53,13 @@ export const BlogPostCard = ({ post, onMarkAsRead, className, variant = 'default
           )}
         </div>
         
-        {/* Title */}
-        <h3 className="text-sm font-medium text-gray-900 line-clamp-3 mb-2 leading-tight">
+        {/* Title - flex-1 to take remaining space */}
+        <h3 className="text-sm font-medium text-gray-900 line-clamp-3 mb-2 leading-tight flex-1">
           {post.title}
         </h3>
         
-        {/* Date */}
-        <div className="text-xs text-gray-400">
+        {/* Date - fixed at bottom */}
+        <div className="text-xs text-gray-400 mt-auto">
           {new Date(post.detected_at).toLocaleDateString()}
         </div>
       </div>
