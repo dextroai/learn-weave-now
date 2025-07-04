@@ -105,26 +105,10 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
     }
   };
 
-  const getCategoryTitle = (category: string) => {
-    switch (category) {
-      case 'nlp':
-        return 'NLP';
-      case 'mlops':
-        return 'MLOps';
-      case 'traditional-ml':
-        return 'Traditional ML';
-      case 'computer-vision':
-        return 'Computer Vision';
-      default:
-        return category.charAt(0).toUpperCase() + category.slice(1);
-    }
-  };
-
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-900">{getCategoryTitle(category)}</h1>
-        <p className="text-gray-600 text-sm mt-1">
+      <div className="px-6 py-3">
+        <p className="text-gray-600 text-sm">
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -145,7 +129,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ minHeight: 'calc(100vh - 120px)' }}
+        style={{ minHeight: 'calc(100vh - 80px)' }}
       >
         {noteBoxes.map((box) => (
           <div
