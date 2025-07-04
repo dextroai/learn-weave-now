@@ -1,5 +1,5 @@
 
-import { Home } from "lucide-react";
+import { Home, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -7,7 +7,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppSidebarProps {
   selectedTab: string;
@@ -15,7 +17,18 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
+  const { user, signOut } = useAuth();
   const isActive = selectedTab === "all-posts";
+
+  const handleAccountClick = () => {
+    if (user) {
+      // If user is logged in, show account options or sign out
+      signOut();
+    } else {
+      // If user is not logged in, redirect to auth page
+      window.location.href = "/auth";
+    }
+  };
 
   return (
     <Sidebar 
@@ -38,9 +51,24 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-gray-900">
+      
+      <SidebarContent className="bg-gray-900 flex-1">
         {/* Additional content can be added here later */}
       </SidebarContent>
+
+      <SidebarFooter className="bg-gray-900 flex items-center justify-center pb-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleAccountClick}
+              className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-800"
+              title={user ? "Sign Out" : "Sign In"}
+            >
+              <User className="h-6 w-6" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
