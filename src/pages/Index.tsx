@@ -5,6 +5,7 @@ import { TabNavigation } from "@/components/TabNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { HorizontalPostGroup } from "@/components/HorizontalPostGroup";
 import { InteractiveNotesArea } from "@/components/InteractiveNotesArea";
+import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
@@ -12,6 +13,7 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   
   // Get user topics to build tabs
   const { data: userTopics = [] } = useUserTopics();
@@ -55,7 +57,7 @@ const Index = () => {
   ];
 
   const handleAddTab = () => {
-    console.log("Add new topic");
+    setIsAddTopicDialogOpen(true);
   };
 
   const renderContent = () => {
@@ -100,7 +102,7 @@ const Index = () => {
                   >
                     Read full article
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>
                 </div>
@@ -199,6 +201,11 @@ const Index = () => {
           </div>
         </SidebarInset>
       </div>
+      
+      <AddTopicDialog 
+        open={isAddTopicDialogOpen}
+        onOpenChange={setIsAddTopicDialogOpen}
+      />
     </SidebarProvider>
   );
 };

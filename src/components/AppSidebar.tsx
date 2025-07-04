@@ -6,6 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
@@ -21,7 +22,7 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
       collapsible="none"
       className="w-16 bg-gray-900 border-r border-gray-800"
     >
-      <SidebarContent className="bg-gray-900 flex items-center justify-center pt-8">
+      <SidebarHeader className="bg-gray-900 flex items-center justify-center pt-4 pb-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -36,6 +37,9 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent className="bg-gray-900">
+        {/* Additional content can be added here later */}
       </SidebarContent>
     </Sidebar>
   );
