@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -130,9 +129,9 @@ const Index = () => {
       
       return (
         <>
-          <div className="py-6">
+          <div className="py-2">
             <HorizontalPostGroup
-              title={topic?.name || 'Topic'}
+              title=""
               posts={filteredPosts}
               onMarkAsRead={handleMarkAsRead}
             />

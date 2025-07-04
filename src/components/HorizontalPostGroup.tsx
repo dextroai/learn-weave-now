@@ -51,11 +51,13 @@ export function HorizontalPostGroup({ title, posts, onMarkAsRead }: HorizontalPo
 
   return (
     <div className="mb-8">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-4 px-6">
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-        <span className="text-sm text-gray-500">{posts.length} posts</span>
-      </div>
+      {/* Section Header - only show if title is provided */}
+      {title && (
+        <div className="flex items-center justify-between mb-4 px-6">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <span className="text-sm text-gray-500">{posts.length} posts</span>
+        </div>
+      )}
 
       {/* Scrollable Container */}
       <div className="relative">
