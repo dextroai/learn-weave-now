@@ -19,10 +19,15 @@ interface BlogPostGridProps {
 export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridProps) {
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="p-2 border-b border-gray-100">
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+      <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="break-inside-avoid">
+            <div className="bg-gray-200 rounded-lg animate-pulse" style={{ height: `${Math.floor(Math.random() * 200) + 200}px` }}>
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -41,13 +46,14 @@ export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridPro
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+    <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
       {posts.map((post) => (
-        <BlogPostCard
-          key={post.id}
-          post={post}
-          onMarkAsRead={onMarkAsRead}
-        />
+        <div key={post.id} className="break-inside-avoid">
+          <BlogPostCard
+            post={post}
+            onMarkAsRead={onMarkAsRead}
+          />
+        </div>
       ))}
     </div>
   );
