@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TabNavigation } from "@/components/TabNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
-import { NotesEditor } from "@/components/NotesEditor";
+import { InteractiveNotesArea } from "@/components/InteractiveNotesArea";
 import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
@@ -46,7 +45,6 @@ const Index = () => {
   ];
 
   const handleAddTab = () => {
-    // TODO: Implement add new topic functionality
     console.log("Add new topic");
   };
 
@@ -111,7 +109,7 @@ const Index = () => {
       );
     }
 
-    // Show filtered blog posts grid for topic tabs with notes section
+    // Show filtered blog posts grid for topic tabs with interactive notes section
     if (selectedTab.startsWith("topic-")) {
       const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
       
@@ -125,14 +123,12 @@ const Index = () => {
             />
           </div>
           
-          {/* Full-width separator */}
           <div className="w-full mt-8">
             <Separator className="w-full" />
           </div>
           
-          {/* Full-width notes section */}
           <div className="w-full min-h-screen bg-gray-50">
-            <NotesEditor category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
+            <InteractiveNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
           </div>
         </>
       );
