@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -152,20 +153,22 @@ const Index = () => {
         <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
         <SidebarInset className="flex-1">
           <div className="w-full">
-            <div className="max-w-2xl mx-auto px-6 py-4">
-              <header className="flex h-8 shrink-0 items-center gap-2 mb-4">
-                <SidebarTrigger className="-ml-1" />
-              </header>
-              
-              <TabNavigation
-                tabs={tabs}
-                activeTab={selectedTab}
-                onTabChange={setSelectedTab}
-                onAddTab={handleAddTab}
-              />
+            {/* Header with Google-style layout */}
+            <div className="w-full bg-white border-b border-gray-200">
+              <div className="flex items-center px-6 py-4">
+                <SidebarTrigger className="-ml-1 mr-4" />
+                <div className="flex-1">
+                  <TabNavigation
+                    tabs={tabs}
+                    activeTab={selectedTab}
+                    onTabChange={setSelectedTab}
+                    onAddTab={handleAddTab}
+                  />
+                </div>
+              </div>
             </div>
             
-            <main className="mt-4">
+            <main className="mt-0">
               {renderContent()}
             </main>
           </div>
