@@ -98,18 +98,11 @@ All colors MUST be HSL.
   }
 }
 
-/* Pinterest-style masonry layout utilities */
+/* List layout utilities */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .line-clamp-6 {
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

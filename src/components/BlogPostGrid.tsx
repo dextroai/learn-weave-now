@@ -19,14 +19,14 @@ interface BlogPostGridProps {
 export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridProps) {
   if (isLoading) {
     return (
-      <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-        {[...Array(12)].map((_, i) => (
-          <div key={i} className="break-inside-avoid">
-            <div className="bg-gray-200 rounded-lg animate-pulse" style={{ height: `${Math.floor(Math.random() * 200) + 200}px` }}>
-              <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-              </div>
+      <div className="bg-white rounded-lg shadow-sm">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="flex items-start gap-3 py-3 px-4 border-b border-gray-100 last:border-b-0">
+            <div className="w-2 h-2 bg-gray-200 rounded-full mt-2 animate-pulse"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+              <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/6 animate-pulse"></div>
             </div>
           </div>
         ))}
@@ -36,7 +36,7 @@ export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridPro
 
   if (posts.length === 0) {
     return (
-      <div className="text-center py-12 px-6">
+      <div className="text-center py-12 px-6 bg-white rounded-lg shadow-sm">
         <div className="text-gray-500 mb-2">No posts found</div>
         <div className="text-sm text-gray-400">
           No blog posts available. Try adding some blog sources in Settings.
@@ -46,14 +46,13 @@ export function BlogPostGrid({ posts, isLoading, onMarkAsRead }: BlogPostGridPro
   }
 
   return (
-    <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+    <div className="bg-white rounded-lg shadow-sm">
       {posts.map((post) => (
-        <div key={post.id} className="break-inside-avoid">
-          <BlogPostCard
-            post={post}
-            onMarkAsRead={onMarkAsRead}
-          />
-        </div>
+        <BlogPostCard
+          key={post.id}
+          post={post}
+          onMarkAsRead={onMarkAsRead}
+        />
       ))}
     </div>
   );
