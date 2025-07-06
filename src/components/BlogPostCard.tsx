@@ -1,6 +1,8 @@
 
 import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -13,17 +15,31 @@ type BlogPost = Tables<'blog_posts'> & {
 interface BlogPostCardProps {
   post: BlogPost;
   onMarkAsRead?: (postId: string) => void;
+  onInsightClick?: (post: BlogPost) => void;
   className?: string;
   variant?: 'default' | 'horizontal';
 }
 
-export const BlogPostCard = ({ post, onMarkAsRead, className, variant = 'default' }: BlogPostCardProps) => {
+export const BlogPostCard = ({ 
+  post, 
+  onMarkAsRead, 
+  onInsightClick,
+  className, 
+  variant = 'default' 
+}: BlogPostCardProps) => {
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
       onMarkAsRead(post.id);
     }
     if (post.link) {
       window.open(post.link, '_blank');
+    }
+  };
+
+  const handleInsightClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onInsightClick) {
+      onInsightClick(post);
     }
   };
 
@@ -66,7 +82,7 @@ export const BlogPostCard = ({ post, onMarkAsRead, className, variant = 'default
     );
   }
 
-  // Default vertical layout
+  // Default vertical layout with Insight button
   return (
     <div 
       className={cn(
@@ -95,6 +111,19 @@ export const BlogPostCard = ({ post, onMarkAsRead, className, variant = 'default
         <div className="text-xs text-gray-400 mt-1">
           {new Date(post.detected_at).toLocaleDateString()}
         </div>
+      </div>
+
+      {/* Insight button - only show in default variant */}
+      <div className="flex-shrink-0 ml-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleInsightClick}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <Eye className="h-4 w-4" />
+          <span className="ml-1">Insight</span>
+        </Button>
       </div>
     </div>
   );
