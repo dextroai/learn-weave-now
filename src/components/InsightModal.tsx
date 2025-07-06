@@ -31,56 +31,19 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
     console.log('Disliked post:', post.title);
   };
 
-  const handleRedirectToLabel = () => {
-    if (post.link) {
-      // Get the topic name from label_id or use a default category
-      const getTopicNameFromLabelId = (labelId: number | null) => {
-        const topicMap: Record<number, string> = {
-          1: 'nlp',
-          2: 'mlops', 
-          3: 'traditional-ml',
-          4: 'computer-vision'
-        };
-        return labelId ? topicMap[labelId] || 'general' : 'general';
-      };
-
-      const topicName = getTopicNameFromLabelId(post.label_id);
-      const category = topicName.toLowerCase().replace(' ', '-');
-      
-      // Get existing notes from localStorage
-      const existingNotes = localStorage.getItem(`interactive-notes-${category}`) || '[]';
-      let noteBoxes = JSON.parse(existingNotes);
-      
-      // Create a new note box with the link and post title
-      const newNoteBox = {
-        id: Date.now().toString(),
-        content: `${post.title}\n${post.link}\n\n`,
-        x: Math.random() * 300,
-        y: Math.random() * 200,
-        width: 300,
-        height: 150,
-      };
-      
-      noteBoxes.push(newNoteBox);
-      
-      // Save updated notes
-      localStorage.setItem(`interactive-notes-${category}`, JSON.stringify(noteBoxes));
-      
-      // Add post to knowledge bank
-      window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
-        detail: { post } 
-      }));
-      
-      // Close modal and redirect to the topic tab
-      onOpenChange(false);
-      
-      // Trigger a custom event to switch to the topic tab
-      window.dispatchEvent(new CustomEvent('switchToTopic', { 
-        detail: { topicId: post.label_id } 
-      }));
-      
-      console.log('Added to notes in category:', category);
-    }
+  const handleAddToKnowledge = () => {
+    // Add post to knowledge bank
+    window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
+      detail: { post } 
+    }));
+    
+    // Close modal and redirect to All Posts with Knowledge Bank sub-tab
+    onOpenChange(false);
+    
+    // Trigger a custom event to switch to All Posts tab and Knowledge Bank sub-tab
+    window.dispatchEvent(new CustomEvent('switchToKnowledgeBank'));
+    
+    console.log('Added to Knowledge Bank:', post.title);
   };
 
   return (
@@ -120,12 +83,11 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleRedirectToLabel}
+            onClick={handleAddToKnowledge}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-            disabled={!post.link}
           >
             <Move className="h-4 w-4" />
-            <span className="text-xs">Add to Notes</span>
+            <span className="text-xs">Add to Knowledge</span>
           </Button>
         </div>
         

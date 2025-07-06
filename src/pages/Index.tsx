@@ -31,10 +31,17 @@ const Index = () => {
       }
     };
 
+    const handleSwitchToKnowledgeBank = () => {
+      setSelectedTab("all-posts");
+      setSelectedSubTab("knowledge-bank");
+    };
+
     window.addEventListener('switchToTopic', handleSwitchToTopic as EventListener);
+    window.addEventListener('switchToKnowledgeBank', handleSwitchToKnowledgeBank as EventListener);
     
     return () => {
       window.removeEventListener('switchToTopic', handleSwitchToTopic as EventListener);
+      window.removeEventListener('switchToKnowledgeBank', handleSwitchToKnowledgeBank as EventListener);
     };
   }, []);
   
