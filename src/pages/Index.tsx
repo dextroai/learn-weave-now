@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -17,6 +17,22 @@ const Index = () => {
   
   // Get user topics to build tabs
   const { data: userTopics = [] } = useUserTopics();
+  
+  // Listen for custom events to switch tabs
+  useEffect(() => {
+    const handleSwitchToTopic = (event: CustomEvent) => {
+      const { topicId } = event.detail;
+      if (topicId) {
+        setSelectedTab(`topic-${topicId}`);
+      }
+    };
+
+    window.addEventListener('switchToTopic', handleSwitchToTopic as EventListener);
+    
+    return () => {
+      window.removeEventListener('switchToTopic', handleSwitchToTopic as EventListener);
+    };
+  }, []);
   
   // Extract category from selectedTab for filtering
   const getTopicIdFromTab = (tabId: string) => {
