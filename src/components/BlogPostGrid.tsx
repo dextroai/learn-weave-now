@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { InsightModal } from "@/components/InsightModal";
@@ -20,6 +21,7 @@ interface BlogPostGridProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   showSearch?: boolean;
+  renderSubNavigation?: () => React.ReactNode;
 }
 
 export function BlogPostGrid({ 
@@ -28,7 +30,8 @@ export function BlogPostGrid({
   onMarkAsRead, 
   searchQuery = "", 
   onSearchChange, 
-  showSearch = false 
+  showSearch = false,
+  renderSubNavigation
 }: BlogPostGridProps) {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
@@ -49,6 +52,11 @@ export function BlogPostGrid({
               </div>
               <div className="pl-10 pr-4 py-2 bg-gray-100 rounded-full h-10 animate-pulse"></div>
             </div>
+          </div>
+        )}
+        {renderSubNavigation && (
+          <div className="px-4 pt-4">
+            {renderSubNavigation()}
           </div>
         )}
         {[...Array(8)].map((_, i) => (
@@ -84,6 +92,11 @@ export function BlogPostGrid({
             </div>
           </div>
         )}
+        {renderSubNavigation && (
+          <div className="px-4 pt-4">
+            {renderSubNavigation()}
+          </div>
+        )}
         <div className="text-center py-12 px-6">
           <div className="text-gray-500 mb-2">No posts found</div>
           <div className="text-sm text-gray-400">
@@ -113,6 +126,11 @@ export function BlogPostGrid({
             </div>
           </div>
         )}
+        {renderSubNavigation && (
+          <div className="px-4 pt-4">
+            {renderSubNavigation()}
+          </div>
+        )}
         <div className="text-center py-12 px-6">
           <div className="text-gray-500 mb-2">No posts found</div>
           <div className="text-sm text-gray-400">
@@ -140,6 +158,11 @@ export function BlogPostGrid({
                 className="pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300"
               />
             </div>
+          </div>
+        )}
+        {renderSubNavigation && (
+          <div className="px-4 pt-4">
+            {renderSubNavigation()}
           </div>
         )}
         {posts.map((post) => (

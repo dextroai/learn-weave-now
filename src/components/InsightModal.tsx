@@ -66,6 +66,11 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
       // Save updated notes
       localStorage.setItem(`interactive-notes-${category}`, JSON.stringify(noteBoxes));
       
+      // Add post to knowledge bank
+      window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
+        detail: { post } 
+      }));
+      
       // Close modal and redirect to the topic tab
       onOpenChange(false);
       

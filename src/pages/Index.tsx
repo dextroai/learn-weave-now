@@ -6,17 +6,21 @@ import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { HorizontalPostGroup } from "@/components/HorizontalPostGroup";
 import { InteractiveNotesArea } from "@/components/InteractiveNotesArea";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
+import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
+import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
+  const [selectedSubTab, setSelectedSubTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   
   // Get user topics to build tabs
   const { data: userTopics = [] } = useUserTopics();
+  const { knowledgeBankPosts } = useKnowledgeBank();
   
   // Listen for custom events to switch tabs
   useEffect(() => {
@@ -137,17 +141,30 @@ const Index = () => {
       );
     }
 
-    // Show all posts in simple list format with search bar
+    // Show all posts in simple list format with search bar and subparts
     if (selectedTab === "all-posts") {
+      // Determine which posts to show based on sub-tab
+      const postsToShow = selectedSubTab === "knowledge-bank" 
+        ? knowledgeBankPosts 
+        : searchFilteredPosts;
+
       return (
         <div className="max-w-4xl mx-auto px-6 py-6">
           <BlogPostGrid 
-            posts={searchFilteredPosts}
+            posts={postsToShow}
             isLoading={isLoading}
             onMarkAsRead={handleMarkAsRead}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             showSearch={true}
+            renderSubNavigation={() => (
+              <AllPostsSubNavigation
+                activeSubTab={selectedSubTab}
+                onSubTabChange={setSelectedSubTab}
+                allPostsCount={allBlogPosts.length}
+                knowledgeBankCount={knowledgeBankPosts.length}
+              />
+            )}
           />
         </div>
       );
