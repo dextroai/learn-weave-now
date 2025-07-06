@@ -113,13 +113,12 @@ export const BlogPostCard = ({
         </div>
       </div>
 
-      {/* Insight button - only show in default variant */}
+      {/* Insight button - always visible now */}
       <div className="flex-shrink-0 ml-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleInsightClick}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <Eye className="h-4 w-4" />
           <span className="ml-1">Insight</span>
