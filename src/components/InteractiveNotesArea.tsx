@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Plus, X, Move } from 'lucide-react';
 
@@ -12,9 +13,10 @@ interface NoteBox {
 
 interface InteractiveNotesAreaProps {
   category: string;
+  pageTitle?: string;
 }
 
-export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
+export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAreaProps) {
   const [noteBoxes, setNoteBoxes] = useState<NoteBox[]>([]);
   const [draggedBox, setDraggedBox] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -104,7 +106,10 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
 
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="px-6 py-2 pb-1">
+      <div className="px-6 py-2 pb-1 border-b border-gray-200">
+        {pageTitle && (
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">{pageTitle}</h1>
+        )}
         <p className="text-gray-600 text-sm">
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
@@ -126,7 +131,7 @@ export function InteractiveNotesArea({ category }: InteractiveNotesAreaProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ minHeight: 'calc(100vh - 60px)' }}
+        style={{ minHeight: 'calc(100vh - 120px)' }}
       >
         {noteBoxes.map((box) => (
           <div

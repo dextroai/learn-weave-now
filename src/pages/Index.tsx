@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
 
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
@@ -185,9 +186,9 @@ const Index = () => {
       
       if (topicSubTab === "notes") {
         return (
-          <div className="max-w-4xl mx-auto px-6 py-6">
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="px-4 pt-4">
+          <div className="h-screen flex flex-col">
+            <div className="bg-white border-b border-gray-200">
+              <div className="max-w-4xl mx-auto px-6 pt-4">
                 <TopicSubNavigation
                   activeSubTab={topicSubTab}
                   onSubTabChange={setTopicSubTab}
@@ -196,8 +197,8 @@ const Index = () => {
                 />
               </div>
             </div>
-            <div className="w-full min-h-screen bg-gray-50 mt-6 rounded-lg">
-              <InteractiveNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
+            <div className="flex-1">
+              <PageBasedNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
             </div>
           </div>
         );
