@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -17,7 +16,7 @@ import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
   const [selectedSubTab, setSelectedSubTab] = useState("all");
-  const [topicSubTab, setTopicSubTab] = useState("sources"); // Default to sources for topic tabs
+  const [topicSubTab, setTopicSubTab] = useState("notes"); // Default to notes for topic tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   

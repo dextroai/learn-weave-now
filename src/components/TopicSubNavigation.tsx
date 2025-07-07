@@ -15,8 +15,8 @@ export const TopicSubNavigation = ({
   sourcesCount 
 }: TopicSubNavigationProps) => {
   const subTabs = [
-    { id: 'sources', label: 'Sources', count: sourcesCount },
-    { id: 'notes', label: 'Notes', count: notesCount }
+    { id: 'notes', label: 'Notes', count: notesCount },
+    { id: 'sources', label: 'Sources', count: sourcesCount }
   ];
 
   return (
