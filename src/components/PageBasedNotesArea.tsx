@@ -176,7 +176,7 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
               <p className="text-lg mb-2">No pages yet</p>
               <p className="text-sm">Create your first page to start taking notes</p>
             </div>
-          )}
+          </div>
         )}
       </div>
     </div>
