@@ -76,10 +76,10 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
 
   return (
     <div className="flex h-screen">
-      {/* Left Sidebar - Made smaller */}
+      {/* Left Sidebar - Made smaller and reaches to top */}
       <div className="w-60 bg-purple-50 border-r border-purple-200 flex flex-col">
-        {/* Add Page Section - Reduced padding and size */}
-        <div className="p-4 bg-purple-100">
+        {/* Add Page Section - No top padding, reaches to top */}
+        <div className="p-4 pt-6 bg-purple-100">
           <h2 className="text-lg font-semibold text-purple-900 mb-3">Add Page</h2>
           {!isAddingPage ? (
             <button
@@ -122,7 +122,7 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
           )}
         </div>
         
-        {/* Pages Section - Reduced padding */}
+        {/* Pages Section */}
         <div className="flex-1 p-4">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Pages</h2>
           
