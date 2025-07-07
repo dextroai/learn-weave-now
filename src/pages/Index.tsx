@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -7,6 +8,7 @@ import { HorizontalPostGroup } from "@/components/HorizontalPostGroup";
 import { InteractiveNotesArea } from "@/components/InteractiveNotesArea";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
+import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { Separator } from "@/components/ui/separator";
 import { useBlogPosts, useMarkPostAsRead } from "@/hooks/useBlogPosts";
 import { useUserTopics } from "@/hooks/useUserTopics";
@@ -15,6 +17,7 @@ import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("all-posts");
   const [selectedSubTab, setSelectedSubTab] = useState("all");
+  const [topicSubTab, setTopicSubTab] = useState("sources"); // Default to sources for topic tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   
@@ -177,29 +180,48 @@ const Index = () => {
       );
     }
 
-    // Show filtered blog posts in horizontal layout for topic tabs with interactive notes section
+    // Show topic content with subnavigation for Notes/Sources
     if (selectedTab.startsWith("topic-")) {
       const topic = userTopics.find(t => `topic-${t.topic_id}` === selectedTab);
       
-      return (
-        <>
-          <div className="py-2">
-            <HorizontalPostGroup
-              title=""
+      if (topicSubTab === "notes") {
+        return (
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="px-4 pt-4">
+                <TopicSubNavigation
+                  activeSubTab={topicSubTab}
+                  onSubTabChange={setTopicSubTab}
+                  notesCount={0}
+                  sourcesCount={filteredPosts.length}
+                />
+              </div>
+            </div>
+            <div className="w-full min-h-screen bg-gray-50 mt-6 rounded-lg">
+              <InteractiveNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
+            </div>
+          </div>
+        );
+      } else {
+        // Sources view - show blog posts
+        return (
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <BlogPostGrid 
               posts={filteredPosts}
+              isLoading={isLoading}
               onMarkAsRead={handleMarkAsRead}
+              renderSubNavigation={() => (
+                <TopicSubNavigation
+                  activeSubTab={topicSubTab}
+                  onSubTabChange={setTopicSubTab}
+                  notesCount={0}
+                  sourcesCount={filteredPosts.length}
+                />
+              )}
             />
           </div>
-          
-          <div className="w-full mt-8">
-            <Separator className="w-full" />
-          </div>
-          
-          <div className="w-full min-h-screen bg-gray-50">
-            <InteractiveNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
-          </div>
-        </>
-      );
+        );
+      }
     }
 
     // Fallback
