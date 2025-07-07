@@ -78,43 +78,61 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
     <div className="flex h-full">
       {/* Sidebar with pages */}
       <div className="w-64 bg-purple-50 border-r border-purple-200 flex flex-col">
-        <div className="p-4 border-b border-purple-200">
-          <button
-            onClick={() => setIsAddingPage(true)}
-            className="flex items-center gap-2 w-full p-2 text-sm text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Page
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto">
-          {isAddingPage && (
-            <div className="p-3 border-b border-purple-200">
+        {/* Add Page Section */}
+        <div className="p-4 bg-purple-100 border-b border-purple-200">
+          <h3 className="text-sm font-medium text-purple-900 mb-3">Add Page</h3>
+          {!isAddingPage ? (
+            <button
+              onClick={() => setIsAddingPage(true)}
+              className="flex items-center gap-2 w-full p-3 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              New Page
+            </button>
+          ) : (
+            <div className="space-y-2">
               <input
                 type="text"
                 value={newPageTitle}
                 onChange={(e) => setNewPageTitle(e.target.value)}
                 onKeyDown={handleKeyPress}
-                onBlur={() => {
-                  if (newPageTitle.trim()) {
-                    addNewPage();
-                  } else {
-                    setIsAddingPage(false);
-                  }
-                }}
-                placeholder="Page title..."
+                placeholder="Enter page title..."
                 className="w-full p-2 text-sm border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                 autoFocus
               />
+              <div className="flex gap-2">
+                <button
+                  onClick={addNewPage}
+                  disabled={!newPageTitle.trim()}
+                  className="flex-1 px-3 py-1 text-xs bg-purple-600 text-white hover:bg-purple-700 disabled:bg-purple-300 rounded transition-colors"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAddingPage(false);
+                    setNewPageTitle('');
+                  }}
+                  className="flex-1 px-3 py-1 text-xs bg-gray-300 text-gray-700 hover:bg-gray-400 rounded transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
+        </div>
+        
+        {/* Pages List */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-3">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Pages</h3>
+          </div>
           
           {pages.map((page) => (
             <div
               key={page.id}
-              className={`flex items-center justify-between p-3 border-b border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors ${
-                activePage === page.id ? 'bg-purple-100 border-l-4 border-l-purple-500' : ''
+              className={`flex items-center justify-between p-3 mx-3 mb-2 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors ${
+                activePage === page.id ? 'bg-purple-200 border border-purple-300' : 'bg-white border border-purple-100'
               }`}
               onClick={() => setActivePage(page.id)}
             >
@@ -134,6 +152,13 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
               </button>
             </div>
           ))}
+          
+          {pages.length === 0 && (
+            <div className="p-4 text-center text-gray-500">
+              <p className="text-sm">No pages yet</p>
+              <p className="text-xs text-gray-400 mt-1">Create your first page above</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -151,7 +176,7 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
               <p className="text-lg mb-2">No pages yet</p>
               <p className="text-sm">Create your first page to start taking notes</p>
             </div>
-          </div>
+          )}
         )}
       </div>
     </div>
