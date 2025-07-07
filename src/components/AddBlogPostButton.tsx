@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,10 +13,7 @@ export const AddBlogPostButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    link: "",
-    summary: "",
-    blogName: "",
-    blogUrl: ""
+    link: ""
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -38,12 +34,24 @@ export const AddBlogPostButton = () => {
         return;
       }
 
+      // Extract domain from URL to create blog name and URL
+      let blogName = "";
+      let blogUrl = "";
+      try {
+        const url = new URL(formData.link);
+        blogName = url.hostname.replace('www.', '');
+        blogUrl = `${url.protocol}//${url.hostname}`;
+      } catch {
+        blogName = "Manual Entry";
+        blogUrl = formData.link;
+      }
+
       // First, check if blog exists or create it
       let blogId: string;
       const { data: existingBlog } = await supabase
         .from('blogs')
         .select('id')
-        .eq('url', formData.blogUrl)
+        .eq('url', blogUrl)
         .eq('user_id', user.id)
         .single();
 
@@ -54,8 +62,8 @@ export const AddBlogPostButton = () => {
         const { data: newBlog, error: blogError } = await supabase
           .from('blogs')
           .insert({
-            name: formData.blogName,
-            url: formData.blogUrl,
+            name: blogName,
+            url: blogUrl,
             category: 'manual',
             user_id: user.id
           })
@@ -72,7 +80,6 @@ export const AddBlogPostButton = () => {
         .insert({
           title: formData.title,
           link: formData.link,
-          summary: formData.summary,
           blog_id: blogId,
           is_new: true
         })
@@ -105,10 +112,7 @@ export const AddBlogPostButton = () => {
       // Reset form and close dialog
       setFormData({
         title: "",
-        link: "",
-        summary: "",
-        blogName: "",
-        blogUrl: ""
+        link: ""
       });
       setIsOpen(false);
 
@@ -140,7 +144,7 @@ export const AddBlogPostButton = () => {
           <span className="text-sm">Add Post</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Add New Blog Post</DialogTitle>
         </DialogHeader>
@@ -164,40 +168,6 @@ export const AddBlogPostButton = () => {
               value={formData.link}
               onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
               placeholder="https://example.com/post"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="summary">Summary (Optional)</Label>
-            <Textarea
-              id="summary"
-              value={formData.summary}
-              onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
-              placeholder="Brief summary of the post"
-              rows={3}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="blogName">Blog Name</Label>
-            <Input
-              id="blogName"
-              value={formData.blogName}
-              onChange={(e) => setFormData(prev => ({ ...prev, blogName: e.target.value }))}
-              placeholder="e.g., TechCrunch"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="blogUrl">Blog URL</Label>
-            <Input
-              id="blogUrl"
-              type="url"
-              value={formData.blogUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, blogUrl: e.target.value }))}
-              placeholder="https://techcrunch.com"
               required
             />
           </div>
