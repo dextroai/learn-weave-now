@@ -53,18 +53,18 @@ export const AddBlogPostButton = () => {
         .select('id')
         .eq('url', blogUrl)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (existingBlog) {
         blogId = existingBlog.id;
       } else {
-        // Create new blog
+        // Create new blog - using 'tech' as category instead of 'manual'
         const { data: newBlog, error: blogError } = await supabase
           .from('blogs')
           .insert({
             name: blogName,
             url: blogUrl,
-            category: 'manual',
+            category: 'tech',
             user_id: user.id
           })
           .select('id')
