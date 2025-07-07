@@ -75,16 +75,16 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
   };
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar with pages */}
+    <div className="flex h-screen">
+      {/* Left Sidebar */}
       <div className="w-80 bg-purple-50 border-r border-purple-200 flex flex-col">
         {/* Add Page Section */}
-        <div className="p-6 bg-purple-100 border-b border-purple-200">
-          <h2 className="text-lg font-semibold text-purple-900 mb-4">Add Page</h2>
+        <div className="p-6 bg-purple-100">
+          <h2 className="text-xl font-semibold text-purple-900 mb-4">Add Page</h2>
           {!isAddingPage ? (
             <button
               onClick={() => setIsAddingPage(true)}
-              className="flex items-center justify-center gap-3 w-full p-4 text-base bg-purple-600 text-white hover:bg-purple-700 rounded-xl transition-colors font-medium shadow-sm"
+              className="w-full flex items-center justify-center gap-3 p-4 bg-purple-600 text-white hover:bg-purple-700 rounded-xl transition-colors font-medium text-lg"
             >
               <Plus className="w-5 h-5" />
               New Page
@@ -97,14 +97,14 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
                 onChange={(e) => setNewPageTitle(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Enter page title..."
-                className="w-full p-3 text-sm border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button
                   onClick={addNewPage}
                   disabled={!newPageTitle.trim()}
-                  className="flex-1 px-4 py-2 text-sm bg-purple-600 text-white hover:bg-purple-700 disabled:bg-purple-300 rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 disabled:bg-purple-300 rounded-lg transition-colors font-medium"
                 >
                   Add
                 </button>
@@ -113,7 +113,7 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
                     setIsAddingPage(false);
                     setNewPageTitle('');
                   }}
-                  className="flex-1 px-4 py-2 text-sm bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -122,26 +122,24 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
           )}
         </div>
         
-        {/* Pages List */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Pages</h2>
-          </div>
+        {/* Pages Section */}
+        <div className="flex-1 p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Pages</h2>
           
           {pages.length > 0 ? (
-            <div className="px-4 pb-4">
+            <div className="space-y-3">
               {pages.map((page) => (
                 <div
                   key={page.id}
-                  className={`flex items-center justify-between p-4 mb-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors ${
                     activePage === page.id 
                       ? 'bg-white border-2 border-purple-300 shadow-sm' 
-                      : 'bg-white/50 border border-purple-100 hover:bg-white hover:border-purple-200'
+                      : 'bg-white/60 border border-purple-100 hover:bg-white hover:border-purple-200'
                   }`}
                   onClick={() => setActivePage(page.id)}
                 >
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                    <h3 className="font-medium text-gray-900 truncate">
                       {page.title}
                     </h3>
                   </div>
@@ -158,10 +156,10 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-              <div className="text-gray-400 mb-2">
-                <div className="text-lg font-medium">No pages yet</div>
-                <div className="text-sm text-gray-500 mt-1">Create your first page above</div>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-gray-500">
+                <div className="text-lg font-medium mb-2">No pages yet</div>
+                <div className="text-sm">Create your first page above</div>
               </div>
             </div>
           )}
