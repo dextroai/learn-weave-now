@@ -1,6 +1,5 @@
+
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { TabNavigation } from "@/components/TabNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { HorizontalPostGroup } from "@/components/HorizontalPostGroup";
@@ -255,38 +254,30 @@ const Index = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
-        <SidebarInset className="flex-1">
-          <div className="w-full">
-            {/* Header with Google-style layout */}
-            <div className="w-full bg-white border-b border-gray-200">
-              <div className="flex items-center px-6 py-4">
-                <SidebarTrigger className="-ml-1 mr-4" />
-                <div className="flex-1">
-                  <TabNavigation
-                    tabs={tabs}
-                    activeTab={selectedTab}
-                    onTabChange={setSelectedTab}
-                    onAddTab={handleAddTab}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <main className="mt-0">
-              {renderContent()}
-            </main>
+    <div className="min-h-screen w-full bg-gray-50">
+      {/* Header with Google-style layout */}
+      <div className="w-full bg-white border-b border-gray-200">
+        <div className="flex items-center px-6 py-4">
+          <div className="flex-1">
+            <TabNavigation
+              tabs={tabs}
+              activeTab={selectedTab}
+              onTabChange={setSelectedTab}
+              onAddTab={handleAddTab}
+            />
           </div>
-        </SidebarInset>
+        </div>
       </div>
+      
+      <main className="mt-0">
+        {renderContent()}
+      </main>
       
       <AddTopicDialog 
         open={isAddTopicDialogOpen}
         onOpenChange={setIsAddTopicDialogOpen}
       />
-    </SidebarProvider>
+    </div>
   );
 };
 
