@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -58,13 +57,13 @@ export const AddBlogPostButton = () => {
       if (existingBlog) {
         blogId = existingBlog.id;
       } else {
-        // Create new blog - using 'tech' as category instead of 'manual'
+        // Create new blog - using 'nlp' as category (one of the allowed values)
         const { data: newBlog, error: blogError } = await supabase
           .from('blogs')
           .insert({
             name: blogName,
             url: blogUrl,
-            category: 'tech',
+            category: 'nlp',
             user_id: user.id
           })
           .select('id')
