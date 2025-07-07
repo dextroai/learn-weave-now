@@ -20,6 +20,7 @@ const Index = () => {
   const [topicSubTab, setTopicSubTab] = useState("notes"); // Default to notes for topic tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
+  const [showAddPageDialog, setShowAddPageDialog] = useState(false);
   
   // Get user topics to build tabs
   const { data: userTopics = [] } = useUserTopics();
@@ -39,14 +40,31 @@ const Index = () => {
       setSelectedSubTab("knowledge-bank");
     };
 
+    const handleOpenAddPageDialog = () => {
+      // If we're on a topic tab, show the add page dialog for that topic
+      if (selectedTab.startsWith("topic-")) {
+        setShowAddPageDialog(true);
+      } else {
+        // If not on a topic tab, switch to the first topic or create one
+        if (userTopics.length > 0) {
+          setSelectedTab(`topic-${userTopics[0].topic_id}`);
+          setTopicSubTab("notes");
+        } else {
+          setIsAddTopicDialogOpen(true);
+        }
+      }
+    };
+
     window.addEventListener('switchToTopic', handleSwitchToTopic as EventListener);
     window.addEventListener('switchToKnowledgeBank', handleSwitchToKnowledgeBank as EventListener);
+    window.addEventListener('openAddPageDialog', handleOpenAddPageDialog as EventListener);
     
     return () => {
       window.removeEventListener('switchToTopic', handleSwitchToTopic as EventListener);
       window.removeEventListener('switchToKnowledgeBank', handleSwitchToKnowledgeBank as EventListener);
+      window.removeEventListener('openAddPageDialog', handleOpenAddPageDialog as EventListener);
     };
-  }, []);
+  }, [selectedTab, userTopics]);
   
   // Extract category from selectedTab for filtering
   const getTopicIdFromTab = (tabId: string) => {

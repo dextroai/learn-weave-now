@@ -1,5 +1,5 @@
 
-import { Home, User } from "lucide-react";
+import { Home, User, Plus } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +30,12 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
     }
   };
 
+  const handleAddPageClick = () => {
+    // Trigger a custom event to open add page dialog or switch to notes view
+    const event = new CustomEvent('openAddPageDialog');
+    window.dispatchEvent(event);
+  };
+
   return (
     <Sidebar 
       collapsible="none"
@@ -52,8 +58,18 @@ export function AppSidebar({ selectedTab, onTabChange }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       
-      <SidebarContent className="bg-gray-900 flex-1">
-        {/* Additional content can be added here later */}
+      <SidebarContent className="bg-gray-900 flex-1 flex items-center justify-center">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleAddPageClick}
+              className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-800"
+              title="Add Page"
+            >
+              <Plus className="h-6 w-6" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter className="bg-gray-900 flex items-center justify-center pb-4">
