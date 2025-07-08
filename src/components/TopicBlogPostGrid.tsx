@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { TopicBlogPostCard } from "@/components/TopicBlogPostCard";
+import { DateGroupedTopicBlogPosts } from "@/components/DateGroupedTopicBlogPosts";
 import { InsightModal } from "@/components/InsightModal";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -76,22 +77,12 @@ export function TopicBlogPostGrid({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm">
-        {renderSubNavigation && (
-          <div className="px-4 pt-4">
-            {renderSubNavigation()}
-          </div>
-        )}
-        {posts.map(post => (
-          <TopicBlogPostCard 
-            key={post.id} 
-            post={post} 
-            onMarkAsRead={onMarkAsRead} 
-            onInsightClick={handleInsightClick} 
-            topicName={topicName} 
-          />
-        ))}
-      </div>
+      <DateGroupedTopicBlogPosts 
+        posts={posts}
+        onMarkAsRead={onMarkAsRead}
+        onInsightClick={handleInsightClick}
+        topicName={topicName}
+      />
 
       <InsightModal 
         post={selectedPost} 
