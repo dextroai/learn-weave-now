@@ -2,8 +2,9 @@
 import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -29,6 +30,7 @@ export const TopicBlogPostCard = ({
   className
 }: TopicBlogPostCardProps) => {
   const { toast } = useToast();
+  const [isAdded, setIsAdded] = useState(false);
 
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
@@ -96,6 +98,9 @@ export const TopicBlogPostCard = ({
       onMarkAsRead(post.id);
     }
     
+    // Update the button state
+    setIsAdded(true);
+    
     toast({
       title: "Added to Notes",
       description: `"${post.title}" has been added to your ${topicName} notes.`,
@@ -138,10 +143,14 @@ export const TopicBlogPostCard = ({
           variant="ghost"
           size="sm"
           onClick={handleAddToNotes}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          disabled={isAdded}
+          className={cn(
+            "transition-colors",
+            isAdded && "text-green-600"
+          )}
         >
-          <Plus className="h-4 w-4" />
-          <span className="ml-1">Add</span>
+          {isAdded ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          <span className="ml-1">{isAdded ? "Added" : "Add"}</span>
         </Button>
         
         <Button
