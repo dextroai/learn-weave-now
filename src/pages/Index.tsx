@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const {
@@ -37,16 +38,17 @@ const Index = () => {
   } = useIndexPageState();
 
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSettingsClick = () => {
-    window.location.href = "/settings";
+    navigate("/settings");
   };
 
   const handleAccountClick = () => {
     if (user) {
       signOut();
     } else {
-      window.location.href = "/auth";
+      navigate("/auth");
     }
   };
 
