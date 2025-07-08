@@ -3,6 +3,15 @@ import { TabNavigation } from "@/components/TabNavigation";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { MainContent } from "@/components/MainContent";
 import { useIndexPageState } from "@/hooks/useIndexPageState";
+import { Settings, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const {
@@ -27,11 +36,25 @@ const Index = () => {
     handleAddTab
   } = useIndexPageState();
 
+  const { user, signOut } = useAuth();
+
+  const handleSettingsClick = () => {
+    window.location.href = "/settings";
+  };
+
+  const handleAccountClick = () => {
+    if (user) {
+      signOut();
+    } else {
+      window.location.href = "/auth";
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-gray-50">
       {/* Header with Google-style layout */}
       <div className="w-full bg-white border-b border-gray-200">
-        <div className="flex items-center px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex-1">
             <TabNavigation
               tabs={tabs}
@@ -39,6 +62,42 @@ const Index = () => {
               onTabChange={setSelectedTab}
               onAddTab={handleAddTab}
             />
+          </div>
+          
+          {/* Settings and Account section */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSettingsClick}
+              className="h-9 w-9"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {user ? (
+                  <>
+                    <DropdownMenuItem disabled>
+                      {user.email}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleAccountClick}>
+                      Sign Out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem onClick={handleAccountClick}>
+                    Sign In
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
