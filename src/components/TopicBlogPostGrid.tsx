@@ -5,7 +5,6 @@ import { InsightModal } from "@/components/InsightModal";
 import { Tables } from "@/integrations/supabase/types";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -33,24 +32,10 @@ export function TopicBlogPostGrid({
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
 
   const handleInsightClick = (post: BlogPost) => {
     setSelectedPost(post);
     setIsInsightModalOpen(true);
-  };
-
-  const handleAddToKnowledgeBank = (post: BlogPost) => {
-    // Dispatch custom event to add post to knowledge bank
-    const event = new CustomEvent('postAddedToKnowledgeBank', {
-      detail: { post }
-    });
-    window.dispatchEvent(event);
-    
-    toast({
-      title: "Added to Knowledge Bank",
-      description: `"${post.title}" has been added to your ${topicName} Knowledge Bank.`,
-    });
   };
 
   // Filter posts based on search query
@@ -183,7 +168,7 @@ export function TopicBlogPostGrid({
             post={post}
             onMarkAsRead={onMarkAsRead}
             onInsightClick={handleInsightClick}
-            onAddToKnowledgeBank={handleAddToKnowledgeBank}
+            topicName={topicName}
           />
         ))}
       </div>

@@ -3,6 +3,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -16,7 +17,7 @@ interface TopicBlogPostCardProps {
   post: BlogPost;
   onMarkAsRead?: (postId: string) => void;
   onInsightClick?: (post: BlogPost) => void;
-  onAddToKnowledgeBank?: (post: BlogPost) => void;
+  topicName?: string;
   className?: string;
 }
 
@@ -24,9 +25,11 @@ export const TopicBlogPostCard = ({
   post, 
   onMarkAsRead, 
   onInsightClick,
-  onAddToKnowledgeBank,
+  topicName = "General",
   className
 }: TopicBlogPostCardProps) => {
+  const { toast } = useToast();
+
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
       onMarkAsRead(post.id);
@@ -43,11 +46,60 @@ export const TopicBlogPostCard = ({
     }
   };
 
-  const handleAddToKnowledgeBank = (e: React.MouseEvent) => {
+  const handleAddToNotes = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onAddToKnowledgeBank) {
-      onAddToKnowledgeBank(post);
+    
+    // Get the category key for localStorage
+    const categoryKey = topicName.toLowerCase().replace(' ', '-');
+    
+    // Get existing pages for this topic
+    const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
+    let pages = savedPages ? JSON.parse(savedPages) : [];
+    
+    // If no pages exist, create a default page
+    if (pages.length === 0) {
+      const defaultPage = {
+        id: Date.now().toString(),
+        title: `${topicName} Links`,
+        createdAt: new Date().toISOString(),
+      };
+      pages = [defaultPage];
+      localStorage.setItem(`notes-pages-${categoryKey}`, JSON.stringify(pages));
     }
+    
+    // Use the first page to add the link
+    const targetPage = pages[0];
+    const notesKey = `interactive-notes-${categoryKey}-${targetPage.id}`;
+    
+    // Get existing notes for this page
+    const savedNotes = localStorage.getItem(notesKey);
+    let noteBoxes = savedNotes ? JSON.parse(savedNotes) : [];
+    
+    // Create a new note box with the post link and title
+    const linkText = `${post.title}\n${post.link}\nSource: ${post.blogs?.name || 'Unknown'}`;
+    
+    const newNoteBox = {
+      id: Date.now().toString(),
+      content: linkText,
+      x: Math.random() * 300,
+      y: Math.random() * 200,
+      width: 300,
+      height: 120,
+    };
+    
+    // Add the new note box
+    const updatedNoteBoxes = [...noteBoxes, newNoteBox];
+    localStorage.setItem(notesKey, JSON.stringify(updatedNoteBoxes));
+    
+    // Mark the post as read
+    if (post.is_new && onMarkAsRead) {
+      onMarkAsRead(post.id);
+    }
+    
+    toast({
+      title: "Added to Notes",
+      description: `"${post.title}" has been added to your ${topicName} notes.`,
+    });
   };
 
   return (
@@ -85,7 +137,7 @@ export const TopicBlogPostCard = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleAddToKnowledgeBank}
+          onClick={handleAddToNotes}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <Plus className="h-4 w-4" />
