@@ -40,6 +40,10 @@ const Index = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const handleHomeClick = () => {
+    navigate("/");
+  };
+
   const handleSettingsClick = () => {
     navigate("/settings");
   };
@@ -57,7 +61,19 @@ const Index = () => {
       {/* Header with Google-style layout */}
       <div className="w-full bg-white border-b border-gray-200">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex-1">
+          {/* Home button on the left */}
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              onClick={handleHomeClick}
+              className="text-xl font-semibold text-gray-900 hover:bg-gray-100 px-3 py-2"
+            >
+              Dextro
+            </Button>
+          </div>
+
+          {/* Center navigation */}
+          <div className="flex-1 flex justify-center">
             <TabNavigation
               tabs={tabs}
               activeTab={selectedTab}
