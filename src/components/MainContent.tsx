@@ -50,6 +50,14 @@ export const MainContent = ({
 }: MainContentProps) => {
   const [topicSearchQuery, setTopicSearchQuery] = useState("");
 
+  // Filter posts based on topic search query
+  const topicFilteredPosts = topicSearchQuery 
+    ? filteredPosts.filter(post => 
+        post.title.toLowerCase().includes(topicSearchQuery.toLowerCase()) ||
+        post.blogs?.name?.toLowerCase().includes(topicSearchQuery.toLowerCase())
+      )
+    : filteredPosts;
+
   // Show individual blog post content
   if (selectedTab.startsWith("post-")) {
     const postId = selectedTab.replace("post-", "");
@@ -122,27 +130,29 @@ export const MainContent = ({
         </div>
       );
     } else {
-      // Sources view - show blog posts with topic-specific features
+      // Sources view - show blog posts directly in main content area
       return (
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <TopicBlogPostGrid 
-            posts={filteredPosts}
-            isLoading={isLoading}
-            onMarkAsRead={handleMarkAsRead}
+        <div className="h-screen flex flex-col">
+          <TopicSubNavigation
+            activeSubTab={topicSubTab}
+            onSubTabChange={setTopicSubTab}
+            notesCount={0}
+            sourcesCount={filteredPosts.length}
             topicName={topic?.name}
-            renderSubNavigation={() => (
-              <TopicSubNavigation
-                activeSubTab={topicSubTab}
-                onSubTabChange={setTopicSubTab}
-                notesCount={0}
-                sourcesCount={filteredPosts.length}
-                topicName={topic?.name}
-                searchQuery={topicSearchQuery}
-                onSearchChange={setTopicSearchQuery}
-                showSearch={true}
-              />
-            )}
+            searchQuery={topicSearchQuery}
+            onSearchChange={setTopicSearchQuery}
+            showSearch={true}
           />
+          <div className="flex-1 overflow-auto">
+            <div className="max-w-4xl mx-auto px-6 py-6">
+              <TopicBlogPostGrid 
+                posts={topicFilteredPosts}
+                isLoading={isLoading}
+                onMarkAsRead={handleMarkAsRead}
+                topicName={topic?.name}
+              />
+            </div>
+          </div>
         </div>
       );
     }
