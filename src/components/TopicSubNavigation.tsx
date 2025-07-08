@@ -1,5 +1,3 @@
-
-
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Input } from '@/components/ui/input';
@@ -28,7 +26,6 @@ export const TopicSubNavigation = ({
 }: TopicSubNavigationProps) => {
   const [notesCount, setNotesCount] = useState(initialNotesCount);
 
-  // Calculate actual notes count from localStorage
   const calculateNotesCount = () => {
     const categoryKey = topicName.toLowerCase().replace(' ', '-');
     const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
@@ -51,17 +48,14 @@ export const TopicSubNavigation = ({
   };
 
   useEffect(() => {
-    // Calculate and set the actual notes count on mount
     const actualCount = calculateNotesCount();
     setNotesCount(actualCount);
   }, [topicName]);
 
   useEffect(() => {
-    // Listen for notes updates
     const handleNotesUpdate = (event: CustomEvent) => {
       const { topicName: updatedTopic, action } = event.detail;
       if (updatedTopic === topicName && action === 'add') {
-        // Recalculate the actual count instead of just incrementing
         const actualCount = calculateNotesCount();
         setNotesCount(actualCount);
       }
@@ -74,7 +68,6 @@ export const TopicSubNavigation = ({
     };
   }, [topicName]);
 
-  // Update notes count when initialNotesCount changes
   useEffect(() => {
     const actualCount = calculateNotesCount();
     setNotesCount(actualCount);
@@ -98,9 +91,9 @@ export const TopicSubNavigation = ({
 
   return (
     <div className="bg-white">
-      {/* Search Bar Section */}
+      {/* Search Bar Section - moved to top */}
       {showSearch && (
-        <div className="border-b border-gray-100 p-4">
+        <div className="px-6 py-6">
           <div className="relative max-w-md mx-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
@@ -139,4 +132,3 @@ export const TopicSubNavigation = ({
     </div>
   );
 };
-
