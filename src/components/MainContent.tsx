@@ -5,6 +5,7 @@ import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
 import { BlogPostContent } from "@/components/BlogPostContent";
 import { Tables } from "@/integrations/supabase/types";
+import { useState } from "react";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -47,6 +48,8 @@ export const MainContent = ({
   handleMarkAsRead,
   setSelectedSubTab
 }: MainContentProps) => {
+  const [topicSearchQuery, setTopicSearchQuery] = useState("");
+
   // Show individual blog post content
   if (selectedTab.startsWith("post-")) {
     const postId = selectedTab.replace("post-", "");
@@ -100,19 +103,21 @@ export const MainContent = ({
     if (topicSubTab === "notes") {
       return (
         <div className="h-screen flex flex-col">
-          <div className="bg-white">
-            <div className="max-w-4xl mx-auto px-6 pt-4">
-              <TopicSubNavigation
-                activeSubTab={topicSubTab}
-                onSubTabChange={setTopicSubTab}
-                notesCount={0}
-                sourcesCount={filteredPosts.length}
-                topicName={topic?.name}
-              />
-            </div>
-          </div>
+          <TopicSubNavigation
+            activeSubTab={topicSubTab}
+            onSubTabChange={setTopicSubTab}
+            notesCount={0}
+            sourcesCount={filteredPosts.length}
+            topicName={topic?.name}
+            searchQuery={topicSearchQuery}
+            onSearchChange={setTopicSearchQuery}
+            showSearch={true}
+          />
           <div className="flex-1">
-            <PageBasedNotesArea category={topic?.name.toLowerCase().replace(' ', '-') || 'general'} />
+            <PageBasedNotesArea 
+              category={topic?.name.toLowerCase().replace(' ', '-') || 'general'}
+              searchQuery={topicSearchQuery}
+            />
           </div>
         </div>
       );
@@ -132,6 +137,9 @@ export const MainContent = ({
                 notesCount={0}
                 sourcesCount={filteredPosts.length}
                 topicName={topic?.name}
+                searchQuery={topicSearchQuery}
+                onSearchChange={setTopicSearchQuery}
+                showSearch={true}
               />
             )}
           />

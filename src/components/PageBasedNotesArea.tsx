@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { Plus, X, Search } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { InteractiveNotesArea } from './InteractiveNotesArea';
-import { Input } from '@/components/ui/input';
 
 interface NotePage {
   id: string;
@@ -12,14 +10,14 @@ interface NotePage {
 
 interface PageBasedNotesAreaProps {
   category: string;
+  searchQuery?: string;
 }
 
-export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
+export function PageBasedNotesArea({ category, searchQuery = "" }: PageBasedNotesAreaProps) {
   const [pages, setPages] = useState<NotePage[]>([]);
   const [activePage, setActivePage] = useState<string | null>(null);
   const [isAddingPage, setIsAddingPage] = useState(false);
   const [newPageTitle, setNewPageTitle] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Load saved pages from localStorage
   useEffect(() => {
@@ -84,23 +82,7 @@ export function PageBasedNotesArea({ category }: PageBasedNotesAreaProps) {
     : pages;
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Search Bar Section - consistent with TopicBlogPostGrid */}
-      <div className="bg-white border-b border-gray-100 p-4">
-        <div className="relative max-w-md mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
-          <Input
-            type="text"
-            placeholder="Search notes pages..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300"
-          />
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full">
       <div className="flex flex-1">
         {/* Left Sidebar - Made smaller and reaches to top */}
         <div className="w-60 bg-purple-50 border-r border-purple-200 flex flex-col">
