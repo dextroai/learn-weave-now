@@ -1,5 +1,5 @@
-
 import { BlogPostGrid } from "@/components/BlogPostGrid";
+import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
@@ -107,6 +107,7 @@ export const MainContent = ({
                 onSubTabChange={setTopicSubTab}
                 notesCount={0}
                 sourcesCount={filteredPosts.length}
+                topicName={topic?.name}
               />
             </div>
           </div>
@@ -116,19 +117,21 @@ export const MainContent = ({
         </div>
       );
     } else {
-      // Sources view - show blog posts
+      // Sources view - show blog posts with topic-specific features
       return (
         <div className="max-w-4xl mx-auto px-6 py-6">
-          <BlogPostGrid 
+          <TopicBlogPostGrid 
             posts={filteredPosts}
             isLoading={isLoading}
             onMarkAsRead={handleMarkAsRead}
+            topicName={topic?.name}
             renderSubNavigation={() => (
               <TopicSubNavigation
                 activeSubTab={topicSubTab}
                 onSubTabChange={setTopicSubTab}
                 notesCount={0}
                 sourcesCount={filteredPosts.length}
+                topicName={topic?.name}
               />
             )}
           />

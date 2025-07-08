@@ -6,17 +6,23 @@ interface TopicSubNavigationProps {
   onSubTabChange: (subTab: string) => void;
   notesCount: number;
   sourcesCount: number;
+  topicName?: string;
 }
 
 export const TopicSubNavigation = ({ 
   activeSubTab, 
   onSubTabChange, 
   notesCount, 
-  sourcesCount 
+  sourcesCount,
+  topicName = "General"
 }: TopicSubNavigationProps) => {
+  const getKnowledgeBankLabel = (topicName: string) => {
+    return `${topicName} Knowledge Bank`;
+  };
+
   const subTabs = [
     { id: 'notes', label: 'Notes', count: notesCount },
-    { id: 'sources', label: 'Sources', count: sourcesCount }
+    { id: 'sources', label: getKnowledgeBankLabel(topicName), count: sourcesCount }
   ];
 
   return (
