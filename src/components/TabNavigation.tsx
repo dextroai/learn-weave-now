@@ -18,7 +18,7 @@ interface TabNavigationProps {
 
 export function TabNavigation({ tabs, activeTab, onTabChange, onAddTab }: TabNavigationProps) {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center justify-center">
       <div className="flex items-center space-x-8">
         {tabs.map((tab) => (
           <button
