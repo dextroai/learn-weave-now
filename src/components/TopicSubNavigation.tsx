@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface TopicSubNavigationProps {
   activeSubTab: string;
@@ -12,10 +13,33 @@ interface TopicSubNavigationProps {
 export const TopicSubNavigation = ({ 
   activeSubTab, 
   onSubTabChange, 
-  notesCount, 
+  notesCount: initialNotesCount, 
   sourcesCount,
   topicName = "General"
 }: TopicSubNavigationProps) => {
+  const [notesCount, setNotesCount] = useState(initialNotesCount);
+
+  useEffect(() => {
+    // Listen for notes updates
+    const handleNotesUpdate = (event: CustomEvent) => {
+      const { topicName: updatedTopic, action } = event.detail;
+      if (updatedTopic === topicName && action === 'add') {
+        setNotesCount(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('notesUpdated', handleNotesUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('notesUpdated', handleNotesUpdate as EventListener);
+    };
+  }, [topicName]);
+
+  // Update notes count when initialNotesCount changes
+  useEffect(() => {
+    setNotesCount(initialNotesCount);
+  }, [initialNotesCount]);
+
   const getKnowledgeBankLabel = (topicName: string) => {
     return `${topicName} Knowledge Bank`;
   };

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -31,6 +31,31 @@ export const TopicBlogPostCard = ({
 }: TopicBlogPostCardProps) => {
   const { toast } = useToast();
   const [isAdded, setIsAdded] = useState(false);
+
+  // Check if this post was already added on component mount
+  useEffect(() => {
+    const categoryKey = topicName.toLowerCase().replace(' ', '-');
+    const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
+    
+    if (savedPages) {
+      const pages = JSON.parse(savedPages);
+      // Check all pages for this post
+      for (const page of pages) {
+        const notesKey = `interactive-notes-${categoryKey}-${page.id}`;
+        const savedNotes = localStorage.getItem(notesKey);
+        if (savedNotes) {
+          const noteBoxes = JSON.parse(savedNotes);
+          const postExists = noteBoxes.some((note: any) => 
+            note.content.includes(post.title) && note.content.includes(post.link)
+          );
+          if (postExists) {
+            setIsAdded(true);
+            break;
+          }
+        }
+      }
+    }
+  }, [post.id, post.title, post.link, topicName]);
 
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
@@ -100,6 +125,11 @@ export const TopicBlogPostCard = ({
     
     // Update the button state
     setIsAdded(true);
+    
+    // Dispatch custom event to update notes counter
+    window.dispatchEvent(new CustomEvent('notesUpdated', { 
+      detail: { topicName, action: 'add' } 
+    }));
     
     toast({
       title: "Added to Notes",
