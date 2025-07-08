@@ -1,8 +1,6 @@
 
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
 
 interface TopicSubNavigationProps {
   activeSubTab: string;
@@ -21,9 +19,6 @@ export const TopicSubNavigation = ({
   notesCount: initialNotesCount, 
   sourcesCount,
   topicName = "General",
-  searchQuery = "",
-  onSearchChange,
-  showSearch = true
 }: TopicSubNavigationProps) => {
   const [notesCount, setNotesCount] = useState(initialNotesCount);
 
@@ -83,13 +78,6 @@ export const TopicSubNavigation = ({
     return `${topicName} Knowledge Bank`;
   };
 
-  const getSearchPlaceholder = () => {
-    if (activeSubTab === 'notes') {
-      return "Search notes pages...";
-    }
-    return `Search in ${topicName} Knowledge Bank...`;
-  };
-
   const subTabs = [
     { id: 'notes', label: 'Notes', count: notesCount },
     { id: 'sources', label: getKnowledgeBankLabel(topicName), count: sourcesCount }
@@ -97,24 +85,6 @@ export const TopicSubNavigation = ({
 
   return (
     <div className="bg-white">
-      {/* Search Bar Section */}
-      {showSearch && (
-        <div className="border-b border-gray-100 p-4">
-          <div className="relative max-w-md mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <Input
-              type="text"
-              placeholder={getSearchPlaceholder()}
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Sub Navigation Tabs */}
       <div className="flex items-center justify-center gap-1 px-4 py-4 border-b border-gray-200">
         {subTabs.map((subTab) => (
