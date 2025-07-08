@@ -19,12 +19,42 @@ export const TopicSubNavigation = ({
 }: TopicSubNavigationProps) => {
   const [notesCount, setNotesCount] = useState(initialNotesCount);
 
+  // Calculate actual notes count from localStorage
+  const calculateNotesCount = () => {
+    const categoryKey = topicName.toLowerCase().replace(' ', '-');
+    const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
+    
+    if (!savedPages) return 0;
+    
+    let totalNotes = 0;
+    const pages = JSON.parse(savedPages);
+    
+    for (const page of pages) {
+      const notesKey = `interactive-notes-${categoryKey}-${page.id}`;
+      const savedNotes = localStorage.getItem(notesKey);
+      if (savedNotes) {
+        const noteBoxes = JSON.parse(savedNotes);
+        totalNotes += noteBoxes.length;
+      }
+    }
+    
+    return totalNotes;
+  };
+
+  useEffect(() => {
+    // Calculate and set the actual notes count on mount
+    const actualCount = calculateNotesCount();
+    setNotesCount(actualCount);
+  }, [topicName]);
+
   useEffect(() => {
     // Listen for notes updates
     const handleNotesUpdate = (event: CustomEvent) => {
       const { topicName: updatedTopic, action } = event.detail;
       if (updatedTopic === topicName && action === 'add') {
-        setNotesCount(prev => prev + 1);
+        // Recalculate the actual count instead of just incrementing
+        const actualCount = calculateNotesCount();
+        setNotesCount(actualCount);
       }
     };
 
@@ -37,7 +67,8 @@ export const TopicSubNavigation = ({
 
   // Update notes count when initialNotesCount changes
   useEffect(() => {
-    setNotesCount(initialNotesCount);
+    const actualCount = calculateNotesCount();
+    setNotesCount(actualCount);
   }, [initialNotesCount]);
 
   const getKnowledgeBankLabel = (topicName: string) => {
