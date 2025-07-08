@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { TopicBlogPostCard } from "@/components/TopicBlogPostCard";
+import { DateGroupedTopicBlogPosts } from "@/components/DateGroupedTopicBlogPosts";
 import { InsightModal } from "@/components/InsightModal";
 import { Tables } from "@/integrations/supabase/types";
 import { Input } from "@/components/ui/input";
@@ -142,8 +143,8 @@ export function TopicBlogPostGrid({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b border-gray-100">
+      <div className="space-y-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 border-b border-gray-100">
           <div className="relative max-w-md mx-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
@@ -157,20 +158,19 @@ export function TopicBlogPostGrid({
             />
           </div>
         </div>
+        
         {renderSubNavigation && (
-          <div className="px-4 pt-4">
+          <div className="bg-white rounded-lg shadow-sm px-4 pt-4">
             {renderSubNavigation()}
           </div>
         )}
-        {filteredPosts.map((post) => (
-          <TopicBlogPostCard
-            key={post.id}
-            post={post}
-            onMarkAsRead={onMarkAsRead}
-            onInsightClick={handleInsightClick}
-            topicName={topicName}
-          />
-        ))}
+        
+        <DateGroupedTopicBlogPosts
+          posts={filteredPosts}
+          onMarkAsRead={onMarkAsRead}
+          onInsightClick={handleInsightClick}
+          topicName={topicName}
+        />
       </div>
 
       <InsightModal

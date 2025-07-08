@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { BlogPostCard } from "@/components/BlogPostCard";
+import { DateGroupedBlogPosts } from "@/components/DateGroupedBlogPosts";
 import { InsightModal } from "@/components/InsightModal";
 import { AddBlogPostButton } from "@/components/AddBlogPostButton";
 import { Tables } from "@/integrations/supabase/types";
@@ -153,9 +154,9 @@ export function BlogPostGrid({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="space-y-4">
         {showSearch && (
-          <div className="p-4 border-b border-gray-100">
+          <div className="bg-white rounded-lg shadow-sm p-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div className="relative max-w-md mx-auto flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -173,19 +174,18 @@ export function BlogPostGrid({
             </div>
           </div>
         )}
+        
         {renderSubNavigation && (
-          <div className="px-4 pt-4">
+          <div className="bg-white rounded-lg shadow-sm px-4 pt-4">
             {renderSubNavigation()}
           </div>
         )}
-        {posts.map((post) => (
-          <BlogPostCard
-            key={post.id}
-            post={post}
-            onMarkAsRead={onMarkAsRead}
-            onInsightClick={handleInsightClick}
-          />
-        ))}
+        
+        <DateGroupedBlogPosts
+          posts={posts}
+          onMarkAsRead={onMarkAsRead}
+          onInsightClick={handleInsightClick}
+        />
       </div>
 
       <InsightModal
