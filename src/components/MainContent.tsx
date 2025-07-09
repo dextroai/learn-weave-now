@@ -1,3 +1,4 @@
+
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
@@ -51,8 +52,9 @@ export const MainContent = ({
   const renderAllPostsContent = () => {
     const renderSubNavigation = () => (
       <AllPostsSubNavigation
-        selectedSubTab={selectedSubTab}
+        activeSubTab={selectedSubTab}
         onSubTabChange={setSelectedSubTab}
+        allPostsCount={allBlogPosts.length}
         knowledgeBankCount={knowledgeBankPosts.length}
       />
     );
@@ -98,8 +100,10 @@ export const MainContent = ({
         onMarkAsRead={handleMarkAsRead}
         renderSubNavigation={() => (
           <TopicSubNavigation
-            selectedSubTab={topicSubTab}
+            activeSubTab={topicSubTab}
             onSubTabChange={setTopicSubTab}
+            notesCount={0}
+            sourcesCount={filteredPosts.length}
             topicName={topic.name}
           />
         )}
