@@ -82,6 +82,11 @@ export const MainContent = ({
   const currentTopic = getTopicFromTab(selectedTab);
   const isTopicView = currentTopic !== null;
 
+  // Filter knowledge bank posts for the current topic
+  const topicKnowledgeBankPosts = currentTopic 
+    ? knowledgeBankPosts.filter(post => post.label_id === currentTopic.topic_id)
+    : [];
+
   if (selectedTab === "all-posts") {
     if (selectedSubTab === "knowledge-bank") {
       return (
@@ -100,7 +105,7 @@ export const MainContent = ({
                 allPostsCount={allBlogPosts.length}
               />
             )}
-            isTopicView={false} // This is the All Posts view
+            isTopicView={false}
           />
         </div>
       );
@@ -123,7 +128,7 @@ export const MainContent = ({
               allPostsCount={allBlogPosts.length}
             />
           )}
-          isTopicView={false} // This is the All Posts view
+          isTopicView={false}
         />
       </div>
     );
@@ -139,7 +144,7 @@ export const MainContent = ({
               activeSubTab={topicSubTab}
               onSubTabChange={setTopicSubTab}
               notesCount={0}
-              sourcesCount={filteredPosts.length}
+              sourcesCount={topicKnowledgeBankPosts.length}
               topicName={currentTopic.name}
             />
           </div>
@@ -148,10 +153,11 @@ export const MainContent = ({
       );
     }
 
+    // Knowledge Bank view for the topic (sources)
     return (
       <div className="max-w-4xl mx-auto p-6">
         <TopicBlogPostGrid
-          posts={filteredPosts}
+          posts={topicKnowledgeBankPosts}
           isLoading={isLoading}
           onMarkAsRead={handleMarkAsRead}
           topicName={currentTopic.name}
@@ -160,7 +166,7 @@ export const MainContent = ({
               activeSubTab={topicSubTab}
               onSubTabChange={setTopicSubTab}
               notesCount={0}
-              sourcesCount={filteredPosts.length}
+              sourcesCount={topicKnowledgeBankPosts.length}
               topicName={currentTopic.name}
             />
           )}

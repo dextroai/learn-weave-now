@@ -74,10 +74,6 @@ export const TopicSubNavigation = ({
     setNotesCount(actualCount);
   }, [initialNotesCount]);
 
-  const getKnowledgeBankLabel = (topicName: string) => {
-    return `${topicName} Knowledge Bank`;
-  };
-
   const getSearchPlaceholder = () => {
     if (activeSubTab === 'notes') {
       return "Search notes pages...";
@@ -87,7 +83,7 @@ export const TopicSubNavigation = ({
 
   const subTabs = [
     { id: 'notes', label: 'Notes', count: notesCount },
-    { id: 'sources', label: getKnowledgeBankLabel(topicName), count: sourcesCount }
+    { id: 'sources', label: `${topicName} Knowledge Bank`, count: sourcesCount }
   ];
 
   return (
