@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Eye, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { useAuth } from "@/contexts/AuthContext";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -30,32 +32,44 @@ export const TopicBlogPostCard = ({
   className
 }: TopicBlogPostCardProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { knowledgeBankPosts, addToKnowledgeBank } = useKnowledgeBank();
   const [isAdded, setIsAdded] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  // Check if this post was already added on component mount
+  // Check if this post is in knowledge bank or was already added to notes
   useEffect(() => {
-    const categoryKey = topicName.toLowerCase().replace(' ', '-');
-    const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
-    
-    if (savedPages) {
-      const pages = JSON.parse(savedPages);
-      // Check all pages for this post
-      for (const page of pages) {
-        const notesKey = `interactive-notes-${categoryKey}-${page.id}`;
-        const savedNotes = localStorage.getItem(notesKey);
-        if (savedNotes) {
-          const noteBoxes = JSON.parse(savedNotes);
-          const postExists = noteBoxes.some((note: any) => 
-            note.content.includes(post.title) && note.content.includes(post.link)
-          );
-          if (postExists) {
-            setIsAdded(true);
-            break;
+    // Check knowledge bank
+    const isInKnowledgeBank = knowledgeBankPosts.some(kbPost => kbPost.id === post.id);
+    if (isInKnowledgeBank) {
+      setIsAdded(true);
+      return;
+    }
+
+    // Check if this post was already added to notes (localStorage check for unauthenticated users)
+    if (!user) {
+      const categoryKey = topicName.toLowerCase().replace(' ', '-');
+      const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
+      
+      if (savedPages) {
+        const pages = JSON.parse(savedPages);
+        for (const page of pages) {
+          const notesKey = `interactive-notes-${categoryKey}-${page.id}`;
+          const savedNotes = localStorage.getItem(notesKey);
+          if (savedNotes) {
+            const noteBoxes = JSON.parse(savedNotes);
+            const postExists = noteBoxes.some((note: any) => 
+              note.content.includes(post.title) && note.content.includes(post.link)
+            );
+            if (postExists) {
+              setIsAdded(true);
+              break;
+            }
           }
         }
       }
     }
-  }, [post.id, post.title, post.link, topicName]);
+  }, [post.id, post.title, post.link, topicName, knowledgeBankPosts, user]);
 
   const handleClick = () => {
     if (post.is_new && onMarkAsRead) {
@@ -73,68 +87,80 @@ export const TopicBlogPostCard = ({
     }
   };
 
-  const handleAddToNotes = (e: React.MouseEvent) => {
+  const handleAddToNotes = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Get the category key for localStorage
-    const categoryKey = topicName.toLowerCase().replace(' ', '-');
+    if (isAdded) return;
     
-    // Get existing pages for this topic
-    const savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
-    let pages = savedPages ? JSON.parse(savedPages) : [];
+    setIsAdding(true);
     
-    // If no pages exist, create a default page
-    if (pages.length === 0) {
-      const defaultPage = {
-        id: Date.now().toString(),
-        title: `${topicName} Links`,
-        createdAt: new Date().toISOString(),
-      };
-      pages = [defaultPage];
-      localStorage.setItem(`notes-pages-${categoryKey}`, JSON.stringify(pages));
+    try {
+      // First, try to add to knowledge bank if user is authenticated
+      if (user && addToKnowledgeBank) {
+        addToKnowledgeBank(post);
+      } else {
+        // For unauthenticated users, add to localStorage notes
+        const categoryKey = topicName.toLowerCase().replace(' ', '-');
+        
+        let savedPages = localStorage.getItem(`notes-pages-${categoryKey}`);
+        let pages = savedPages ? JSON.parse(savedPages) : [];
+        
+        if (pages.length === 0) {
+          const defaultPage = {
+            id: Date.now().toString(),
+            title: `${topicName} Links`,
+            createdAt: new Date().toISOString(),
+          };
+          pages = [defaultPage];
+          localStorage.setItem(`notes-pages-${categoryKey}`, JSON.stringify(pages));
+        }
+        
+        const targetPage = pages[0];
+        const notesKey = `interactive-notes-${categoryKey}-${targetPage.id}`;
+        
+        const savedNotes = localStorage.getItem(notesKey);
+        let noteBoxes = savedNotes ? JSON.parse(savedNotes) : [];
+        
+        const linkText = `${post.title}\n${post.link}\nSource: ${post.blogs?.name || 'Unknown'}`;
+        
+        const newNoteBox = {
+          id: Date.now().toString(),
+          content: linkText,
+          x: Math.random() * 300,
+          y: Math.random() * 200,
+          width: 300,
+          height: 120,
+        };
+        
+        const updatedNoteBoxes = [...noteBoxes, newNoteBox];
+        localStorage.setItem(notesKey, JSON.stringify(updatedNoteBoxes));
+        
+        window.dispatchEvent(new CustomEvent('notesUpdated', { 
+          detail: { topicName, action: 'add' } 
+        }));
+      }
+
+      if (post.is_new && onMarkAsRead) {
+        onMarkAsRead(post.id);
+      }
+      
+      setIsAdded(true);
+      
+      toast({
+        title: user ? "Added to Knowledge Bank" : "Added to Notes",
+        description: user 
+          ? `"${post.title}" has been added to your knowledge bank.`
+          : `"${post.title}" has been added to your ${topicName} notes.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add post.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
     }
-    
-    // Use the first page to add the link
-    const targetPage = pages[0];
-    const notesKey = `interactive-notes-${categoryKey}-${targetPage.id}`;
-    
-    // Get existing notes for this page
-    const savedNotes = localStorage.getItem(notesKey);
-    let noteBoxes = savedNotes ? JSON.parse(savedNotes) : [];
-    
-    // Create a new note box with the post link and title
-    const linkText = `${post.title}\n${post.link}\nSource: ${post.blogs?.name || 'Unknown'}`;
-    
-    const newNoteBox = {
-      id: Date.now().toString(),
-      content: linkText,
-      x: Math.random() * 300,
-      y: Math.random() * 200,
-      width: 300,
-      height: 120,
-    };
-    
-    // Add the new note box
-    const updatedNoteBoxes = [...noteBoxes, newNoteBox];
-    localStorage.setItem(notesKey, JSON.stringify(updatedNoteBoxes));
-    
-    // Mark the post as read
-    if (post.is_new && onMarkAsRead) {
-      onMarkAsRead(post.id);
-    }
-    
-    // Update the button state
-    setIsAdded(true);
-    
-    // Dispatch custom event to update notes counter
-    window.dispatchEvent(new CustomEvent('notesUpdated', { 
-      detail: { topicName, action: 'add' } 
-    }));
-    
-    toast({
-      title: "Added to Notes",
-      description: `"${post.title}" has been added to your ${topicName} notes.`,
-    });
   };
 
   return (
@@ -145,42 +171,39 @@ export const TopicBlogPostCard = ({
       )}
       onClick={handleClick}
     >
-      {/* New indicator */}
       {post.is_new && (
         <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
       )}
       
       <div className="flex-1 min-w-0">
-        {/* Source */}
         <div className="text-sm text-gray-500 mb-1">
           {post.blogs?.name || 'Unknown Source'}
         </div>
         
-        {/* Title */}
         <h3 className="text-base font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {post.title}
         </h3>
         
-        {/* Date */}
         <div className="text-xs text-gray-400 mt-1">
           {new Date(post.detected_at).toLocaleDateString()}
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="flex-shrink-0 ml-2 flex gap-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleAddToNotes}
-          disabled={isAdded}
+          disabled={isAdded || isAdding}
           className={cn(
             "transition-colors",
             isAdded && "text-green-600"
           )}
         >
           {isAdded ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          <span className="ml-1">{isAdded ? "Added" : "Add"}</span>
+          <span className="ml-1">
+            {isAdded ? "Added" : isAdding ? "Adding..." : "Add"}
+          </span>
         </Button>
         
         <Button

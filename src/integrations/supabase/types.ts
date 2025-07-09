@@ -103,6 +103,41 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_bank_posts: {
+        Row: {
+          added_at: string
+          created_at: string
+          id: string
+          notes: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_bank_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_topics: {
         Row: {
           created_at: string

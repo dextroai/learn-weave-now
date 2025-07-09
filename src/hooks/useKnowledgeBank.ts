@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { useUserTopics } from "@/hooks/useUserTopics";
+import { useKnowledgeBankDatabase } from "@/hooks/useKnowledgeBankDatabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -12,83 +14,94 @@ type BlogPost = Tables<'blog_posts'> & {
 };
 
 type KnowledgeBankPost = BlogPost & {
-  addedToKnowledgeBank: number; // timestamp when added
-  topicName?: string; // Add topic name
+  addedToKnowledgeBank: number;
+  topicName?: string;
 };
 
 export const useKnowledgeBank = () => {
-  const [knowledgeBankPosts, setKnowledgeBankPosts] = useState<KnowledgeBankPost[]>([]);
+  const { user } = useAuth();
+  const [localKnowledgeBankPosts, setLocalKnowledgeBankPosts] = useState<KnowledgeBankPost[]>([]);
   const { data: userTopics = [] } = useUserTopics();
+  
+  // Use database implementation if user is authenticated
+  const databaseHook = useKnowledgeBankDatabase();
 
   useEffect(() => {
-    // Load knowledge bank posts from localStorage
-    const loadKnowledgeBankPosts = () => {
-      const savedPosts = localStorage.getItem('knowledge-bank-posts');
-      if (savedPosts) {
-        const posts: KnowledgeBankPost[] = JSON.parse(savedPosts);
-        
-        // Add topic names to posts
-        const postsWithTopicNames = posts.map(post => {
-          const topic = userTopics.find(t => t.topic_id === post.label_id);
-          return {
-            ...post,
-            topicName: topic?.name || 'Unknown Topic'
-          };
-        });
-        
-        // Sort by addedToKnowledgeBank timestamp in descending order (most recent first)
-        const sortedPosts = postsWithTopicNames.sort((a, b) => 
-          (b.addedToKnowledgeBank || 0) - (a.addedToKnowledgeBank || 0)
-        );
-        setKnowledgeBankPosts(sortedPosts);
-      }
-    };
-
-    loadKnowledgeBankPosts();
-
-    // Listen for custom events when posts are added to knowledge bank
-    const handlePostAddedToKnowledgeBank = (event: CustomEvent) => {
-      const { post } = event.detail;
-      if (post) {
+    // If user is not authenticated, load from localStorage
+    if (!user) {
+      const loadKnowledgeBankPosts = () => {
         const savedPosts = localStorage.getItem('knowledge-bank-posts');
-        const existingPosts: KnowledgeBankPost[] = savedPosts ? JSON.parse(savedPosts) : [];
-        
-        // Check if post already exists to avoid duplicates
-        const postExists = existingPosts.some((p: BlogPost) => p.id === post.id);
-        if (!postExists) {
-          // Find topic name for the new post
-          const topic = userTopics.find(t => t.topic_id === post.label_id);
+        if (savedPosts) {
+          const posts: KnowledgeBankPost[] = JSON.parse(savedPosts);
           
-          // Add timestamp when post is added to knowledge bank
-          const postWithTimestamp: KnowledgeBankPost = {
-            ...post,
-            addedToKnowledgeBank: Date.now(),
-            topicName: topic?.name || 'Unknown Topic'
-          };
+          const postsWithTopicNames = posts.map(post => {
+            const topic = userTopics.find(t => t.topic_id === post.label_id);
+            return {
+              ...post,
+              topicName: topic?.name || 'Unknown Topic'
+            };
+          });
           
-          // Add new post at the beginning of the array (most recent first)
-          const updatedPosts = [postWithTimestamp, ...existingPosts];
-          localStorage.setItem('knowledge-bank-posts', JSON.stringify(updatedPosts));
-          setKnowledgeBankPosts(updatedPosts);
+          const sortedPosts = postsWithTopicNames.sort((a, b) => 
+            (b.addedToKnowledgeBank || 0) - (a.addedToKnowledgeBank || 0)
+          );
+          setLocalKnowledgeBankPosts(sortedPosts);
         }
-      }
-    };
+      };
 
-    window.addEventListener('postAddedToKnowledgeBank', handlePostAddedToKnowledgeBank as EventListener);
-    
-    return () => {
-      window.removeEventListener('postAddedToKnowledgeBank', handlePostAddedToKnowledgeBank as EventListener);
-    };
-  }, [userTopics]);
+      loadKnowledgeBankPosts();
 
-  const removeFromKnowledgeBank = (postId: string) => {
-    const updatedPosts = knowledgeBankPosts.filter(post => post.id !== postId);
+      const handlePostAddedToKnowledgeBank = (event: CustomEvent) => {
+        const { post } = event.detail;
+        if (post) {
+          const savedPosts = localStorage.getItem('knowledge-bank-posts');
+          const existingPosts: KnowledgeBankPost[] = savedPosts ? JSON.parse(savedPosts) : [];
+          
+          const postExists = existingPosts.some((p: BlogPost) => p.id === post.id);
+          if (!postExists) {
+            const topic = userTopics.find(t => t.topic_id === post.label_id);
+            
+            const postWithTimestamp: KnowledgeBankPost = {
+              ...post,
+              addedToKnowledgeBank: Date.now(),
+              topicName: topic?.name || 'Unknown Topic'
+            };
+            
+            const updatedPosts = [postWithTimestamp, ...existingPosts];
+            localStorage.setItem('knowledge-bank-posts', JSON.stringify(updatedPosts));
+            setLocalKnowledgeBankPosts(updatedPosts);
+          }
+        }
+      };
+
+      window.addEventListener('postAddedToKnowledgeBank', handlePostAddedToKnowledgeBank as EventListener);
+      
+      return () => {
+        window.removeEventListener('postAddedToKnowledgeBank', handlePostAddedToKnowledgeBank as EventListener);
+      };
+    }
+  }, [userTopics, user]);
+
+  const removeFromLocalKnowledgeBank = (postId: string) => {
+    const updatedPosts = localKnowledgeBankPosts.filter(post => post.id !== postId);
     localStorage.setItem('knowledge-bank-posts', JSON.stringify(updatedPosts));
-    setKnowledgeBankPosts(updatedPosts);
+    setLocalKnowledgeBankPosts(updatedPosts);
   };
 
+  // Return database implementation for authenticated users
+  if (user) {
+    return {
+      knowledgeBankPosts: databaseHook.knowledgeBankPosts,
+      removeFromKnowledgeBank: databaseHook.removeFromKnowledgeBank,
+      addToKnowledgeBank: databaseHook.addToKnowledgeBank,
+      isLoading: databaseHook.isLoading,
+    };
+  }
+
+  // Return localStorage implementation for unauthenticated users
   return {
-    knowledgeBankPosts,
-    removeFromKnowledgeBank
+    knowledgeBankPosts: localKnowledgeBankPosts,
+    removeFromKnowledgeBank: removeFromLocalKnowledgeBank,
+    isLoading: false,
   };
 };
