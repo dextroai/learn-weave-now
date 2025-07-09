@@ -1,5 +1,6 @@
 
 import { BlogPostCard } from "@/components/BlogPostCard";
+import { KnowledgeBankPostCard } from "@/components/KnowledgeBankPostCard";
 import { Tables } from "@/integrations/supabase/types";
 
 type BlogPost = Tables<'blog_posts'> & {
@@ -8,18 +9,23 @@ type BlogPost = Tables<'blog_posts'> & {
     name: string;
     url: string;
   } | null;
+  topicName?: string;
 };
 
 interface DateGroupedBlogPostsProps {
   posts: BlogPost[];
-  onMarkAsRead: (postId: string) => void;
+  onMarkAsRead?: (postId: string) => void;
   onInsightClick: (post: BlogPost) => void;
+  onRemove?: (postId: string) => void;
+  isKnowledgeBank?: boolean;
 }
 
 export const DateGroupedBlogPosts = ({ 
   posts, 
   onMarkAsRead, 
-  onInsightClick 
+  onInsightClick,
+  onRemove,
+  isKnowledgeBank = false
 }: DateGroupedBlogPostsProps) => {
   // Group posts by date
   const groupedPosts = posts.reduce((groups, post) => {
@@ -56,12 +62,21 @@ export const DateGroupedBlogPosts = ({
           {/* Posts for this date */}
           <div className="bg-white rounded-lg shadow-sm">
             {groupedPosts[date].map((post) => (
-              <BlogPostCard
-                key={post.id}
-                post={post}
-                onMarkAsRead={onMarkAsRead}
-                onInsightClick={onInsightClick}
-              />
+              isKnowledgeBank ? (
+                <KnowledgeBankPostCard
+                  key={post.id}
+                  post={post}
+                  onInsightClick={onInsightClick}
+                  onRemove={onRemove}
+                />
+              ) : (
+                <BlogPostCard
+                  key={post.id}
+                  post={post}
+                  onMarkAsRead={onMarkAsRead}
+                  onInsightClick={onInsightClick}
+                />
+              )
             ))}
           </div>
         </div>

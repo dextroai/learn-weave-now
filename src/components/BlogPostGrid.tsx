@@ -14,6 +14,7 @@ type BlogPost = Tables<'blog_posts'> & {
     name: string;
     url: string;
   } | null;
+  topicName?: string;
 };
 
 interface BlogPostGridProps {
@@ -24,6 +25,8 @@ interface BlogPostGridProps {
   onSearchChange?: (query: string) => void;
   showSearch?: boolean;
   renderSubNavigation?: () => React.ReactNode;
+  isKnowledgeBank?: boolean;
+  onRemove?: (postId: string) => void;
 }
 
 export function BlogPostGrid({ 
@@ -33,7 +36,9 @@ export function BlogPostGrid({
   searchQuery = "", 
   onSearchChange, 
   showSearch = false,
-  renderSubNavigation
+  renderSubNavigation,
+  isKnowledgeBank = false,
+  onRemove
 }: BlogPostGridProps) {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
@@ -185,6 +190,8 @@ export function BlogPostGrid({
           posts={posts}
           onMarkAsRead={onMarkAsRead}
           onInsightClick={handleInsightClick}
+          onRemove={onRemove}
+          isKnowledgeBank={isKnowledgeBank}
         />
       </div>
 
