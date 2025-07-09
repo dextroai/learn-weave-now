@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Input } from '@/components/ui/input';
@@ -88,23 +89,21 @@ export const TopicSubNavigation = ({
   return (
     <div className="w-full bg-white">
       <div className="max-w-6xl mx-auto px-6">
-        {/* Centered Search Bar Section */}
-        {showSearch && (
-          <div className="py-6 border-b border-gray-100 flex justify-center">
-            <div className="relative max-w-md w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <Input
-                type="text"
-                placeholder={getSearchPlaceholder()}
-                value={searchQuery}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-white border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300 w-full"
-              />
+        {/* Always show centered search bar */}
+        <div className="py-6 border-b border-gray-100 flex justify-center">
+          <div className="relative max-w-md w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
             </div>
+            <Input
+              type="text"
+              placeholder={getSearchPlaceholder()}
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-white border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300 w-full"
+            />
           </div>
-        )}
+        </div>
 
         {/* Centered Sub Navigation Tabs */}
         <div className="flex items-center justify-center gap-8 py-4">

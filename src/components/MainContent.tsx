@@ -137,7 +137,7 @@ export const MainContent = ({
 
   // Handle Topic-specific views
   if (currentTopic) {
-    // Always show the TopicSubNavigation for topic views
+    // Always show the TopicSubNavigation for topic views with consistent search
     const renderTopicSubNavigation = () => (
       <TopicSubNavigation 
         activeSubTab={topicSubTab}
@@ -145,7 +145,9 @@ export const MainContent = ({
         notesCount={0}
         sourcesCount={topicKnowledgeBankPosts.length}
         topicName={currentTopic.name}
-        showSearch={topicSubTab === 'sources'}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        showSearch={true}
       />
     );
 
