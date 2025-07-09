@@ -87,6 +87,7 @@ export const MainContent = ({
     ? knowledgeBankPosts.filter(post => post.label_id === currentTopic.topic_id)
     : [];
 
+  // Handle All Posts views
   if (selectedTab === "all-posts") {
     if (selectedSubTab === "knowledge-bank") {
       return (
@@ -134,45 +135,61 @@ export const MainContent = ({
     );
   }
 
-  // Topic-specific views
+  // Handle Topic-specific views
   if (currentTopic) {
+    // Always show the TopicSubNavigation for topic views
+    const renderTopicSubNavigation = () => (
+      <TopicSubNavigation 
+        activeSubTab={topicSubTab}
+        onSubTabChange={setTopicSubTab}
+        notesCount={0}
+        sourcesCount={topicKnowledgeBankPosts.length}
+        topicName={currentTopic.name}
+        showSearch={topicSubTab === 'sources'}
+      />
+    );
+
     if (topicSubTab === "notes") {
       return (
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="bg-white rounded-lg shadow-sm px-4 pt-4 mb-4">
-            <TopicSubNavigation 
-              activeSubTab={topicSubTab}
-              onSubTabChange={setTopicSubTab}
-              notesCount={0}
-              sourcesCount={topicKnowledgeBankPosts.length}
-              topicName={currentTopic.name}
-            />
+        <div className="flex flex-col min-h-screen">
+          {/* Topic Sub Navigation */}
+          <div className="bg-white border-b border-gray-200">
+            {renderTopicSubNavigation()}
           </div>
-          <PageBasedNotesArea category={currentTopic.name} />
+          
+          {/* Notes Content */}
+          <div className="flex-1">
+            <div className="max-w-6xl mx-auto p-6">
+              <PageBasedNotesArea category={currentTopic.name} />
+            </div>
+          </div>
         </div>
       );
     }
 
     // Knowledge Bank view for the topic (sources)
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <TopicBlogPostGrid
-          posts={topicKnowledgeBankPosts}
-          isLoading={isLoading}
-          onMarkAsRead={handleMarkAsRead}
-          topicName={currentTopic.name}
-          renderSubNavigation={() => (
-            <TopicSubNavigation 
-              activeSubTab={topicSubTab}
-              onSubTabChange={setTopicSubTab}
-              notesCount={0}
-              sourcesCount={topicKnowledgeBankPosts.length}
-              topicName={currentTopic.name}
-            />
-          )}
-        />
-      </div>
-    );
+    if (topicSubTab === "sources") {
+      return (
+        <div className="flex flex-col min-h-screen">
+          {/* Topic Sub Navigation */}
+          <div className="bg-white border-b border-gray-200">
+            {renderTopicSubNavigation()}
+          </div>
+          
+          {/* Knowledge Bank Content */}
+          <div className="flex-1">
+            <div className="max-w-4xl mx-auto p-6">
+              <TopicBlogPostGrid
+                posts={topicKnowledgeBankPosts}
+                isLoading={isLoading}
+                onMarkAsRead={handleMarkAsRead}
+                topicName={currentTopic.name}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return null;
