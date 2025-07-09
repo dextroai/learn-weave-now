@@ -99,41 +99,12 @@ export const MainContent = ({
       post => post.label_id?.toString() === topicId
     );
 
-    const renderSubNavigation = () => (
-      <TopicSubNavigation
-        activeSubTab={topicSubTab}
-        onSubTabChange={setTopicSubTab}
-        notesCount={0}
-        sourcesCount={topicKnowledgeBankPosts.length}
-        topicName={topic.name}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        showSearch={true}
-      />
-    );
-
-    // Render notes section when topicSubTab is "notes"
-    if (topicSubTab === "notes") {
-      return (
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow-sm">
-            {renderSubNavigation()}
-          </div>
-          <PageBasedNotesArea 
-            category={topic.name.toLowerCase().replace(' ', '-')}
-            searchQuery={searchQuery}
-          />
-        </div>
-      );
-    }
-
-    // Render knowledge bank posts when topicSubTab is "sources"
+    // Show knowledge bank posts directly without sub-navigation
     return (
       <TopicBlogPostGrid
         posts={topicKnowledgeBankPosts}
         isLoading={isLoading}
         onMarkAsRead={handleMarkAsRead}
-        renderSubNavigation={renderSubNavigation}
         topicName={topic.name}
       />
     );
