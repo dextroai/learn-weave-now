@@ -20,6 +20,7 @@ interface BlogPostCardProps {
   post: BlogPost;
   onMarkAsRead?: (postId: string) => void;
   onInsightClick?: (post: BlogPost) => void;
+  variant?: "default" | "horizontal";
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export const BlogPostCard = ({
   post, 
   onMarkAsRead, 
   onInsightClick,
+  variant = "default",
   className
 }: BlogPostCardProps) => {
   const { toast } = useToast();
@@ -90,12 +92,70 @@ export const BlogPostCard = ({
     }
   };
 
+  // Different styling based on variant
+  const cardClassName = variant === "horizontal" 
+    ? "flex flex-col w-80 flex-shrink-0 bg-white rounded-lg border border-gray-200 hover:shadow-md cursor-pointer group transition-all duration-200"
+    : "flex items-start gap-3 py-3 px-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 group";
+
+  if (variant === "horizontal") {
+    return (
+      <div 
+        className={cn(cardClassName, className)}
+        onClick={handleClick}
+      >
+        <div className="p-4 flex-1">
+          {post.is_new && (
+            <div className="w-2 h-2 bg-orange-500 rounded-full mb-2"></div>
+          )}
+          
+          <div className="text-sm text-gray-500 mb-2">
+            {post.blogs?.name || 'Unknown Source'}
+          </div>
+          
+          <h3 className="text-base font-medium text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors mb-2">
+            {post.title}
+          </h3>
+          
+          <div className="text-xs text-gray-400 mb-3">
+            {new Date(post.detected_at).toLocaleDateString()}
+          </div>
+
+          <div className="flex gap-2 mt-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddToKnowledgeBank}
+              disabled={isInKnowledgeBank || isAdding}
+              className={cn(
+                "transition-colors flex-1",
+                isInKnowledgeBank && "text-green-600"
+              )}
+            >
+              {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              <span className="ml-1">
+                {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
+              </span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleInsightClick}
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="ml-1">Insight</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default variant (existing layout)
   return (
     <div 
-      className={cn(
-        "flex items-start gap-3 py-3 px-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 group",
-        className
-      )}
+      className={cn(cardClassName, className)}
       onClick={handleClick}
     >
       {post.is_new && (
