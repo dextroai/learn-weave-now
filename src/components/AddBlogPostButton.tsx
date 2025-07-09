@@ -1,21 +1,26 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUserTopics } from "@/hooks/useUserTopics";
 
 export const AddBlogPostButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    link: ""
+    link: "",
+    labelId: ""
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: userTopics = [] } = useUserTopics();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,14 +78,15 @@ export const AddBlogPostButton = () => {
         blogId = newBlog.id;
       }
 
-      // Create blog post
+      // Create blog post with selected label_id
       const { data: newPost, error: postError } = await supabase
         .from('blog_posts')
         .insert({
           title: formData.title,
           link: formData.link,
           blog_id: blogId,
-          is_new: true
+          label_id: formData.labelId ? parseInt(formData.labelId) : null,
+          is_new: false // Set to false since it's manually added to knowledge bank
         })
         .select(`
           *,
@@ -99,7 +105,7 @@ export const AddBlogPostButton = () => {
         detail: { post: newPost } 
       }));
 
-      // Refresh queries
+      // Refresh queries to update counters
       queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
 
@@ -111,7 +117,8 @@ export const AddBlogPostButton = () => {
       // Reset form and close dialog
       setFormData({
         title: "",
-        link: ""
+        link: "",
+        labelId: ""
       });
       setIsOpen(false);
 
@@ -169,6 +176,26 @@ export const AddBlogPostButton = () => {
               placeholder="https://example.com/post"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="labelId">Label Topic (Optional)</Label>
+            <Select 
+              value={formData.labelId} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, labelId: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a topic label" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No label</SelectItem>
+                {userTopics.map((topic) => (
+                  <SelectItem key={topic.topic_id} value={topic.topic_id.toString()}>
+                    {topic.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex justify-end gap-2 pt-4">
