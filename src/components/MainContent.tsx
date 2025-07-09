@@ -91,46 +91,63 @@ export const MainContent = ({
   if (selectedTab === "all-posts") {
     if (selectedSubTab === "knowledge-bank") {
       return (
-        <div className="max-w-4xl mx-auto p-6">
-          <BlogPostGrid
-            posts={knowledgeBankPosts}
-            isLoading={isLoading}
-            onMarkAsRead={handleMarkAsRead}
-            isKnowledgeBank={true}
-            onRemove={handleRemoveFromKnowledgeBank}
-            renderSubNavigation={() => (
-              <AllPostsSubNavigation 
-                activeSubTab={selectedSubTab} 
-                onSubTabChange={setSelectedSubTab}
-                knowledgeBankCount={knowledgeBankPosts.length}
-                allPostsCount={allBlogPosts.length}
-              />
-            )}
-            isTopicView={false}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <BlogPostGrid
-          posts={searchFilteredPosts}
-          isLoading={isLoading}
-          onMarkAsRead={handleMarkAsRead}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          showSearch={true}
-          renderSubNavigation={() => (
+        <div className="flex flex-col min-h-screen">
+          {/* All Posts Sub Navigation */}
+          <div className="bg-white border-b border-gray-200">
             <AllPostsSubNavigation 
               activeSubTab={selectedSubTab} 
               onSubTabChange={setSelectedSubTab}
               knowledgeBankCount={knowledgeBankPosts.length}
               allPostsCount={allBlogPosts.length}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
-          )}
-          isTopicView={false}
-        />
+          </div>
+          
+          {/* Knowledge Bank Content */}
+          <div className="flex-1">
+            <div className="max-w-4xl mx-auto p-6">
+              <BlogPostGrid
+                posts={knowledgeBankPosts}
+                isLoading={isLoading}
+                onMarkAsRead={handleMarkAsRead}
+                isKnowledgeBank={true}
+                onRemove={handleRemoveFromKnowledgeBank}
+                showSearch={false}
+                isTopicView={false}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col min-h-screen">
+        {/* All Posts Sub Navigation */}
+        <div className="bg-white border-b border-gray-200">
+          <AllPostsSubNavigation 
+            activeSubTab={selectedSubTab} 
+            onSubTabChange={setSelectedSubTab}
+            knowledgeBankCount={knowledgeBankPosts.length}
+            allPostsCount={allBlogPosts.length}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </div>
+        
+        {/* All Posts Content */}
+        <div className="flex-1">
+          <div className="max-w-4xl mx-auto p-6">
+            <BlogPostGrid
+              posts={searchFilteredPosts}
+              isLoading={isLoading}
+              onMarkAsRead={handleMarkAsRead}
+              showSearch={false}
+              isTopicView={false}
+            />
+          </div>
+        </div>
       </div>
     );
   }
