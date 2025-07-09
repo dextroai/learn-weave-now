@@ -16,7 +16,7 @@ export const AddBlogPostButton = () => {
   const [formData, setFormData] = useState({
     title: "",
     link: "",
-    labelId: "no-label"
+    labelId: ""
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -24,6 +24,17 @@ export const AddBlogPostButton = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that a label is selected
+    if (!formData.labelId) {
+      toast({
+        title: "Error",
+        description: "Please select a topic label",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -85,7 +96,7 @@ export const AddBlogPostButton = () => {
           title: formData.title,
           link: formData.link,
           blog_id: blogId,
-          label_id: formData.labelId === "no-label" ? null : parseInt(formData.labelId),
+          label_id: parseInt(formData.labelId),
           is_new: false // Set to false since it's manually added to knowledge bank
         })
         .select(`
@@ -118,7 +129,7 @@ export const AddBlogPostButton = () => {
       setFormData({
         title: "",
         link: "",
-        labelId: "no-label"
+        labelId: ""
       });
       setIsOpen(false);
 
@@ -179,16 +190,16 @@ export const AddBlogPostButton = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="labelId">Label Topic (Optional)</Label>
+            <Label htmlFor="labelId">Label Topic *</Label>
             <Select 
               value={formData.labelId} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, labelId: value }))}
+              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a topic label" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="no-label">No label</SelectItem>
                 {userTopics.map((topic) => (
                   <SelectItem key={topic.topic_id} value={topic.topic_id.toString()}>
                     {topic.name}
