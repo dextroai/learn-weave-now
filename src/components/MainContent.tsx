@@ -1,4 +1,3 @@
-
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
@@ -6,6 +5,9 @@ import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
 import { Tables } from "@/integrations/supabase/types";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { AddBlogPostButton } from "@/components/AddBlogPostButton";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -51,6 +53,26 @@ export const MainContent = ({
   const { removeFromKnowledgeBank } = useKnowledgeBank();
 
   const renderAllPostsContent = () => {
+    const renderSearchSection = () => (
+      <div className="bg-white rounded-lg shadow-sm p-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="relative max-w-md mx-auto flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <Input
+              type="text"
+              placeholder="Ask a question..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300"
+            />
+          </div>
+          <AddBlogPostButton />
+        </div>
+      </div>
+    );
+
     const renderSubNavigation = () => (
       <AllPostsSubNavigation
         activeSubTab={selectedSubTab}
@@ -62,27 +84,34 @@ export const MainContent = ({
 
     if (selectedSubTab === "knowledge-bank") {
       return (
-        <BlogPostGrid
-          posts={knowledgeBankPosts}
-          isLoading={false}
-          onMarkAsRead={handleMarkAsRead}
-          renderSubNavigation={renderSubNavigation}
-          isKnowledgeBank={true}
-          onRemove={removeFromKnowledgeBank}
-        />
+        <div className="space-y-4">
+          {renderSearchSection()}
+          <div className="bg-white rounded-lg shadow-sm">
+            {renderSubNavigation()}
+          </div>
+          <BlogPostGrid
+            posts={knowledgeBankPosts}
+            isLoading={false}
+            onMarkAsRead={handleMarkAsRead}
+            isKnowledgeBank={true}
+            onRemove={removeFromKnowledgeBank}
+          />
+        </div>
       );
     }
 
     return (
-      <BlogPostGrid
-        posts={searchQuery ? searchFilteredPosts : allBlogPosts}
-        isLoading={isLoading}
-        onMarkAsRead={handleMarkAsRead}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        showSearch={true}
-        renderSubNavigation={renderSubNavigation}
-      />
+      <div className="space-y-4">
+        {renderSearchSection()}
+        <div className="bg-white rounded-lg shadow-sm">
+          {renderSubNavigation()}
+        </div>
+        <BlogPostGrid
+          posts={searchQuery ? searchFilteredPosts : allBlogPosts}
+          isLoading={isLoading}
+          onMarkAsRead={handleMarkAsRead}
+        />
+      </div>
     );
   };
 
