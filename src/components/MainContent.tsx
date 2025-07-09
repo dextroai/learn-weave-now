@@ -1,4 +1,5 @@
 
+
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
@@ -146,24 +147,22 @@ export const MainContent = ({
       />
     );
 
-    // Render notes section when topicSubTab is "notes"
+    // Render notes section when topicSubTab is "notes" - FULL WIDTH
     if (topicSubTab === "notes") {
       return (
         <div className="space-y-4">
           <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
             {renderSubNavigation()}
           </div>
-          <div className="max-w-4xl mx-auto">
-            <PageBasedNotesArea 
-              category={topic.name.toLowerCase().replace(' ', '-')}
-              searchQuery={searchQuery}
-            />
-          </div>
+          <PageBasedNotesArea 
+            category={topic.name.toLowerCase().replace(' ', '-')}
+            searchQuery={searchQuery}
+          />
         </div>
       );
     }
 
-    // Render knowledge bank posts when topicSubTab is "sources"
+    // Render knowledge bank posts when topicSubTab is "sources" - CENTERED
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
@@ -187,3 +186,4 @@ export const MainContent = ({
     </div>
   );
 };
+
