@@ -16,7 +16,7 @@ export const AddBlogPostButton = () => {
   const [formData, setFormData] = useState({
     title: "",
     link: "",
-    labelId: ""
+    labelId: "no-label"
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -85,7 +85,7 @@ export const AddBlogPostButton = () => {
           title: formData.title,
           link: formData.link,
           blog_id: blogId,
-          label_id: formData.labelId ? parseInt(formData.labelId) : null,
+          label_id: formData.labelId === "no-label" ? null : parseInt(formData.labelId),
           is_new: false // Set to false since it's manually added to knowledge bank
         })
         .select(`
@@ -118,7 +118,7 @@ export const AddBlogPostButton = () => {
       setFormData({
         title: "",
         link: "",
-        labelId: ""
+        labelId: "no-label"
       });
       setIsOpen(false);
 
@@ -188,7 +188,7 @@ export const AddBlogPostButton = () => {
                 <SelectValue placeholder="Select a topic label" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No label</SelectItem>
+                <SelectItem value="no-label">No label</SelectItem>
                 {userTopics.map((topic) => (
                   <SelectItem key={topic.topic_id} value={topic.topic_id.toString()}>
                     {topic.name}
