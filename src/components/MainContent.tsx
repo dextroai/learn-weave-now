@@ -1,3 +1,4 @@
+
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
@@ -55,8 +56,8 @@ export const MainContent = ({
   const renderAllPostsContent = () => {
     const renderSearchSection = () => (
       <div className="bg-white rounded-lg shadow-sm p-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="relative max-w-md mx-auto flex-1">
+        <div className="flex items-center justify-center gap-3 max-w-2xl mx-auto">
+          <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
@@ -86,16 +87,18 @@ export const MainContent = ({
       return (
         <div className="space-y-4">
           {renderSearchSection()}
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
             {renderSubNavigation()}
           </div>
-          <BlogPostGrid
-            posts={knowledgeBankPosts}
-            isLoading={false}
-            onMarkAsRead={handleMarkAsRead}
-            isKnowledgeBank={true}
-            onRemove={removeFromKnowledgeBank}
-          />
+          <div className="max-w-4xl mx-auto">
+            <BlogPostGrid
+              posts={knowledgeBankPosts}
+              isLoading={false}
+              onMarkAsRead={handleMarkAsRead}
+              isKnowledgeBank={true}
+              onRemove={removeFromKnowledgeBank}
+            />
+          </div>
         </div>
       );
     }
@@ -103,14 +106,16 @@ export const MainContent = ({
     return (
       <div className="space-y-4">
         {renderSearchSection()}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
           {renderSubNavigation()}
         </div>
-        <BlogPostGrid
-          posts={searchQuery ? searchFilteredPosts : allBlogPosts}
-          isLoading={isLoading}
-          onMarkAsRead={handleMarkAsRead}
-        />
+        <div className="max-w-4xl mx-auto">
+          <BlogPostGrid
+            posts={searchQuery ? searchFilteredPosts : allBlogPosts}
+            isLoading={isLoading}
+            onMarkAsRead={handleMarkAsRead}
+          />
+        </div>
       </div>
     );
   };
@@ -145,13 +150,15 @@ export const MainContent = ({
     if (topicSubTab === "notes") {
       return (
         <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
             {renderSubNavigation()}
           </div>
-          <PageBasedNotesArea 
-            category={topic.name.toLowerCase().replace(' ', '-')}
-            searchQuery={searchQuery}
-          />
+          <div className="max-w-4xl mx-auto">
+            <PageBasedNotesArea 
+              category={topic.name.toLowerCase().replace(' ', '-')}
+              searchQuery={searchQuery}
+            />
+          </div>
         </div>
       );
     }
@@ -159,21 +166,23 @@ export const MainContent = ({
     // Render knowledge bank posts when topicSubTab is "sources"
     return (
       <div className="space-y-4">
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
           {renderSubNavigation()}
         </div>
-        <TopicBlogPostGrid
-          posts={topicKnowledgeBankPosts}
-          isLoading={isLoading}
-          onMarkAsRead={handleMarkAsRead}
-          topicName={topic.name}
-        />
+        <div className="max-w-4xl mx-auto">
+          <TopicBlogPostGrid
+            posts={topicKnowledgeBankPosts}
+            isLoading={isLoading}
+            onMarkAsRead={handleMarkAsRead}
+            topicName={topic.name}
+          />
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="py-6">
       {selectedTab === "all-posts" ? renderAllPostsContent() : renderTopicContent()}
     </div>
   );
