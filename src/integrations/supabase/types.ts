@@ -138,6 +138,105 @@ export type Database = {
           },
         ]
       }
+      note_boxes: {
+        Row: {
+          box_id: string
+          category: string
+          content: string | null
+          created_at: string
+          height: number
+          id: string
+          updated_at: string
+          user_id: string
+          width: number
+          x: number
+          y: number
+        }
+        Insert: {
+          box_id: string
+          category: string
+          content?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          box_id?: string
+          category?: string
+          content?: string | null
+          created_at?: string
+          height?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      note_pages: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          page_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          page_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          page_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_topics: {
         Row: {
           created_at: string

@@ -1,6 +1,8 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, X, Move } from 'lucide-react';
+import { useNoteBoxesDatabase } from '@/hooks/useNoteBoxesDatabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NoteBox {
   id: string;
@@ -17,22 +19,23 @@ interface InteractiveNotesAreaProps {
 }
 
 export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAreaProps) {
-  const [noteBoxes, setNoteBoxes] = useState<NoteBox[]>([]);
+  const { user } = useAuth();
+  const { noteBoxes, addNoteBox, updateNoteBox, deleteNoteBox, isLoading } = useNoteBoxesDatabase(category);
   const [draggedBox, setDraggedBox] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load saved notes from localStorage
-  useEffect(() => {
-    const savedNotes = localStorage.getItem(`interactive-notes-${category}`);
-    if (savedNotes) {
-      setNoteBoxes(JSON.parse(savedNotes));
-    }
-  }, [category]);
-
-  const saveNotes = (boxes: NoteBox[]) => {
-    localStorage.setItem(`interactive-notes-${category}`, JSON.stringify(boxes));
-  };
+  // If user is not authenticated, show login message
+  if (!user) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please sign in to access your notes.</p>
+        </div>
+      </div>
+    );
+  }
 
   const createNewNoteBox = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && containerRef.current) {
@@ -45,24 +48,15 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
         width: 300,
         height: 100,
       };
-      const updatedBoxes = [...noteBoxes, newBox];
-      setNoteBoxes(updatedBoxes);
-      saveNotes(updatedBoxes);
+      addNoteBox(newBox);
     }
   };
 
   const updateNoteContent = (id: string, content: string) => {
-    const updatedBoxes = noteBoxes.map(box =>
-      box.id === id ? { ...box, content } : box
-    );
-    setNoteBoxes(updatedBoxes);
-    saveNotes(updatedBoxes);
-  };
-
-  const deleteNoteBox = (id: string) => {
-    const updatedBoxes = noteBoxes.filter(box => box.id !== id);
-    setNoteBoxes(updatedBoxes);
-    saveNotes(updatedBoxes);
+    const existingBox = noteBoxes.find(box => box.id === id);
+    if (existingBox) {
+      updateNoteBox({ ...existingBox, content });
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent, boxId: string) => {
@@ -84,25 +78,29 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggedBox && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const updatedBoxes = noteBoxes.map(box =>
-        box.id === draggedBox
-          ? {
-              ...box,
-              x: Math.max(0, e.clientX - rect.left - dragOffset.x),
-              y: Math.max(0, e.clientY - rect.top - dragOffset.y),
-            }
-          : box
-      );
-      setNoteBoxes(updatedBoxes);
+      const box = noteBoxes.find(b => b.id === draggedBox);
+      if (box) {
+        const newX = Math.max(0, e.clientX - rect.left - dragOffset.x);
+        const newY = Math.max(0, e.clientY - rect.top - dragOffset.y);
+        updateNoteBox({ ...box, x: newX, y: newY });
+      }
     }
   };
 
   const handleMouseUp = () => {
-    if (draggedBox) {
-      saveNotes(noteBoxes);
-      setDraggedBox(null);
-    }
+    setDraggedBox(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading your notes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">

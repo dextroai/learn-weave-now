@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { InteractiveNotesArea } from './InteractiveNotesArea';
-
-interface NotePage {
-  id: string;
-  title: string;
-  createdAt: string;
-}
+import { useNotePagesDatabase } from '@/hooks/useNotePagesDatabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PageBasedNotesAreaProps {
   category: string;
@@ -14,54 +11,49 @@ interface PageBasedNotesAreaProps {
 }
 
 export function PageBasedNotesArea({ category, searchQuery = "" }: PageBasedNotesAreaProps) {
-  const [pages, setPages] = useState<NotePage[]>([]);
+  const { user } = useAuth();
+  const { pages, addPage, deletePage, isLoading } = useNotePagesDatabase(category);
   const [activePage, setActivePage] = useState<string | null>(null);
   const [isAddingPage, setIsAddingPage] = useState(false);
   const [newPageTitle, setNewPageTitle] = useState('');
 
-  // Load saved pages from localStorage
-  useEffect(() => {
-    const savedPages = localStorage.getItem(`notes-pages-${category}`);
-    if (savedPages) {
-      const parsedPages = JSON.parse(savedPages);
-      setPages(parsedPages);
-      if (parsedPages.length > 0 && !activePage) {
-        setActivePage(parsedPages[0].id);
-      }
-    }
-  }, [category]);
+  // Set active page when pages are loaded
+  if (pages.length > 0 && !activePage && !isLoading) {
+    setActivePage(pages[0].id);
+  }
 
-  const savePages = (newPages: NotePage[]) => {
-    localStorage.setItem(`notes-pages-${category}`, JSON.stringify(newPages));
-  };
+  // If user is not authenticated, show login message
+  if (!user) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please sign in to access your notes.</p>
+        </div>
+      </div>
+    );
+  }
 
   const addNewPage = () => {
     if (newPageTitle.trim()) {
-      const newPage: NotePage = {
+      const newPage = {
         id: Date.now().toString(),
         title: newPageTitle.trim(),
-        createdAt: new Date().toISOString(),
       };
-      const updatedPages = [...pages, newPage];
-      setPages(updatedPages);
-      savePages(updatedPages);
+      addPage(newPage);
       setActivePage(newPage.id);
       setNewPageTitle('');
       setIsAddingPage(false);
     }
   };
 
-  const deletePage = (pageId: string) => {
-    const updatedPages = pages.filter(page => page.id !== pageId);
-    setPages(updatedPages);
-    savePages(updatedPages);
-    
-    // Clear the page's notes from localStorage
-    localStorage.removeItem(`interactive-notes-${category}-${pageId}`);
+  const handleDeletePage = (pageId: string) => {
+    deletePage(pageId);
     
     // If we deleted the active page, switch to another page or none
     if (activePage === pageId) {
-      setActivePage(updatedPages.length > 0 ? updatedPages[0].id : null);
+      const remainingPages = pages.filter(page => page.id !== pageId);
+      setActivePage(remainingPages.length > 0 ? remainingPages[0].id : null);
     }
   };
 
@@ -80,6 +72,17 @@ export function PageBasedNotesArea({ category, searchQuery = "" }: PageBasedNote
         page.title.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : pages;
+
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading your pages...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -154,7 +157,7 @@ export function PageBasedNotesArea({ category, searchQuery = "" }: PageBasedNote
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deletePage(page.id);
+                        handleDeletePage(page.id);
                       }}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors rounded"
                     >

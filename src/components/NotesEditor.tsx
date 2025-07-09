@@ -1,27 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
+import { useNotesDatabase } from '@/hooks/useNotesDatabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NotesEditorProps {
   category: string;
 }
 
 export function NotesEditor({ category }: NotesEditorProps) {
-  const [notes, setNotes] = useState('');
-
-  // Load saved notes from localStorage
-  useEffect(() => {
-    const savedNotes = localStorage.getItem(`notes-${category}`);
-    if (savedNotes) {
-      setNotes(savedNotes);
-    }
-  }, [category]);
-
-  // Save notes to localStorage
-  const handleNotesChange = (value: string) => {
-    setNotes(value);
-    localStorage.setItem(`notes-${category}`, value);
-  };
+  const { user } = useAuth();
+  const { notes, updateNotes, isLoading } = useNotesDatabase(category);
 
   const getCategoryTitle = (category: string) => {
     switch (category) {
@@ -37,6 +26,18 @@ export function NotesEditor({ category }: NotesEditorProps) {
         return category.charAt(0).toUpperCase() + category.slice(1);
     }
   };
+
+  // If user is not authenticated, show login message
+  if (!user) {
+    return (
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please sign in to access your notes.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -55,8 +56,9 @@ export function NotesEditor({ category }: NotesEditorProps) {
       <div className="w-full">
         <Textarea
           value={notes}
-          onChange={(e) => handleNotesChange(e.target.value)}
-          placeholder="Start writing your notes here..."
+          onChange={(e) => updateNotes(e.target.value)}
+          placeholder={isLoading ? "Loading your notes..." : "Start writing your notes here..."}
+          disabled={isLoading}
           className="w-full min-h-screen border-none resize-none focus:ring-0 focus:outline-none text-base leading-relaxed bg-white rounded-none p-6"
           style={{ fontSize: '16px', lineHeight: '1.6' }}
         />
