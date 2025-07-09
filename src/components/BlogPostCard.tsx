@@ -2,6 +2,7 @@
 import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Eye, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -92,6 +93,15 @@ export const BlogPostCard = ({
     }
   };
 
+  // Get topic label - you can customize this logic based on your data structure
+  const getTopicLabel = () => {
+    // This is a placeholder - you might want to derive this from post.label_id or other data
+    if (post.blogs?.name?.toLowerCase().includes('nvidia')) return 'MLOps';
+    if (post.blogs?.name?.toLowerCase().includes('ai')) return 'AI';
+    if (post.blogs?.name?.toLowerCase().includes('machine learning')) return 'ML';
+    return 'Tech'; // Default fallback
+  };
+
   if (variant === "horizontal") {
     return (
       <div 
@@ -175,9 +185,14 @@ export const BlogPostCard = ({
       
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-2">
-        {/* Source */}
-        <div className="text-sm text-gray-500">
-          {post.blogs?.name || 'Unknown Source'}
+        {/* Topic label and source */}
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {getTopicLabel()}
+          </Badge>
+          <div className="text-sm text-gray-500">
+            {post.blogs?.name || 'Unknown Source'}
+          </div>
         </div>
         
         {/* Title */}
