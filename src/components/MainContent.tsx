@@ -3,6 +3,7 @@ import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
 import { TopicSubNavigation } from "@/components/TopicSubNavigation";
+import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
 import { Tables } from "@/integrations/supabase/types";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 
@@ -93,20 +94,41 @@ export const MainContent = ({
       return <div>Topic not found</div>;
     }
 
+    const renderSubNavigation = () => (
+      <TopicSubNavigation
+        activeSubTab={topicSubTab}
+        onSubTabChange={setTopicSubTab}
+        notesCount={0}
+        sourcesCount={filteredPosts.length}
+        topicName={topic.name}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        showSearch={true}
+      />
+    );
+
+    // Render notes section when topicSubTab is "notes"
+    if (topicSubTab === "notes") {
+      return (
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm">
+            {renderSubNavigation()}
+          </div>
+          <PageBasedNotesArea 
+            category={topic.name.toLowerCase().replace(' ', '-')}
+            searchQuery={searchQuery}
+          />
+        </div>
+      );
+    }
+
+    // Render sources/knowledge bank when topicSubTab is "sources"
     return (
       <TopicBlogPostGrid
         posts={filteredPosts}
         isLoading={isLoading}
         onMarkAsRead={handleMarkAsRead}
-        renderSubNavigation={() => (
-          <TopicSubNavigation
-            activeSubTab={topicSubTab}
-            onSubTabChange={setTopicSubTab}
-            notesCount={0}
-            sourcesCount={filteredPosts.length}
-            topicName={topic.name}
-          />
-        )}
+        renderSubNavigation={renderSubNavigation}
         topicName={topic.name}
       />
     );
