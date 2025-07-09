@@ -22,7 +22,7 @@ interface BlogPostCardProps {
   onInsightClick?: (post: BlogPost) => void;
   variant?: "default" | "horizontal";
   className?: string;
-  showAddButton?: boolean; // New prop to control Add button visibility
+  showAddButton?: boolean;
 }
 
 export const BlogPostCard = ({ 
@@ -31,7 +31,7 @@ export const BlogPostCard = ({
   onInsightClick,
   variant = "default",
   className,
-  showAddButton = false // Default to false
+  showAddButton = false
 }: BlogPostCardProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -66,10 +66,8 @@ export const BlogPostCard = ({
     
     try {
       if (user && addToKnowledgeBank) {
-        // For authenticated users, use database
         addToKnowledgeBank(post);
       } else {
-        // For unauthenticated users, use custom event
         window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', {
           detail: { post }
         }));
@@ -94,34 +92,37 @@ export const BlogPostCard = ({
     }
   };
 
-  // Different styling based on variant
-  const cardClassName = variant === "horizontal" 
-    ? "flex flex-col w-80 flex-shrink-0 bg-white rounded-lg border border-gray-200 hover:shadow-md cursor-pointer group transition-all duration-200"
-    : "flex items-start gap-3 py-3 px-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 group";
-
   if (variant === "horizontal") {
     return (
       <div 
-        className={cn(cardClassName, className)}
+        className={cn(
+          "flex flex-col w-80 flex-shrink-0 bg-white rounded-lg border border-gray-200 hover:shadow-md cursor-pointer group transition-all duration-200",
+          className
+        )}
         onClick={handleClick}
       >
-        <div className="p-4 flex-1">
-          {post.is_new && (
-            <div className="w-2 h-2 bg-orange-500 rounded-full mb-2"></div>
-          )}
-          
-          <div className="text-sm text-gray-500 mb-2">
-            {post.blogs?.name || 'Unknown Source'}
+        <div className="p-4 flex-1 flex flex-col">
+          {/* New indicator and source */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="text-sm text-gray-500 truncate flex-1 mr-2">
+              {post.blogs?.name || 'Unknown Source'}
+            </div>
+            {post.is_new && (
+              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+            )}
           </div>
           
-          <h3 className="text-base font-medium text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors mb-2">
+          {/* Title */}
+          <h3 className="text-base font-medium text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors mb-3 flex-1">
             {post.title}
           </h3>
           
-          <div className="text-xs text-gray-400 mb-3">
+          {/* Date */}
+          <div className="text-xs text-gray-400 mb-4">
             {new Date(post.detected_at).toLocaleDateString()}
           </div>
 
+          {/* Action buttons */}
           <div className="flex gap-2 mt-auto">
             {showAddButton && (
               <Button
@@ -130,11 +131,11 @@ export const BlogPostCard = ({
                 onClick={handleAddToKnowledgeBank}
                 disabled={isInKnowledgeBank || isAdding}
                 className={cn(
-                  "transition-colors flex-1",
+                  "transition-colors flex-1 text-xs",
                   isInKnowledgeBank && "text-green-600"
                 )}
               >
-                {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {isInKnowledgeBank ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
                 <span className="ml-1">
                   {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
                 </span>
@@ -145,9 +146,9 @@ export const BlogPostCard = ({
               variant="ghost"
               size="sm"
               onClick={handleInsightClick}
-              className={showAddButton ? "flex-1" : "w-full"}
+              className={cn("text-xs", showAddButton ? "flex-1" : "w-full")}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-3 w-3" />
               <span className="ml-1">Insight</span>
             </Button>
           </div>
@@ -156,31 +157,42 @@ export const BlogPostCard = ({
     );
   }
 
-  // Default variant (existing layout)
+  // Default variant
   return (
     <div 
-      className={cn(cardClassName, className)}
+      className={cn(
+        "flex items-start gap-4 py-4 px-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 group transition-colors",
+        className
+      )}
       onClick={handleClick}
     >
-      {post.is_new && (
-        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-      )}
+      {/* New indicator */}
+      <div className="flex-shrink-0 pt-1">
+        {post.is_new && (
+          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+        )}
+      </div>
       
-      <div className="flex-1 min-w-0">
-        <div className="text-sm text-gray-500 mb-1">
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-2">
+        {/* Source */}
+        <div className="text-sm text-gray-500">
           {post.blogs?.name || 'Unknown Source'}
         </div>
         
+        {/* Title */}
         <h3 className="text-base font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {post.title}
         </h3>
         
-        <div className="text-xs text-gray-400 mt-1">
+        {/* Date */}
+        <div className="text-xs text-gray-400">
           {new Date(post.detected_at).toLocaleDateString()}
         </div>
       </div>
 
-      <div className="flex-shrink-0 ml-2 flex gap-2">
+      {/* Action buttons */}
+      <div className="flex-shrink-0 flex gap-2">
         {showAddButton && (
           <Button
             variant="ghost"
@@ -188,7 +200,7 @@ export const BlogPostCard = ({
             onClick={handleAddToKnowledgeBank}
             disabled={isInKnowledgeBank || isAdding}
             className={cn(
-              "transition-colors",
+              "transition-colors text-xs px-3",
               isInKnowledgeBank && "text-green-600"
             )}
           >
@@ -203,6 +215,7 @@ export const BlogPostCard = ({
           variant="ghost"
           size="sm"
           onClick={handleInsightClick}
+          className="text-xs px-3"
         >
           <Eye className="h-4 w-4" />
           <span className="ml-1">Insight</span>
