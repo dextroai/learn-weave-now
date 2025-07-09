@@ -94,12 +94,17 @@ export const MainContent = ({
       return <div>Topic not found</div>;
     }
 
+    // Filter posts for this specific topic from knowledge bank
+    const topicKnowledgeBankPosts = knowledgeBankPosts.filter(
+      post => post.label_id?.toString() === topicId
+    );
+
     const renderSubNavigation = () => (
       <TopicSubNavigation
         activeSubTab={topicSubTab}
         onSubTabChange={setTopicSubTab}
         notesCount={0}
-        sourcesCount={filteredPosts.length}
+        sourcesCount={topicKnowledgeBankPosts.length}
         topicName={topic.name}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -122,10 +127,10 @@ export const MainContent = ({
       );
     }
 
-    // Render sources/knowledge bank when topicSubTab is "sources"
+    // Render knowledge bank posts when topicSubTab is "sources"
     return (
       <TopicBlogPostGrid
-        posts={filteredPosts}
+        posts={topicKnowledgeBankPosts}
         isLoading={isLoading}
         onMarkAsRead={handleMarkAsRead}
         renderSubNavigation={renderSubNavigation}
