@@ -2,6 +2,7 @@
 import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Eye, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -90,6 +91,21 @@ export const BlogPostCard = ({
     } finally {
       setIsAdding(false);
     }
+  };
+
+  // Get topic label based on post content or source
+  const getTopicLabel = () => {
+    const title = post.title.toLowerCase();
+    const source = post.blogs?.name?.toLowerCase() || '';
+    
+    if (title.includes('mlops') || source.includes('mlops')) return 'MLOps';
+    if (title.includes('nlp') || title.includes('natural language')) return 'NLP';
+    if (title.includes('computer vision') || title.includes('cv')) return 'CV';
+    if (title.includes('ai') || title.includes('artificial intelligence')) return 'AI';
+    if (title.includes('machine learning') || title.includes('ml')) return 'ML';
+    if (title.includes('deep learning') || title.includes('neural')) return 'DL';
+    if (title.includes('data science') || title.includes('analytics')) return 'Data';
+    return 'Tech';
   };
 
   if (variant === "horizontal") {
@@ -191,35 +207,43 @@ export const BlogPostCard = ({
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex-shrink-0 flex gap-2">
-        {showAddButton && (
+      {/* Right side with topic label and action buttons */}
+      <div className="flex-shrink-0 flex items-center gap-3">
+        {/* Topic Label */}
+        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100">
+          {getTopicLabel()}
+        </Badge>
+        
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {showAddButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddToKnowledgeBank}
+              disabled={isInKnowledgeBank || isAdding}
+              className={cn(
+                "transition-colors text-xs px-3",
+                isInKnowledgeBank && "text-green-600"
+              )}
+            >
+              {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              <span className="ml-1">
+                {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
+              </span>
+            </Button>
+          )}
+          
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleAddToKnowledgeBank}
-            disabled={isInKnowledgeBank || isAdding}
-            className={cn(
-              "transition-colors text-xs px-3",
-              isInKnowledgeBank && "text-green-600"
-            )}
+            onClick={handleInsightClick}
+            className="text-xs px-3"
           >
-            {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            <span className="ml-1">
-              {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
-            </span>
+            <Eye className="h-4 w-4" />
+            <span className="ml-1">Insight</span>
           </Button>
-        )}
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleInsightClick}
-          className="text-xs px-3"
-        >
-          <Eye className="h-4 w-4" />
-          <span className="ml-1">Insight</span>
-        </Button>
+        </div>
       </div>
     </div>
   );

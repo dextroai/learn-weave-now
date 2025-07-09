@@ -1,8 +1,6 @@
 
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { Tables } from "@/integrations/supabase/types";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -19,7 +17,7 @@ interface DateGroupedBlogPostsProps {
   onInsightClick: (post: BlogPost) => void;
   onRemove?: (postId: string) => void;
   isKnowledgeBank?: boolean;
-  showAddButton?: boolean; // New prop to control Add button visibility
+  showAddButton?: boolean;
 }
 
 const groupPostsByDate = (posts: BlogPost[]) => {
@@ -43,7 +41,7 @@ export function DateGroupedBlogPosts({
   onInsightClick, 
   onRemove, 
   isKnowledgeBank = false,
-  showAddButton = false // Default to false
+  showAddButton = false
 }: DateGroupedBlogPostsProps) {
   const groupedPosts = groupPostsByDate(posts);
 
@@ -102,28 +100,6 @@ export function DateGroupedBlogPosts({
                   onInsightClick={onInsightClick}
                   showAddButton={showAddButton}
                 />
-                
-                {isKnowledgeBank && onRemove && (
-                  <div className="absolute top-2 right-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove(post.id);
-                      }}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {isKnowledgeBank && post.topicName && (
-                  <div className="absolute top-2 left-4 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                    {post.topicName}
-                  </div>
-                )}
               </div>
             ))}
           </div>
