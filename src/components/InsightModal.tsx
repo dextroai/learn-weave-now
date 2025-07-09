@@ -9,6 +9,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { useUserTopics } from "@/hooks/useUserTopics";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { useAuth } from "@/contexts/AuthContext";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -27,10 +29,16 @@ interface InsightModalProps {
 export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) => {
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [selectedLabelId, setSelectedLabelId] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
   const { data: userTopics = [] } = useUserTopics();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { knowledgeBankPosts, addToKnowledgeBank } = useKnowledgeBank();
 
   if (!post) return null;
+
+  // Check if post is already in knowledge bank
+  const isInKnowledgeBank = knowledgeBankPosts.some(kbPost => kbPost.id === post.id);
 
   const handleLike = () => {
     // TODO: Implement like functionality
@@ -43,7 +51,15 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
   };
 
   const handleAddToKnowledge = () => {
-    if (userTopics.length === 0) {
+    if (isInKnowledgeBank) {
+      toast({
+        title: "Already Added",
+        description: "This post is already in your knowledge bank.",
+      });
+      return;
+    }
+
+    if (user && userTopics.length === 0) {
       toast({
         title: "No Topics Available",
         description: "Please create a topic first before adding posts to knowledge bank.",
@@ -51,10 +67,50 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
       });
       return;
     }
-    setIsLabelDialogOpen(true);
+
+    if (user) {
+      // For authenticated users, show topic selection dialog
+      setIsLabelDialogOpen(true);
+    } else {
+      // For unauthenticated users, add directly to localStorage
+      handleDirectAddToKnowledge();
+    }
   };
 
-  const handleConfirmAddToKnowledge = () => {
+  const handleDirectAddToKnowledge = async () => {
+    setIsAdding(true);
+    
+    try {
+      if (user && addToKnowledgeBank) {
+        // For authenticated users, use database
+        addToKnowledgeBank(post);
+      } else {
+        // For unauthenticated users, use custom event
+        window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', {
+          detail: { post }
+        }));
+      }
+      
+      // Close modal and redirect to Knowledge Bank
+      onOpenChange(false);
+      window.dispatchEvent(new CustomEvent('switchToKnowledgeBank'));
+      
+      toast({
+        title: "Added to Knowledge Bank",
+        description: `"${post.title}" has been added to your knowledge bank.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add post to knowledge bank.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleConfirmAddToKnowledge = async () => {
     if (!selectedLabelId) {
       toast({
         title: "Error",
@@ -64,33 +120,46 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
       return;
     }
 
-    // Create a new post object with the selected label
-    const postWithLabel = {
-      ...post,
-      label_id: parseInt(selectedLabelId)
-    };
+    setIsAdding(true);
 
-    // Add post to knowledge bank
-    window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
-      detail: { post: postWithLabel } 
-    }));
-    
-    // Close dialogs and redirect to All Posts with Knowledge Bank sub-tab
-    setIsLabelDialogOpen(false);
-    onOpenChange(false);
-    
-    // Trigger a custom event to switch to All Posts tab and Knowledge Bank sub-tab
-    window.dispatchEvent(new CustomEvent('switchToKnowledgeBank'));
-    
-    // Reset selected label
-    setSelectedLabelId("");
-    
-    console.log('Added to Knowledge Bank:', post.title, 'with label:', selectedLabelId);
-    
-    toast({
-      title: "Success",
-      description: "Post added to Knowledge Bank successfully!",
-    });
+    try {
+      // Create a new post object with the selected label
+      const postWithLabel = {
+        ...post,
+        label_id: parseInt(selectedLabelId)
+      };
+
+      if (user && addToKnowledgeBank) {
+        // For authenticated users, use database
+        addToKnowledgeBank(postWithLabel);
+      } else {
+        // For unauthenticated users, use custom event
+        window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
+          detail: { post: postWithLabel } 
+        }));
+      }
+      
+      // Close dialogs and redirect to Knowledge Bank
+      setIsLabelDialogOpen(false);
+      onOpenChange(false);
+      window.dispatchEvent(new CustomEvent('switchToKnowledgeBank'));
+      
+      // Reset selected label
+      setSelectedLabelId("");
+      
+      toast({
+        title: "Added to Knowledge Bank",
+        description: `"${post.title}" has been added to your knowledge bank.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add post to knowledge bank.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
@@ -132,10 +201,13 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
               variant="ghost"
               size="sm"
               onClick={handleAddToKnowledge}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              disabled={isInKnowledgeBank || isAdding}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
             >
               <Move className="h-4 w-4" />
-              <span className="text-xs">Add to Knowledge</span>
+              <span className="text-xs">
+                {isInKnowledgeBank ? "Added to Knowledge" : isAdding ? "Adding..." : "Add to Knowledge"}
+              </span>
             </Button>
           </div>
           
@@ -205,14 +277,15 @@ export const InsightModal = ({ post, isOpen, onOpenChange }: InsightModalProps) 
                   setIsLabelDialogOpen(false);
                   setSelectedLabelId("");
                 }}
+                disabled={isAdding}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleConfirmAddToKnowledge}
-                disabled={!selectedLabelId}
+                disabled={!selectedLabelId || isAdding}
               >
-                Add to Knowledge Bank
+                {isAdding ? "Adding..." : "Add to Knowledge Bank"}
               </Button>
             </div>
           </div>
