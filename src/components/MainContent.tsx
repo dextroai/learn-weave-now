@@ -94,7 +94,7 @@ export const MainContent = ({
             onRemove={handleRemoveFromKnowledgeBank}
             renderSubNavigation={() => (
               <AllPostsSubNavigation 
-                selectedSubTab={selectedSubTab} 
+                activeSubTab={selectedSubTab} 
                 onSubTabChange={setSelectedSubTab}
                 knowledgeBankCount={knowledgeBankPosts.length}
                 allPostsCount={allBlogPosts.length}
@@ -117,7 +117,7 @@ export const MainContent = ({
           showSearch={true}
           renderSubNavigation={() => (
             <AllPostsSubNavigation 
-              selectedSubTab={selectedSubTab} 
+              activeSubTab={selectedSubTab} 
               onSubTabChange={setSelectedSubTab}
               knowledgeBankCount={knowledgeBankPosts.length}
               allPostsCount={allBlogPosts.length}
@@ -136,12 +136,14 @@ export const MainContent = ({
         <div className="max-w-6xl mx-auto p-6">
           <div className="bg-white rounded-lg shadow-sm px-4 pt-4 mb-4">
             <TopicSubNavigation 
-              selectedSubTab={topicSubTab}
+              activeSubTab={topicSubTab}
               onSubTabChange={setTopicSubTab}
+              notesCount={0}
+              sourcesCount={filteredPosts.length}
               topicName={currentTopic.name}
             />
           </div>
-          <PageBasedNotesArea topicName={currentTopic.name} />
+          <PageBasedNotesArea category={currentTopic.name} />
         </div>
       );
     }
@@ -155,8 +157,10 @@ export const MainContent = ({
           topicName={currentTopic.name}
           renderSubNavigation={() => (
             <TopicSubNavigation 
-              selectedSubTab={topicSubTab}
+              activeSubTab={topicSubTab}
               onSubTabChange={setTopicSubTab}
+              notesCount={0}
+              sourcesCount={filteredPosts.length}
               topicName={currentTopic.name}
             />
           )}
