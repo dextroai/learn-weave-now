@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserTopics } from "@/hooks/useUserTopics";
+import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 
 export const AddBlogPostButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,7 @@ export const AddBlogPostButton = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: userTopics = [] } = useUserTopics();
+  const { addToKnowledgeBank } = useKnowledgeBank();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +91,7 @@ export const AddBlogPostButton = () => {
         blogId = newBlog.id;
       }
 
-      // Create blog post with selected label_id
+      // Create blog post with selected label_id and set is_new to false
       const { data: newPost, error: postError } = await supabase
         .from('blog_posts')
         .insert({
@@ -97,7 +99,7 @@ export const AddBlogPostButton = () => {
           link: formData.link,
           blog_id: blogId,
           label_id: parseInt(formData.labelId),
-          is_new: false // Set to false since it's manually added to knowledge bank
+          is_new: false // Set to false since it's manually added
         })
         .select(`
           *,
@@ -111,14 +113,18 @@ export const AddBlogPostButton = () => {
 
       if (postError) throw postError;
 
-      // Add to Knowledge Bank automatically
-      window.dispatchEvent(new CustomEvent('postAddedToKnowledgeBank', { 
-        detail: { post: newPost } 
-      }));
+      // Add to Knowledge Bank using the hook
+      if (addToKnowledgeBank) {
+        addToKnowledgeBank(newPost);
+      }
 
-      // Refresh queries to update counters
+      // Refresh queries to update the UI
       queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledge-bank-posts'] });
+
+      // Switch to Knowledge Bank view
+      window.dispatchEvent(new CustomEvent('switchToKnowledgeBank'));
 
       toast({
         title: "Success",
