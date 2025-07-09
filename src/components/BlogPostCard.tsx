@@ -22,6 +22,7 @@ interface BlogPostCardProps {
   onInsightClick?: (post: BlogPost) => void;
   variant?: "default" | "horizontal";
   className?: string;
+  showAddButton?: boolean; // New prop to control Add button visibility
 }
 
 export const BlogPostCard = ({ 
@@ -29,7 +30,8 @@ export const BlogPostCard = ({
   onMarkAsRead, 
   onInsightClick,
   variant = "default",
-  className
+  className,
+  showAddButton = false // Default to false
 }: BlogPostCardProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -121,27 +123,29 @@ export const BlogPostCard = ({
           </div>
 
           <div className="flex gap-2 mt-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleAddToKnowledgeBank}
-              disabled={isInKnowledgeBank || isAdding}
-              className={cn(
-                "transition-colors flex-1",
-                isInKnowledgeBank && "text-green-600"
-              )}
-            >
-              {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              <span className="ml-1">
-                {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
-              </span>
-            </Button>
+            {showAddButton && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleAddToKnowledgeBank}
+                disabled={isInKnowledgeBank || isAdding}
+                className={cn(
+                  "transition-colors flex-1",
+                  isInKnowledgeBank && "text-green-600"
+                )}
+              >
+                {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                <span className="ml-1">
+                  {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
+                </span>
+              </Button>
+            )}
             
             <Button
               variant="ghost"
               size="sm"
               onClick={handleInsightClick}
-              className="flex-1"
+              className={showAddButton ? "flex-1" : "w-full"}
             >
               <Eye className="h-4 w-4" />
               <span className="ml-1">Insight</span>
@@ -177,21 +181,23 @@ export const BlogPostCard = ({
       </div>
 
       <div className="flex-shrink-0 ml-2 flex gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddToKnowledgeBank}
-          disabled={isInKnowledgeBank || isAdding}
-          className={cn(
-            "transition-colors",
-            isInKnowledgeBank && "text-green-600"
-          )}
-        >
-          {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          <span className="ml-1">
-            {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
-          </span>
-        </Button>
+        {showAddButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAddToKnowledgeBank}
+            disabled={isInKnowledgeBank || isAdding}
+            className={cn(
+              "transition-colors",
+              isInKnowledgeBank && "text-green-600"
+            )}
+          >
+            {isInKnowledgeBank ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            <span className="ml-1">
+              {isInKnowledgeBank ? "Added" : isAdding ? "Adding..." : "Add"}
+            </span>
+          </Button>
+        )}
         
         <Button
           variant="ghost"

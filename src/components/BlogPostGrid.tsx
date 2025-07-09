@@ -27,6 +27,7 @@ interface BlogPostGridProps {
   renderSubNavigation?: () => React.ReactNode;
   isKnowledgeBank?: boolean;
   onRemove?: (postId: string) => void;
+  isTopicView?: boolean; // New prop to determine if this is a topic-specific view
 }
 
 export function BlogPostGrid({ 
@@ -38,7 +39,8 @@ export function BlogPostGrid({
   showSearch = false,
   renderSubNavigation,
   isKnowledgeBank = false,
-  onRemove
+  onRemove,
+  isTopicView = false // Default to false for All Posts view
 }: BlogPostGridProps) {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
@@ -192,6 +194,7 @@ export function BlogPostGrid({
           onInsightClick={handleInsightClick}
           onRemove={onRemove}
           isKnowledgeBank={isKnowledgeBank}
+          showAddButton={isTopicView} // Only show Add button in topic views
         />
       </div>
 

@@ -1,15 +1,12 @@
 
-
-import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { BlogPostGrid } from "@/components/BlogPostGrid";
 import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
+import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
 import { Tables } from "@/integrations/supabase/types";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { AddBlogPostButton } from "@/components/AddBlogPostButton";
+import { useToast } from "@/hooks/use-toast";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -17,23 +14,26 @@ type BlogPost = Tables<'blog_posts'> & {
     name: string;
     url: string;
   } | null;
+  topicName?: string;
 };
+
+type UserTopic = Tables<'user_topics'>;
 
 interface MainContentProps {
   selectedTab: string;
   selectedSubTab: string;
   topicSubTab: string;
-  setTopicSubTab: (subTab: string) => void;
+  setTopicSubTab: (tab: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  userTopics: any[];
+  userTopics: UserTopic[];
   knowledgeBankPosts: BlogPost[];
   allBlogPosts: BlogPost[];
   searchFilteredPosts: BlogPost[];
   filteredPosts: BlogPost[];
   isLoading: boolean;
   handleMarkAsRead: (postId: string) => void;
-  setSelectedSubTab: (subTab: string) => void;
+  setSelectedSubTab: (tab: string) => void;
 }
 
 export const MainContent = ({
@@ -53,137 +53,117 @@ export const MainContent = ({
   setSelectedSubTab,
 }: MainContentProps) => {
   const { removeFromKnowledgeBank } = useKnowledgeBank();
+  const { toast } = useToast();
 
-  const renderAllPostsContent = () => {
-    const renderSearchSection = () => (
-      <div className="bg-white rounded-lg shadow-sm p-4 border-b border-gray-100">
-        <div className="flex items-center justify-center gap-3 max-w-2xl mx-auto">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <Input
-              type="text"
-              placeholder="Ask a question..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-full focus:bg-white focus-visible:ring-1 focus-visible:ring-gray-300"
-            />
-          </div>
-          <AddBlogPostButton />
-        </div>
-      </div>
-    );
+  const handleRemoveFromKnowledgeBank = async (postId: string) => {
+    try {
+      if (removeFromKnowledgeBank) {
+        removeFromKnowledgeBank(postId);
+        toast({
+          title: "Removed from Knowledge Bank",
+          description: "Post has been removed from your knowledge bank.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove post from knowledge bank.",
+        variant: "destructive",
+      });
+    }
+  };
 
-    const renderSubNavigation = () => (
-      <AllPostsSubNavigation
-        activeSubTab={selectedSubTab}
-        onSubTabChange={setSelectedSubTab}
-        allPostsCount={allBlogPosts.length}
-        knowledgeBankCount={knowledgeBankPosts.length}
-      />
-    );
+  // Get topic information
+  const getTopicFromTab = (tabId: string) => {
+    if (tabId === "all-posts") return null;
+    return userTopics.find(t => `topic-${t.topic_id}` === tabId);
+  };
 
+  const currentTopic = getTopicFromTab(selectedTab);
+  const isTopicView = currentTopic !== null;
+
+  if (selectedTab === "all-posts") {
     if (selectedSubTab === "knowledge-bank") {
       return (
-        <div className="space-y-4">
-          {renderSearchSection()}
-          <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
-            {renderSubNavigation()}
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <BlogPostGrid
-              posts={knowledgeBankPosts}
-              isLoading={false}
-              onMarkAsRead={handleMarkAsRead}
-              isKnowledgeBank={true}
-              onRemove={removeFromKnowledgeBank}
-            />
-          </div>
+        <div className="max-w-4xl mx-auto p-6">
+          <BlogPostGrid
+            posts={knowledgeBankPosts}
+            isLoading={isLoading}
+            onMarkAsRead={handleMarkAsRead}
+            isKnowledgeBank={true}
+            onRemove={handleRemoveFromKnowledgeBank}
+            renderSubNavigation={() => (
+              <AllPostsSubNavigation 
+                selectedSubTab={selectedSubTab} 
+                onSubTabChange={setSelectedSubTab}
+                knowledgeBankCount={knowledgeBankPosts.length}
+                allPostsCount={allBlogPosts.length}
+              />
+            )}
+            isTopicView={false} // This is the All Posts view
+          />
         </div>
       );
     }
 
     return (
-      <div className="space-y-4">
-        {renderSearchSection()}
-        <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
-          {renderSubNavigation()}
-        </div>
-        <div className="max-w-4xl mx-auto">
-          <BlogPostGrid
-            posts={searchQuery ? searchFilteredPosts : allBlogPosts}
-            isLoading={isLoading}
-            onMarkAsRead={handleMarkAsRead}
-          />
-        </div>
+      <div className="max-w-4xl mx-auto p-6">
+        <BlogPostGrid
+          posts={searchFilteredPosts}
+          isLoading={isLoading}
+          onMarkAsRead={handleMarkAsRead}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          showSearch={true}
+          renderSubNavigation={() => (
+            <AllPostsSubNavigation 
+              selectedSubTab={selectedSubTab} 
+              onSubTabChange={setSelectedSubTab}
+              knowledgeBankCount={knowledgeBankPosts.length}
+              allPostsCount={allBlogPosts.length}
+            />
+          )}
+          isTopicView={false} // This is the All Posts view
+        />
       </div>
     );
-  };
+  }
 
-  const renderTopicContent = () => {
-    const topicId = selectedTab.replace("topic-", "");
-    const topic = userTopics.find(t => t.topic_id.toString() === topicId);
-    
-    if (!topic) {
-      return <div>Topic not found</div>;
-    }
-
-    // Filter posts for this specific topic from knowledge bank
-    const topicKnowledgeBankPosts = knowledgeBankPosts.filter(
-      post => post.label_id?.toString() === topicId
-    );
-
-    const renderSubNavigation = () => (
-      <TopicSubNavigation
-        activeSubTab={topicSubTab}
-        onSubTabChange={setTopicSubTab}
-        notesCount={0}
-        sourcesCount={topicKnowledgeBankPosts.length}
-        topicName={topic.name}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        showSearch={true}
-      />
-    );
-
-    // Render notes section when topicSubTab is "notes" - FULL WIDTH
+  // Topic-specific views
+  if (currentTopic) {
     if (topicSubTab === "notes") {
       return (
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
-            {renderSubNavigation()}
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-sm px-4 pt-4 mb-4">
+            <TopicSubNavigation 
+              selectedSubTab={topicSubTab}
+              onSubTabChange={setTopicSubTab}
+              topicName={currentTopic.name}
+            />
           </div>
-          <PageBasedNotesArea 
-            category={topic.name.toLowerCase().replace(' ', '-')}
-            searchQuery={searchQuery}
-          />
+          <PageBasedNotesArea topicName={currentTopic.name} />
         </div>
       );
     }
 
-    // Render knowledge bank posts when topicSubTab is "sources" - CENTERED
     return (
-      <div className="space-y-4">
-        <div className="bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
-          {renderSubNavigation()}
-        </div>
-        <div className="max-w-4xl mx-auto">
-          <TopicBlogPostGrid
-            posts={topicKnowledgeBankPosts}
-            isLoading={isLoading}
-            onMarkAsRead={handleMarkAsRead}
-            topicName={topic.name}
-          />
-        </div>
+      <div className="max-w-4xl mx-auto p-6">
+        <TopicBlogPostGrid
+          posts={filteredPosts}
+          isLoading={isLoading}
+          onMarkAsRead={handleMarkAsRead}
+          topicName={currentTopic.name}
+          renderSubNavigation={() => (
+            <TopicSubNavigation 
+              selectedSubTab={topicSubTab}
+              onSubTabChange={setTopicSubTab}
+              topicName={currentTopic.name}
+            />
+          )}
+        />
       </div>
     );
-  };
+  }
 
-  return (
-    <div className="py-6">
-      {selectedTab === "all-posts" ? renderAllPostsContent() : renderTopicContent()}
-    </div>
-  );
+  return null;
 };
-
