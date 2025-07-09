@@ -15,6 +15,7 @@ type BlogPost = Tables<'blog_posts'> & {
     name: string;
     url: string;
   } | null;
+  topicName?: string;
 };
 
 interface BlogPostCardProps {
@@ -24,6 +25,7 @@ interface BlogPostCardProps {
   variant?: "default" | "horizontal";
   className?: string;
   showAddButton?: boolean;
+  showTopicLabel?: boolean;
 }
 
 export const BlogPostCard = ({ 
@@ -32,7 +34,8 @@ export const BlogPostCard = ({
   onInsightClick,
   variant = "default",
   className,
-  showAddButton = false
+  showAddButton = false,
+  showTopicLabel = true
 }: BlogPostCardProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -91,21 +94,6 @@ export const BlogPostCard = ({
     } finally {
       setIsAdding(false);
     }
-  };
-
-  // Get topic label based on post content or source
-  const getTopicLabel = () => {
-    const title = post.title.toLowerCase();
-    const source = post.blogs?.name?.toLowerCase() || '';
-    
-    if (title.includes('mlops') || source.includes('mlops')) return 'MLOps';
-    if (title.includes('nlp') || title.includes('natural language')) return 'NLP';
-    if (title.includes('computer vision') || title.includes('cv')) return 'CV';
-    if (title.includes('ai') || title.includes('artificial intelligence')) return 'AI';
-    if (title.includes('machine learning') || title.includes('ml')) return 'ML';
-    if (title.includes('deep learning') || title.includes('neural')) return 'DL';
-    if (title.includes('data science') || title.includes('analytics')) return 'Data';
-    return 'Tech';
   };
 
   if (variant === "horizontal") {
@@ -209,10 +197,12 @@ export const BlogPostCard = ({
 
       {/* Right side with topic label and action buttons */}
       <div className="flex-shrink-0 flex items-center gap-3">
-        {/* Topic Label */}
-        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100">
-          {getTopicLabel()}
-        </Badge>
+        {/* Topic Label - only show if showTopicLabel is true and topicName exists */}
+        {showTopicLabel && post.topicName && (
+          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100">
+            {post.topicName}
+          </Badge>
+        )}
         
         {/* Action buttons */}
         <div className="flex gap-2">

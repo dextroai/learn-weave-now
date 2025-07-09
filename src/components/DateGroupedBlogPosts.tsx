@@ -18,6 +18,7 @@ interface DateGroupedBlogPostsProps {
   onRemove?: (postId: string) => void;
   isKnowledgeBank?: boolean;
   showAddButton?: boolean;
+  showTopicLabels?: boolean;
 }
 
 const groupPostsByDate = (posts: BlogPost[]) => {
@@ -41,7 +42,8 @@ export function DateGroupedBlogPosts({
   onInsightClick, 
   onRemove, 
   isKnowledgeBank = false,
-  showAddButton = false
+  showAddButton = false,
+  showTopicLabels = true
 }: DateGroupedBlogPostsProps) {
   const groupedPosts = groupPostsByDate(posts);
 
@@ -99,6 +101,7 @@ export function DateGroupedBlogPosts({
                   onMarkAsRead={onMarkAsRead}
                   onInsightClick={onInsightClick}
                   showAddButton={showAddButton}
+                  showTopicLabel={showTopicLabels}
                 />
               </div>
             ))}

@@ -10,6 +10,7 @@ interface AllPostsSubNavigationProps {
   knowledgeBankCount: number;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  isAllPostsView?: boolean;
 }
 
 export const AllPostsSubNavigation = ({ 
@@ -18,7 +19,8 @@ export const AllPostsSubNavigation = ({
   allPostsCount, 
   knowledgeBankCount,
   searchQuery = "",
-  onSearchChange
+  onSearchChange,
+  isAllPostsView = false
 }: AllPostsSubNavigationProps) => {
   const subTabs = [
     { id: 'all', label: 'All', count: allPostsCount },
