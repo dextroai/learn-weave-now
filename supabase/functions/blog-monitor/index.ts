@@ -1,0 +1,393 @@
+
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+interface BlogPost {
+  title: string
+  link: string
+  published: string
+  summary: string
+  content?: string
+}
+
+interface BlogData {
+  title: string
+  description: string
+  link: string
+  posts: BlogPost[]
+}
+
+class BlogMonitorService {
+  private supabase: any
+
+  constructor() {
+    this.supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+  }
+
+  async fetchBlogContent(url: string): Promise<BlogData | null> {
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+
+    try {
+      console.log(`Fetching content from: ${url}`)
+      
+      // Try RSS/Atom feeds first
+      const feedUrls = [
+        `${url}/feed`,
+        `${url}/rss`,
+        `${url}/atom.xml`,
+        `${url}/feed.xml`,
+        `${url}/rss.xml`
+      ]
+
+      for (const feedUrl of feedUrls) {
+        try {
+          const response = await fetch(feedUrl, { headers })
+          if (response.ok) {
+            const feedText = await response.text()
+            const feedData = this.parseFeedContent(feedText)
+            if (feedData && feedData.posts.length > 0) {
+              console.log(`Successfully parsed RSS feed: ${feedUrl}`)
+              return feedData
+            }
+          }
+        } catch (e) {
+          console.log(`Failed to fetch RSS from ${feedUrl}: ${e.message}`)
+          continue
+        }
+      }
+
+      // Fallback to HTML scraping
+      const response = await fetch(url, { headers })
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const html = await response.text()
+      return this.parseHtmlContent(html, url)
+
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error.message)
+      return null
+    }
+  }
+
+  parseFeedContent(feedText: string): BlogData | null {
+    try {
+      // Simple RSS/Atom parser
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(feedText, 'text/xml')
+      
+      const posts: BlogPost[] = []
+      const items = doc.querySelectorAll('item, entry')
+      
+      for (const item of Array.from(items).slice(0, 10)) {
+        const title = item.querySelector('title')?.textContent || 'No Title'
+        const link = item.querySelector('link')?.textContent || 
+                    item.querySelector('link')?.getAttribute('href') || ''
+        const published = item.querySelector('pubDate, published')?.textContent || ''
+        const summary = item.querySelector('description, summary, content')?.textContent || ''
+        
+        posts.push({ title, link, published, summary })
+      }
+
+      const feedTitle = doc.querySelector('channel > title, feed > title')?.textContent || 'Blog'
+      const feedDescription = doc.querySelector('channel > description, feed > subtitle')?.textContent || ''
+      const feedLink = doc.querySelector('channel > link, feed > link')?.textContent || ''
+
+      return {
+        title: feedTitle,
+        description: feedDescription,
+        link: feedLink,
+        posts
+      }
+    } catch (error) {
+      console.error('Error parsing feed:', error)
+      return null
+    }
+  }
+
+  parseHtmlContent(html: string, url: string): BlogData | null {
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(html, 'text/html')
+      
+      // Remove unwanted elements
+      const unwantedSelectors = ['script', 'style', 'nav', 'footer', 'aside']
+      unwantedSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => el.remove())
+      })
+
+      const posts: BlogPost[] = []
+      const postSelectors = ['article', '.post', '.entry', '.blog-post', '[class*="post"]']
+      
+      for (const selector of postSelectors) {
+        const elements = doc.querySelectorAll(selector)
+        if (elements.length > 0) {
+          for (const element of Array.from(elements).slice(0, 10)) {
+            const titleEl = element.querySelector('h1, h2, h3, .title, .post-title')
+            const title = titleEl?.textContent?.trim() || 'No Title'
+            
+            const linkEl = element.querySelector('a')
+            let link = linkEl?.getAttribute('href') || ''
+            if (link && !link.startsWith('http')) {
+              const baseUrl = new URL(url)
+              link = new URL(link, baseUrl.origin).href
+            }
+            
+            const content = element.textContent?.trim() || ''
+            const summary = content.length > 500 ? content.substring(0, 500) + '...' : content
+            
+            posts.push({ title, link, published: '', summary })
+          }
+          break
+        }
+      }
+
+      const title = doc.querySelector('title')?.textContent || 'Blog'
+      
+      return {
+        title,
+        description: '',
+        link: url,
+        posts
+      }
+    } catch (error) {
+      console.error('Error parsing HTML:', error)
+      return null
+    }
+  }
+
+  async getActiveBlogs() {
+    const { data: blogs, error } = await this.supabase
+      .from('blogs')
+      .select('*')
+      .eq('is_active', true)
+
+    if (error) {
+      console.error('Error fetching blogs:', error)
+      return []
+    }
+
+    return blogs || []
+  }
+
+  async getPreviousPosts(blogId: string): Promise<BlogPost[]> {
+    const { data: posts, error } = await this.supabase
+      .from('blog_posts')
+      .select('title, link, published_date, summary, content')
+      .eq('blog_id', blogId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      console.error('Error fetching previous posts:', error)
+      return []
+    }
+
+    return posts?.map(post => ({
+      title: post.title,
+      link: post.link || '',
+      published: post.published_date || '',
+      summary: post.summary || '',
+      content: post.content || ''
+    })) || []
+  }
+
+  detectNewPosts(oldPosts: BlogPost[], newPosts: BlogPost[]): BlogPost[] {
+    if (!oldPosts.length) {
+      return newPosts
+    }
+
+    const oldPostIds = new Set(
+      oldPosts.map(post => `${post.title}${post.link}`)
+    )
+
+    return newPosts.filter(post => {
+      const postId = `${post.title}${post.link}`
+      return !oldPostIds.has(postId)
+    })
+  }
+
+  async saveBlogPosts(blogId: string, posts: BlogPost[]) {
+    const postsToInsert = posts.map(post => ({
+      blog_id: blogId,
+      title: post.title,
+      link: post.link || null,
+      published_date: post.published || null,
+      summary: post.summary || null,
+      content: post.content || null,
+      is_new: true,
+      detected_at: new Date().toISOString()
+    }))
+
+    const { error } = await this.supabase
+      .from('blog_posts')
+      .insert(postsToInsert)
+
+    if (error) {
+      console.error('Error saving blog posts:', error)
+      throw error
+    }
+
+    console.log(`Saved ${posts.length} new posts for blog ${blogId}`)
+  }
+
+  async updateBlogLastChecked(blogId: string) {
+    const { error } = await this.supabase
+      .from('blogs')
+      .update({ 
+        last_checked: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', blogId)
+
+    if (error) {
+      console.error('Error updating blog last_checked:', error)
+    }
+  }
+
+  async sendNotification(blogName: string, blogUrl: string, newPosts: BlogPost[]) {
+    // This would integrate with your email service
+    // For now, we'll just log the notification
+    console.log(`📧 Notification: ${newPosts.length} new posts found in ${blogName}`)
+    console.log(`Blog URL: ${blogUrl}`)
+    newPosts.forEach((post, i) => {
+      console.log(`${i + 1}. ${post.title}`)
+      if (post.link) console.log(`   Link: ${post.link}`)
+    })
+  }
+
+  async checkBlog(blog: any): Promise<boolean> {
+    console.log(`Checking blog: ${blog.name}`)
+
+    try {
+      const blogData = await this.fetchBlogContent(blog.url)
+      if (!blogData) {
+        console.log(`Failed to fetch content for ${blog.name}`)
+        await this.updateBlogLastChecked(blog.id)
+        return false
+      }
+
+      const previousPosts = await this.getPreviousPosts(blog.id)
+      const newPosts = this.detectNewPosts(previousPosts, blogData.posts)
+
+      if (newPosts.length > 0) {
+        console.log(`Found ${newPosts.length} new posts in ${blog.name}`)
+        
+        await this.saveBlogPosts(blog.id, newPosts)
+        await this.sendNotification(blog.name, blog.url, newPosts)
+        await this.updateBlogLastChecked(blog.id)
+        
+        return true
+      } else if (previousPosts.length === 0) {
+        // First time checking this blog
+        console.log(`Initial check for ${blog.name} - saving ${blogData.posts.length} posts`)
+        await this.saveBlogPosts(blog.id, blogData.posts)
+        await this.updateBlogLastChecked(blog.id)
+        return true
+      } else {
+        console.log(`No new posts found in ${blog.name}`)
+        await this.updateBlogLastChecked(blog.id)
+        return false
+      }
+    } catch (error) {
+      console.error(`Error checking blog ${blog.name}:`, error)
+      await this.updateBlogLastChecked(blog.id)
+      return false
+    }
+  }
+
+  async checkAllBlogs() {
+    console.log('Starting blog check cycle')
+    
+    const blogs = await this.getActiveBlogs()
+    console.log(`Found ${blogs.length} active blogs to check`)
+
+    let checkedCount = 0
+    let updatedCount = 0
+
+    for (const blog of blogs) {
+      try {
+        const hasUpdates = await this.checkBlog(blog)
+        checkedCount++
+        if (hasUpdates) updatedCount++
+        
+        // Be respectful to servers
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } catch (error) {
+        console.error(`Error checking ${blog.name}:`, error)
+      }
+    }
+
+    console.log(`Blog check cycle completed: ${checkedCount} checked, ${updatedCount} updated`)
+    
+    return {
+      checked: checkedCount,
+      updated: updatedCount,
+      total: blogs.length
+    }
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const url = new URL(req.url)
+    const action = url.searchParams.get('action') || 'check'
+
+    const monitor = new BlogMonitorService()
+
+    let result
+    switch (action) {
+      case 'check':
+        result = await monitor.checkAllBlogs()
+        break
+      case 'test':
+        const blogs = await monitor.getActiveBlogs()
+        result = { message: 'Service is running', activeBlogs: blogs.length }
+        break
+      default:
+        result = { error: 'Unknown action' }
+    }
+
+    return new Response(
+      JSON.stringify(result),
+      { 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error in blog-monitor function:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
+      { 
+        status: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        } 
+      }
+    )
+  }
+})
