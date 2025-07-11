@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_blogs: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_checked: string | null
+          name: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked?: string | null
+          name: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked?: string | null
+          name?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           blog_id: string
