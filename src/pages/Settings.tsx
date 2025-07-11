@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlogs, useAddBlog, useUpdateBlog, useDeleteBlog } from "@/hooks/useBlogs";
@@ -27,7 +28,7 @@ interface BlogForm {
 
 const Settings = () => {
   const [isAdding, setIsAdding] = useState(false);
-  const [newBlog, setNewBlog] = useState<BlogForm>({ name: '', url: '', category: '' });
+  const [newBlogUrl, setNewBlogUrl] = useState('');
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [editedBlog, setEditedBlog] = useState<Partial<BlogForm>>({});
   const navigate = useNavigate();
@@ -45,15 +46,22 @@ const Settings = () => {
   }, [isLoading, refetch]);
 
   const handleAddBlog = async () => {
-    if (!newBlog.name || !newBlog.url || !newBlog.category) {
-      toast.error('Please fill in all fields');
+    if (!newBlogUrl) {
+      toast.error('Please enter a blog URL');
       return;
     }
 
-    addBlogMutation.mutate(newBlog, {
+    // Use URL as name and set default category
+    const blogData = {
+      name: newBlogUrl,
+      url: newBlogUrl,
+      category: 'General'
+    };
+
+    addBlogMutation.mutate(blogData, {
       onSuccess: () => {
         toast.success('Blog added successfully!');
-        setNewBlog({ name: '', url: '', category: '' });
+        setNewBlogUrl('');
         setIsAdding(false);
       },
       onError: (error: any) => {
@@ -135,32 +143,15 @@ const Settings = () => {
 
             {isAdding && (
               <div className="mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="url">Blog URL</Label>
                     <Input
-                      type="text"
-                      id="name"
-                      value={newBlog.name}
-                      onChange={(e) => setNewBlog({ ...newBlog, name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="url">URL</Label>
-                    <Input
-                      type="text"
+                      type="url"
                       id="url"
-                      value={newBlog.url}
-                      onChange={(e) => setNewBlog({ ...newBlog, url: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      type="text"
-                      id="category"
-                      value={newBlog.category}
-                      onChange={(e) => setNewBlog({ ...newBlog, category: e.target.value })}
+                      placeholder="https://example.com"
+                      value={newBlogUrl}
+                      onChange={(e) => setNewBlogUrl(e.target.value)}
                     />
                   </div>
                 </div>

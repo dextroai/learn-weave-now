@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -29,7 +30,7 @@ export const useAddBlog = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (blog: Omit<BlogInsert, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'added_date'>) => {
+    mutationFn: async (blog: { name: string; url: string; category: string }) => {
       console.log('Adding blog:', blog);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
