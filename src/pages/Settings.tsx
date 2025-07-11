@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlogs, useAddBlog, useUpdateBlog, useDeleteBlog } from "@/hooks/useBlogs";
-import { useUserTopics } from "@/hooks/useUserTopics";
+import { useUserTopics, useToggleTopicActive } from "@/hooks/useUserTopics";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { TopicPredictionButton } from '@/components/TopicPredictionButton';
+import { AddTopicDialog } from '@/components/AddTopicDialog';
 
 interface BlogForm {
   name: string;
@@ -31,6 +31,7 @@ const Settings = () => {
   const [newBlogUrl, setNewBlogUrl] = useState('');
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [editedBlog, setEditedBlog] = useState<Partial<BlogForm>>({});
+  const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const { data: blogs, isLoading, refetch } = useBlogs();
@@ -38,6 +39,7 @@ const Settings = () => {
   const addBlogMutation = useAddBlog();
   const updateBlogMutation = useUpdateBlog();
   const deleteBlogMutation = useDeleteBlog();
+  const toggleTopicActiveMutation = useToggleTopicActive();
 
   useEffect(() => {
     if (!isLoading) {
@@ -104,6 +106,20 @@ const Settings = () => {
   const handleCancelEdit = () => {
     setEditingBlogId(null);
     setEditedBlog({});
+  };
+
+  const handleToggleTopicActive = async (topicId: string, isActive: boolean) => {
+    toggleTopicActiveMutation.mutate(
+      { id: topicId, is_active: !isActive },
+      {
+        onSuccess: () => {
+          toast.success(`Topic ${!isActive ? 'activated' : 'deactivated'} successfully!`);
+        },
+        onError: (error: any) => {
+          toast.error(`Failed to update topic: ${error.message}`);
+        },
+      }
+    );
   };
 
   const navigateToHome = () => {
@@ -238,17 +254,27 @@ const Settings = () => {
 
           {/* Topics Section */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Topics</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Your Topics</h2>
+              <Button onClick={() => setIsAddTopicDialogOpen(true)} size="sm">
+                Add Topic
+              </Button>
+            </div>
             {userTopics && userTopics.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userTopics.map((topic) => (
                   <div key={topic.id} className="flex items-center justify-between p-3 rounded-md shadow-sm border border-gray-200">
                     <div>
                       <span className="font-medium text-gray-700">{topic.name}</span>
+                      <p className="text-sm text-gray-500">Topic ID: {topic.topic_id}</p>
                     </div>
-                    <div>
-                      <Switch id={`topic-active-${topic.id}`} checked={topic.is_active} />
-                      <Label htmlFor={`topic-active-${topic.id}`} className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        id={`topic-active-${topic.id}`} 
+                        checked={topic.is_active}
+                        onCheckedChange={() => handleToggleTopicActive(topic.id, topic.is_active)}
+                      />
+                      <Label htmlFor={`topic-active-${topic.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Active
                       </Label>
                     </div>
@@ -256,11 +282,16 @@ const Settings = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-gray-500">No topics created yet.</div>
+              <div className="text-gray-500">No topics created yet. Click "Add Topic" to create your first topic.</div>
             )}
           </div>
         </div>
       </div>
+
+      <AddTopicDialog 
+        open={isAddTopicDialogOpen} 
+        onOpenChange={setIsAddTopicDialogOpen} 
+      />
     </div>
   );
 };
