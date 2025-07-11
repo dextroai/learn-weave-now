@@ -1,6 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,7 +54,7 @@ class BlogMonitorService {
           const response = await fetch(feedUrl, { headers })
           if (response.ok) {
             const feedText = await response.text()
-            const feedData = this.parseFeedContent(feedText)
+            const feedData = await this.parseFeedContent(feedText)
             if (feedData && feedData.posts.length > 0) {
               console.log(`Successfully parsed RSS feed: ${feedUrl}`)
               return feedData
@@ -73,7 +73,7 @@ class BlogMonitorService {
       }
       
       const html = await response.text()
-      return this.parseHtmlContent(html, url)
+      return await this.parseHtmlContent(html, url)
 
     } catch (error) {
       console.error(`Error fetching ${url}:`, error.message)
@@ -81,19 +81,24 @@ class BlogMonitorService {
     }
   }
 
-  parseFeedContent(feedText: string): BlogData | null {
+  async parseFeedContent(feedText: string): Promise<BlogData | null> {
     try {
-      // Simple RSS/Atom parser
+      // Simple RSS/Atom parser using deno-dom
       const parser = new DOMParser()
       const doc = parser.parseFromString(feedText, 'text/xml')
+      
+      if (!doc) {
+        console.error('Failed to parse XML document')
+        return null
+      }
       
       const posts: BlogPost[] = []
       const items = doc.querySelectorAll('item, entry')
       
       for (const item of Array.from(items).slice(0, 10)) {
         const title = item.querySelector('title')?.textContent || 'No Title'
-        const link = item.querySelector('link')?.textContent || 
-                    item.querySelector('link')?.getAttribute('href') || ''
+        const linkEl = item.querySelector('link')
+        const link = linkEl?.textContent || linkEl?.getAttribute('href') || ''
         const published = item.querySelector('pubDate, published')?.textContent || ''
         const summary = item.querySelector('description, summary, content')?.textContent || ''
         
@@ -102,7 +107,8 @@ class BlogMonitorService {
 
       const feedTitle = doc.querySelector('channel > title, feed > title')?.textContent || 'Blog'
       const feedDescription = doc.querySelector('channel > description, feed > subtitle')?.textContent || ''
-      const feedLink = doc.querySelector('channel > link, feed > link')?.textContent || ''
+      const feedLinkEl = doc.querySelector('channel > link, feed > link')
+      const feedLink = feedLinkEl?.textContent || feedLinkEl?.getAttribute('href') || ''
 
       return {
         title: feedTitle,
@@ -116,10 +122,15 @@ class BlogMonitorService {
     }
   }
 
-  parseHtmlContent(html: string, url: string): BlogData | null {
+  async parseHtmlContent(html: string, url: string): Promise<BlogData | null> {
     try {
       const parser = new DOMParser()
       const doc = parser.parseFromString(html, 'text/html')
+      
+      if (!doc) {
+        console.error('Failed to parse HTML document')
+        return null
+      }
       
       // Remove unwanted elements
       const unwantedSelectors = ['script', 'style', 'nav', 'footer', 'aside']
