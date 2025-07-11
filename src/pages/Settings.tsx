@@ -51,11 +51,11 @@ const Settings = () => {
       return;
     }
 
-    // Use URL as name and set default category
+    // Use URL as name and set default category to one of the allowed values
     const blogData = {
       name: newBlogUrl,
       url: newBlogUrl,
-      category: 'General'
+      category: 'nlp'
     };
 
     addBlogMutation.mutate(blogData, {
