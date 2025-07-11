@@ -24,6 +24,9 @@ interface BlogData {
 
 class BlogMonitorService {
   private supabase: any
+  private readonly BATCH_SIZE = 3 // Process only 3 blogs at a time
+  private readonly MAX_POSTS_PER_BLOG = 5 // Reduced from 10
+  private readonly MAX_CONTENT_LENGTH = 1000 // Limit content size
 
   constructor() {
     this.supabase = createClient(
@@ -51,10 +54,15 @@ class BlogMonitorService {
 
       for (const feedUrl of feedUrls) {
         try {
-          const response = await fetch(feedUrl, { headers })
+          const response = await fetch(feedUrl, { 
+            headers,
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+          })
           if (response.ok) {
             const feedText = await response.text()
-            const feedData = await this.parseFeedContent(feedText)
+            // Limit feed text size
+            const limitedFeedText = feedText.length > 50000 ? feedText.substring(0, 50000) : feedText
+            const feedData = await this.parseFeedContent(limitedFeedText)
             if (feedData && feedData.posts.length > 0) {
               console.log(`Successfully parsed RSS feed: ${feedUrl}`)
               return feedData
@@ -66,14 +74,19 @@ class BlogMonitorService {
         }
       }
 
-      // Fallback to HTML scraping
-      const response = await fetch(url, { headers })
+      // Fallback to HTML scraping with size limits
+      const response = await fetch(url, { 
+        headers,
+        signal: AbortSignal.timeout(10000)
+      })
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       
       const html = await response.text()
-      return await this.parseHtmlContent(html, url)
+      // Limit HTML size to prevent memory issues
+      const limitedHtml = html.length > 100000 ? html.substring(0, 100000) : html
+      return await this.parseHtmlContent(limitedHtml, url)
 
     } catch (error) {
       console.error(`Error fetching ${url}:`, error.message)
@@ -83,7 +96,6 @@ class BlogMonitorService {
 
   async parseFeedContent(feedText: string): Promise<BlogData | null> {
     try {
-      // Simple RSS/Atom parser using deno-dom
       const parser = new DOMParser()
       const doc = parser.parseFromString(feedText, 'text/xml')
       
@@ -95,12 +107,18 @@ class BlogMonitorService {
       const posts: BlogPost[] = []
       const items = doc.querySelectorAll('item, entry')
       
-      for (const item of Array.from(items).slice(0, 10)) {
+      // Limit to fewer posts to reduce memory usage
+      for (const item of Array.from(items).slice(0, this.MAX_POSTS_PER_BLOG)) {
         const title = item.querySelector('title')?.textContent || 'No Title'
         const linkEl = item.querySelector('link')
         const link = linkEl?.textContent || linkEl?.getAttribute('href') || ''
         const published = item.querySelector('pubDate, published')?.textContent || ''
-        const summary = item.querySelector('description, summary, content')?.textContent || ''
+        let summary = item.querySelector('description, summary, content')?.textContent || ''
+        
+        // Limit summary length
+        if (summary.length > this.MAX_CONTENT_LENGTH) {
+          summary = summary.substring(0, this.MAX_CONTENT_LENGTH) + '...'
+        }
         
         posts.push({ title, link, published, summary })
       }
@@ -132,8 +150,8 @@ class BlogMonitorService {
         return null
       }
       
-      // Remove unwanted elements
-      const unwantedSelectors = ['script', 'style', 'nav', 'footer', 'aside']
+      // Remove unwanted elements to reduce memory
+      const unwantedSelectors = ['script', 'style', 'nav', 'footer', 'aside', 'iframe', 'video']
       unwantedSelectors.forEach(selector => {
         doc.querySelectorAll(selector).forEach(el => el.remove())
       })
@@ -144,7 +162,7 @@ class BlogMonitorService {
       for (const selector of postSelectors) {
         const elements = doc.querySelectorAll(selector)
         if (elements.length > 0) {
-          for (const element of Array.from(elements).slice(0, 10)) {
+          for (const element of Array.from(elements).slice(0, this.MAX_POSTS_PER_BLOG)) {
             const titleEl = element.querySelector('h1, h2, h3, .title, .post-title')
             const title = titleEl?.textContent?.trim() || 'No Title'
             
@@ -155,8 +173,12 @@ class BlogMonitorService {
               link = new URL(link, baseUrl.origin).href
             }
             
-            const content = element.textContent?.trim() || ''
-            const summary = content.length > 500 ? content.substring(0, 500) + '...' : content
+            let content = element.textContent?.trim() || ''
+            // Limit content length
+            if (content.length > this.MAX_CONTENT_LENGTH) {
+              content = content.substring(0, this.MAX_CONTENT_LENGTH) + '...'
+            }
+            const summary = content
             
             posts.push({ title, link, published: '', summary })
           }
@@ -183,6 +205,7 @@ class BlogMonitorService {
       .from('blogs')
       .select('*')
       .eq('is_active', true)
+      .limit(20) // Limit total blogs to process
 
     if (error) {
       console.error('Error fetching blogs:', error)
@@ -198,7 +221,7 @@ class BlogMonitorService {
       .select('title, link, published_date, summary, content')
       .eq('blog_id', blogId)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(20) // Reduced from 50
 
     if (error) {
       console.error('Error fetching previous posts:', error)
@@ -268,8 +291,6 @@ class BlogMonitorService {
   }
 
   async sendNotification(blogName: string, blogUrl: string, newPosts: BlogPost[]) {
-    // This would integrate with your email service
-    // For now, we'll just log the notification
     console.log(`📧 Notification: ${newPosts.length} new posts found in ${blogName}`)
     console.log(`Blog URL: ${blogUrl}`)
     newPosts.forEach((post, i) => {
@@ -301,7 +322,6 @@ class BlogMonitorService {
         
         return true
       } else if (previousPosts.length === 0) {
-        // First time checking this blog
         console.log(`Initial check for ${blog.name} - saving ${blogData.posts.length} posts`)
         await this.saveBlogPosts(blog.id, blogData.posts)
         await this.updateBlogLastChecked(blog.id)
@@ -319,7 +339,7 @@ class BlogMonitorService {
   }
 
   async checkAllBlogs() {
-    console.log('Starting blog check cycle')
+    console.log('Starting blog check cycle with batching')
     
     const blogs = await this.getActiveBlogs()
     console.log(`Found ${blogs.length} active blogs to check`)
@@ -327,16 +347,28 @@ class BlogMonitorService {
     let checkedCount = 0
     let updatedCount = 0
 
-    for (const blog of blogs) {
-      try {
-        const hasUpdates = await this.checkBlog(blog)
-        checkedCount++
-        if (hasUpdates) updatedCount++
-        
-        // Be respectful to servers
-        await new Promise(resolve => setTimeout(resolve, 2000))
-      } catch (error) {
-        console.error(`Error checking ${blog.name}:`, error)
+    // Process blogs in batches to manage memory
+    for (let i = 0; i < blogs.length; i += this.BATCH_SIZE) {
+      const batch = blogs.slice(i, i + this.BATCH_SIZE)
+      console.log(`Processing batch ${Math.floor(i / this.BATCH_SIZE) + 1} with ${batch.length} blogs`)
+
+      for (const blog of batch) {
+        try {
+          const hasUpdates = await this.checkBlog(blog)
+          checkedCount++
+          if (hasUpdates) updatedCount++
+          
+          // Small delay between blogs
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        } catch (error) {
+          console.error(`Error checking ${blog.name}:`, error)
+        }
+      }
+
+      // Longer delay between batches to allow memory cleanup
+      if (i + this.BATCH_SIZE < blogs.length) {
+        console.log('Waiting between batches for memory cleanup...')
+        await new Promise(resolve => setTimeout(resolve, 3000))
       }
     }
 
@@ -351,7 +383,6 @@ class BlogMonitorService {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
