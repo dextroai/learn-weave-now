@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       admin_blogs: {
         Row: {
-          category: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -26,7 +25,6 @@ export type Database = {
           url: string
         }
         Insert: {
-          category?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -36,7 +34,6 @@ export type Database = {
           url: string
         }
         Update: {
-          category?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -100,7 +97,6 @@ export type Database = {
       blogs: {
         Row: {
           added_date: string
-          category: string
           created_at: string
           id: string
           is_active: boolean
@@ -112,7 +108,6 @@ export type Database = {
         }
         Insert: {
           added_date?: string
-          category: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -124,7 +119,6 @@ export type Database = {
         }
         Update: {
           added_date?: string
-          category?: string
           created_at?: string
           id?: string
           is_active?: boolean

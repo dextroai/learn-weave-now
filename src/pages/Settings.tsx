@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlogs, useAddBlog, useUpdateBlog, useDeleteBlog } from "@/hooks/useBlogs";
@@ -23,7 +24,6 @@ import { AddTopicDialog } from '@/components/AddTopicDialog';
 interface BlogForm {
   name: string;
   url: string;
-  category: string;
 }
 
 const Settings = () => {
@@ -53,11 +53,10 @@ const Settings = () => {
       return;
     }
 
-    // Use URL as name and set default category to one of the allowed values
+    // Use URL as name
     const blogData = {
       name: newBlogUrl,
       url: newBlogUrl,
-      category: 'nlp'
     };
 
     addBlogMutation.mutate(blogData, {
@@ -187,7 +186,6 @@ const Settings = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>URL</TableHead>
-                    <TableHead>Category</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -208,13 +206,6 @@ const Settings = () => {
                           onChange={(e) => setEditedBlog({ ...editedBlog, url: e.target.value })}
                         />
                       ) : blog.url}</TableCell>
-                      <TableCell>{editingBlogId === blog.id ? (
-                        <Input
-                          type="text"
-                          value={editedBlog.category || blog.category}
-                          onChange={(e) => setEditedBlog({ ...editedBlog, category: e.target.value })}
-                        />
-                      ) : blog.category}</TableCell>
                       <TableCell className="text-right">
                         {editingBlogId === blog.id ? (
                           <div className="flex justify-end gap-2">
@@ -241,7 +232,7 @@ const Settings = () => {
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={4}>
+                    <TableCell colSpan={3}>
                       {/* You can add pagination or additional information here */}
                     </TableCell>
                   </TableRow>
