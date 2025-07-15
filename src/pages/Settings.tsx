@@ -22,7 +22,6 @@ import { TopicPredictionButton } from '@/components/TopicPredictionButton';
 import { AddTopicDialog } from '@/components/AddTopicDialog';
 
 interface BlogForm {
-  name: string;
   url: string;
 }
 
@@ -53,9 +52,7 @@ const Settings = () => {
       return;
     }
 
-    // Use URL as name
     const blogData = {
-      name: newBlogUrl,
       url: newBlogUrl,
     };
 
@@ -184,7 +181,6 @@ const Settings = () => {
                 <TableCaption>A list of your blog sources.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
                     <TableHead>URL</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -192,13 +188,6 @@ const Settings = () => {
                 <TableBody>
                   {blogs.map((blog) => (
                     <TableRow key={blog.id}>
-                      <TableCell>{editingBlogId === blog.id ? (
-                        <Input
-                          type="text"
-                          value={editedBlog.name || blog.name}
-                          onChange={(e) => setEditedBlog({ ...editedBlog, name: e.target.value })}
-                        />
-                      ) : blog.name}</TableCell>
                       <TableCell>{editingBlogId === blog.id ? (
                         <Input
                           type="text"
@@ -232,7 +221,7 @@ const Settings = () => {
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={3}>
+                    <TableCell colSpan={2}>
                       {/* You can add pagination or additional information here */}
                     </TableCell>
                   </TableRow>

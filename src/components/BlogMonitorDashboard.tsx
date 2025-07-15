@@ -12,7 +12,6 @@ import { useBlogs } from '@/hooks/useBlogs'
 
 export const BlogMonitorDashboard = () => {
   const [newBlogUrl, setNewBlogUrl] = useState('')
-  const [newBlogName, setNewBlogName] = useState('')
   
   const { addBlog, triggerBlogCheck, testBlogMonitor, isLoading } = useBlogMonitor()
   const { data: blogs, isLoading: blogsLoading } = useBlogs()
@@ -22,9 +21,8 @@ export const BlogMonitorDashboard = () => {
     if (!newBlogUrl.trim()) return
 
     try {
-      await addBlog(newBlogUrl, newBlogName || undefined)
+      await addBlog(newBlogUrl)
       setNewBlogUrl('')
-      setNewBlogName('')
     } catch (error) {
       // Error handled in hook
     }
@@ -134,16 +132,6 @@ export const BlogMonitorDashboard = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="blog-name">Blog Name (optional)</Label>
-                  <Input
-                    id="blog-name"
-                    placeholder="My Favorite Blog"
-                    value={newBlogName}
-                    onChange={(e) => setNewBlogName(e.target.value)}
-                  />
-                </div>
-                
                 <Button type="submit" disabled={isLoading || !newBlogUrl.trim()}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Blog
@@ -171,7 +159,7 @@ export const BlogMonitorDashboard = () => {
                   {activeBlogs.map((blog) => (
                     <div key={blog.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h3 className="font-medium">{blog.name}</h3>
+                        <h3 className="font-medium">{blog.url}</h3>
                         <p className="text-sm text-muted-foreground">{blog.url}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {blog.last_checked && (
@@ -205,7 +193,7 @@ export const BlogMonitorDashboard = () => {
                   {recentlyChecked.map((blog) => (
                     <div key={blog.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <h3 className="font-medium">{blog.name}</h3>
+                        <h3 className="font-medium">{blog.url}</h3>
                         <p className="text-sm text-muted-foreground">
                           Checked: {new Date(blog.last_checked!).toLocaleString()}
                         </p>

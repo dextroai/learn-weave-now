@@ -20,7 +20,6 @@ export type Database = {
           id: string
           is_active: boolean
           last_checked: string | null
-          name: string
           updated_at: string
           url: string
         }
@@ -29,7 +28,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_checked?: string | null
-          name: string
           updated_at?: string
           url: string
         }
@@ -38,7 +36,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_checked?: string | null
-          name?: string
           updated_at?: string
           url?: string
         }
@@ -101,7 +98,6 @@ export type Database = {
           id: string
           is_active: boolean
           last_checked: string | null
-          name: string
           updated_at: string
           url: string
           user_id: string
@@ -112,7 +108,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_checked?: string | null
-          name: string
           updated_at?: string
           url: string
           user_id: string
@@ -123,7 +118,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_checked?: string | null
-          name?: string
           updated_at?: string
           url?: string
           user_id?: string

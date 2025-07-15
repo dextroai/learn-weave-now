@@ -30,7 +30,7 @@ export const useAddBlog = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (blog: { name: string; url: string }) => {
+    mutationFn: async (blog: { url: string }) => {
       console.log('Adding blog:', blog);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

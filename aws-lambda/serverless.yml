@@ -1,0 +1,60 @@
+
+service: blog-monitor-lambda
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  
+  environment:
+    SUPABASE_URL: ${env:SUPABASE_URL}
+    SUPABASE_SERVICE_ROLE_KEY: ${env:SUPABASE_SERVICE_ROLE_KEY}
+    CACHE_BUCKET_NAME: ${self:service}-${self:provider.stage}-cache
+    NOTIFICATION_EMAIL: ${env:NOTIFICATION_EMAIL}
+  
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+      Resource: "arn:aws:s3:::${self:provider.environment.CACHE_BUCKET_NAME}/*"
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource: "arn:aws:s3:::${self:provider.environment.CACHE_BUCKET_NAME}"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+      Resource: "*"
+
+functions:
+  blogMonitor:
+    handler: blog_monitor_lambda.lambda_handler
+    timeout: 900  # 15 minutes
+    memorySize: 512
+    events:
+      - schedule: rate(1 day)  # Run once daily
+    
+resources:
+  Resources:
+    CacheBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.CACHE_BUCKET_NAME}
+        VersioningConfiguration:
+          Status: Enabled
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldVersions
+              Status: Enabled
+              NoncurrentVersionExpirationInDays: 30
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
