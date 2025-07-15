@@ -6,11 +6,11 @@ import { toast } from 'sonner'
 export const useBlogMonitor = () => {
   const [isLoading, setIsLoading] = useState(false)
 
-  const addBlog = async (url: string, name?: string, category?: string) => {
+  const addBlog = async (url: string, name?: string) => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('add-blog', {
-        body: { url, name, category }
+        body: { url, name }
       })
 
       if (error) throw error

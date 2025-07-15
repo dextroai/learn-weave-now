@@ -13,7 +13,6 @@ import { useBlogs } from '@/hooks/useBlogs'
 export const BlogMonitorDashboard = () => {
   const [newBlogUrl, setNewBlogUrl] = useState('')
   const [newBlogName, setNewBlogName] = useState('')
-  const [newBlogCategory, setNewBlogCategory] = useState('General')
   
   const { addBlog, triggerBlogCheck, testBlogMonitor, isLoading } = useBlogMonitor()
   const { data: blogs, isLoading: blogsLoading } = useBlogs()
@@ -23,10 +22,9 @@ export const BlogMonitorDashboard = () => {
     if (!newBlogUrl.trim()) return
 
     try {
-      await addBlog(newBlogUrl, newBlogName || undefined, newBlogCategory)
+      await addBlog(newBlogUrl, newBlogName || undefined)
       setNewBlogUrl('')
       setNewBlogName('')
-      setNewBlogCategory('General')
     } catch (error) {
       // Error handled in hook
     }
@@ -146,16 +144,6 @@ export const BlogMonitorDashboard = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="blog-category">Category</Label>
-                  <Input
-                    id="blog-category"
-                    placeholder="General"
-                    value={newBlogCategory}
-                    onChange={(e) => setNewBlogCategory(e.target.value)}
-                  />
-                </div>
-                
                 <Button type="submit" disabled={isLoading || !newBlogUrl.trim()}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Blog
@@ -186,7 +174,6 @@ export const BlogMonitorDashboard = () => {
                         <h3 className="font-medium">{blog.name}</h3>
                         <p className="text-sm text-muted-foreground">{blog.url}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary">{blog.category}</Badge>
                           {blog.last_checked && (
                             <span className="text-xs text-muted-foreground">
                               Last checked: {new Date(blog.last_checked).toLocaleDateString()}
