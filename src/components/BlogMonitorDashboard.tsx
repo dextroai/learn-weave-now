@@ -4,209 +4,153 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { Play, Plus, TestTube, Globe, Clock, TrendingUp } from 'lucide-react'
 import { useBlogMonitor } from '@/hooks/useBlogMonitor'
-import { useBlogs } from '@/hooks/useBlogs'
+import { LambdaTriggerButton } from '@/components/LambdaTriggerButton'
+import { Loader2, Plus, TestTube, Activity } from 'lucide-react'
+import { toast } from 'sonner'
 
 export const BlogMonitorDashboard = () => {
   const [newBlogUrl, setNewBlogUrl] = useState('')
-  
   const { addBlog, triggerBlogCheck, testBlogMonitor, isLoading } = useBlogMonitor()
-  const { data: blogs, isLoading: blogsLoading } = useBlogs()
 
-  const handleAddBlog = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newBlogUrl.trim()) return
+  const handleAddBlog = async () => {
+    if (!newBlogUrl.trim()) {
+      toast.error('Please enter a blog URL')
+      return
+    }
 
     try {
-      await addBlog(newBlogUrl)
+      await addBlog(newBlogUrl.trim())
       setNewBlogUrl('')
     } catch (error) {
-      // Error handled in hook
+      console.error('Error adding blog:', error)
     }
   }
 
-  const activeBlogs = blogs?.filter(blog => blog.is_active) || []
-  const recentlyChecked = blogs?.filter(blog => blog.last_checked)
-    .sort((a, b) => new Date(b.last_checked!).getTime() - new Date(a.last_checked!).getTime())
-    .slice(0, 5) || []
+  const handleTriggerCheck = async () => {
+    try {
+      await triggerBlogCheck()
+    } catch (error) {
+      console.error('Error triggering blog check:', error)
+    }
+  }
+
+  const handleTestMonitor = async () => {
+    try {
+      await testBlogMonitor()
+    } catch (error) {
+      console.error('Error testing blog monitor:', error)
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Blog Monitor Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor your favorite blogs for new posts automatically
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={testBlogMonitor}
-            disabled={isLoading}
-            variant="outline"
-            size="sm"
-          >
-            <TestTube className="w-4 h-4 mr-2" />
-            Test Service
-          </Button>
-          <Button 
-            onClick={triggerBlogCheck}
-            disabled={isLoading}
-          >
-            <Play className="w-4 h-4 mr-2" />
-            Check Now
-          </Button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Blog Monitor Dashboard</h1>
+        <p className="text-gray-600 mt-2">
+          Centralized blog monitoring with AWS Lambda integration
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Blogs</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeBlogs.length}</div>
-            <p className="text-xs text-muted-foreground">
-              blogs being monitored
+      {/* Add Blog Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Add Blog to Monitor
+          </CardTitle>
+          <CardDescription>
+            Add a new blog URL to the centralized monitoring system
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="blog-url">Blog URL</Label>
+            <Input
+              id="blog-url"
+              type="url"
+              placeholder="https://example.com"
+              value={newBlogUrl}
+              onChange={(e) => setNewBlogUrl(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleAddBlog} disabled={isLoading} className="gap-2">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Add Blog
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Control Panel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Monitor Controls
+          </CardTitle>
+          <CardDescription>
+            Control and test the blog monitoring system
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={handleTriggerCheck} disabled={isLoading} variant="outline" className="gap-2">
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Activity className="h-4 w-4" />}
+              Trigger Check
+            </Button>
+            
+            <Button onClick={handleTestMonitor} disabled={isLoading} variant="outline" className="gap-2">
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
+              Test Monitor
+            </Button>
+
+            <LambdaTriggerButton />
+          </div>
+          
+          <div className="text-sm text-gray-600 mt-4">
+            <p><strong>Trigger Check:</strong> Manually run the centralized blog monitoring</p>
+            <p><strong>Test Monitor:</strong> Test the monitoring service status</p>
+            <p><strong>Manual Trigger Lambda:</strong> Trigger the AWS Lambda function manually</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lambda Integration Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>AWS Lambda Integration</CardTitle>
+          <CardDescription>
+            Information about the AWS Lambda blog monitoring setup
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium text-gray-900">Schedule</h4>
+              <p className="text-gray-600">Runs daily at scheduled time</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900">Storage</h4>
+              <p className="text-gray-600">Cache stored in S3</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900">Notifications</h4>
+              <p className="text-gray-600">Email via Amazon SES</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900">Database</h4>
+              <p className="text-gray-600">Syncs with Supabase</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-blue-50 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Deployment:</strong> Use the deployment script in the aws-lambda folder to deploy the function to AWS.
+              Make sure to set the required environment variables before deployment.
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recently Checked</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{recentlyChecked.length}</div>
-            <p className="text-xs text-muted-foreground">
-              blogs checked recently
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              posts detected
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="add-blog" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="add-blog">Add Blog</TabsTrigger>
-          <TabsTrigger value="active-blogs">Active Blogs</TabsTrigger>
-          <TabsTrigger value="recent-activity">Recent Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="add-blog">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Blog</CardTitle>
-              <CardDescription>
-                Add a blog URL to start monitoring for new posts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddBlog} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="blog-url">Blog URL *</Label>
-                  <Input
-                    id="blog-url"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={newBlogUrl}
-                    onChange={(e) => setNewBlogUrl(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" disabled={isLoading || !newBlogUrl.trim()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Blog
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="active-blogs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Blogs</CardTitle>
-              <CardDescription>
-                Blogs currently being monitored
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {blogsLoading ? (
-                <p>Loading blogs...</p>
-              ) : activeBlogs.length === 0 ? (
-                <p className="text-muted-foreground">No active blogs. Add one to get started!</p>
-              ) : (
-                <div className="space-y-3">
-                  {activeBlogs.map((blog) => (
-                    <div key={blog.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{blog.url}</h3>
-                        <p className="text-sm text-muted-foreground">{blog.url}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {blog.last_checked && (
-                            <span className="text-xs text-muted-foreground">
-                              Last checked: {new Date(blog.last_checked).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recent-activity">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Recently checked blogs and their status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentlyChecked.length === 0 ? (
-                <p className="text-muted-foreground">No recent activity. Trigger a check to see results here.</p>
-              ) : (
-                <div className="space-y-3">
-                  {recentlyChecked.map((blog) => (
-                    <div key={blog.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{blog.url}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Checked: {new Date(blog.last_checked!).toLocaleString()}
-                        </p>
-                      </div>
-                      <Badge variant="outline">Checked</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -22,11 +22,6 @@ fi
 echo "📦 Installing Serverless plugins..."
 npm install serverless-python-requirements
 
-# Copy blog monitor files
-echo "📋 Copying blog monitor files..."
-cp ../blog_monitor.py .
-cp ../supabase_sync.py .
-
 # Deploy the function
 echo "🚀 Deploying to AWS Lambda..."
 serverless deploy --stage prod

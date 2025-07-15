@@ -105,16 +105,11 @@ class LambdaBlogMonitor(BlogMonitor):
     """
     
     def __init__(self, supabase_client, s3_client, ses_client, cache_bucket):
+        super().__init__()
         self.supabase = supabase_client
         self.s3_client = s3_client
         self.ses_client = ses_client
         self.cache_bucket = cache_bucket
-        self.logger = logging.getLogger(__name__)
-        
-        # Override parent's __init__ since we don't need config file
-        import urllib3, ssl
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        ssl._create_default_https_context = ssl._create_unverified_context
     
     def load_cache_from_s3(self, blog_url):
         """Load previous posts cache from S3"""
