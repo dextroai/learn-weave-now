@@ -10,7 +10,7 @@ export class TopicPredictionService {
   static predictTopicLabelForBlog(blog: Blog, userTopics: UserTopic[]): number | null {
     if (userTopics.length === 0) return null;
 
-    const blogText = `${blog.name} ${blog.url}`.toLowerCase();
+    const blogText = `${blog.url}`.toLowerCase();
     
     // Simple keyword-based prediction (dummy logic)
     const predictions = [
@@ -108,7 +108,15 @@ export class TopicPredictionService {
             } else {
               predictionsCount += posts.length;
               const topicName = userTopics.find(t => t.topic_id === predictedTopicId)?.name || 'Unknown';
-              console.log(`Assigned label ${predictedTopicId} (${topicName}) to ${posts.length} posts from blog "${blog.name}"`);
+              const blogName = (() => {
+                try {
+                  const url = new URL(blog.url);
+                  return url.hostname.replace('www.', '');
+                } catch {
+                  return blog.url;
+                }
+              })();
+              console.log(`Assigned label ${predictedTopicId} (${topicName}) to ${posts.length} posts from blog "${blogName}"`);
             }
           }
         }

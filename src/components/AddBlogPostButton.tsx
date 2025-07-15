@@ -51,15 +51,12 @@ export const AddBlogPostButton = () => {
         return;
       }
 
-      // Extract domain from URL to create blog name and URL
-      let blogName = "";
+      // Extract domain from URL to create blog URL
       let blogUrl = "";
       try {
         const url = new URL(formData.link);
-        blogName = url.hostname.replace('www.', '');
         blogUrl = `${url.protocol}//${url.hostname}`;
       } catch {
-        blogName = "Manual Entry";
         blogUrl = formData.link;
       }
 
@@ -75,13 +72,11 @@ export const AddBlogPostButton = () => {
       if (existingBlog) {
         blogId = existingBlog.id;
       } else {
-        // Create new blog - using 'nlp' as category (one of the allowed values)
+        // Create new blog
         const { data: newBlog, error: blogError } = await supabase
           .from('blogs')
           .insert({
-            name: blogName,
             url: blogUrl,
-            category: 'nlp',
             user_id: user.id
           })
           .select('id')
@@ -105,7 +100,6 @@ export const AddBlogPostButton = () => {
           *,
           blogs:blog_id (
             id,
-            name,
             url
           )
         `)
@@ -113,9 +107,25 @@ export const AddBlogPostButton = () => {
 
       if (postError) throw postError;
 
+      // Add blog name derived from URL
+      const postWithBlogName = {
+        ...newPost,
+        blogs: newPost.blogs ? {
+          ...newPost.blogs,
+          name: (() => {
+            try {
+              const url = new URL(newPost.blogs.url);
+              return url.hostname.replace('www.', '');
+            } catch {
+              return newPost.blogs.url;
+            }
+          })()
+        } : null
+      };
+
       // Add to Knowledge Bank using the hook
       if (addToKnowledgeBank) {
-        addToKnowledgeBank(newPost);
+        addToKnowledgeBank(postWithBlogName);
       }
 
       // Refresh queries to update the UI

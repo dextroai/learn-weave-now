@@ -38,7 +38,6 @@ export const useKnowledgeBankDatabase = () => {
             *,
             blogs:blog_id (
               id,
-              name,
               url
             )
           )
@@ -56,8 +55,23 @@ export const useKnowledgeBankDatabase = () => {
         const post = item.blog_posts;
         const topic = userTopics.find(t => t.topic_id === post.label_id);
         
+        // Extract blog name from URL
+        let blogName = 'Unknown Source';
+        if (post.blogs?.url) {
+          try {
+            const url = new URL(post.blogs.url);
+            blogName = url.hostname.replace('www.', '');
+          } catch {
+            blogName = post.blogs.url;
+          }
+        }
+        
         return {
           ...post,
+          blogs: post.blogs ? {
+            ...post.blogs,
+            name: blogName
+          } : null,
           addedToKnowledgeBank: new Date(item.added_at).getTime(),
           topicName: topic?.name || 'Unknown Topic'
         };
