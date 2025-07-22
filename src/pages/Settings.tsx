@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { TopicPredictionButton } from '@/components/TopicPredictionButton';
 import { AddTopicDialog } from '@/components/AddTopicDialog';
+import { AdminLambdaDeployment } from '@/components/AdminLambdaDeployment';
 
 interface BlogForm {
   url: string;
@@ -131,6 +132,9 @@ const Settings = () => {
         </div>
 
         <div className="space-y-8">
+          {/* AWS Lambda Deployment Section (Admin Only) */}
+          <AdminLambdaDeployment />
+
           {/* Topic Prediction Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
