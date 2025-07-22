@@ -1,19 +1,12 @@
-FROM python:3.9-slim
-
-WORKDIR /app
+FROM public.ecr.aws/lambda/python:3.9
 
 # Copy requirements and install dependencies
-COPY requirements.txt .
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install -r requirements.txt
 
-# Copy source code
-COPY *.py ./
+# Copy function code
+COPY blog_monitor_lambda.py ${LAMBDA_TASK_ROOT}
+COPY blog_monitor.py ${LAMBDA_TASK_ROOT}
 
-# Install AWS CLI
-RUN pip install awscli
-
-# Copy deployment scripts
-COPY deploy_direct.sh .
-RUN chmod +x deploy_direct.sh
-
-CMD ["./deploy_direct.sh"]
+# Set the CMD to your handler
+CMD [ "blog_monitor_lambda.lambda_handler" ]
