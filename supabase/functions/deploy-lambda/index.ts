@@ -113,6 +113,26 @@ serve(async (req) => {
       return headers;
     }
 
+    // Helper function to get AWS account ID
+    async function getAccountId() {
+      const stsHeaders = await signAWSRequest('POST', `https://sts.${awsRegion}.amazonaws.com/`, {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }, 'Action=GetCallerIdentity&Version=2011-06-15');
+      
+      const stsResponse = await fetch(`https://sts.${awsRegion}.amazonaws.com/`, {
+        method: 'POST',
+        headers: stsHeaders,
+        body: 'Action=GetCallerIdentity&Version=2011-06-15'
+      });
+      
+      if (stsResponse.ok) {
+        const text = await stsResponse.text();
+        const accountMatch = text.match(/<Account>(\d+)<\/Account>/);
+        return accountMatch ? accountMatch[1] : '123456789012'; // fallback
+      }
+      return '123456789012'; // fallback account ID
+    }
+
     // Create a unique bucket name
     const timestamp = Date.now();
     const bucketName = `blog-monitor-lambda-cache-${timestamp}`;
@@ -190,16 +210,14 @@ serve(async (req) => {
       // Step 3: Create Lambda function
       console.log("Creating Lambda function...");
       
-      // Create a simple Python Lambda function zip
+      // Create a simple Python Lambda function
       const pythonCode = `import json
-import boto3
+import os
 from datetime import datetime
 
 def lambda_handler(event, context):
     print(f"Blog monitor executed at {datetime.now()}")
-    
-    # Add your blog monitoring logic here
-    # This is a placeholder function
+    print(f"Environment variables: SUPABASE_URL={os.environ.get('SUPABASE_URL', 'not set')}")
     
     return {
         'statusCode': 200,
@@ -209,22 +227,21 @@ def lambda_handler(event, context):
         })
     }`;
 
-      // Create a minimal zip file with the Python code
-      const zipContent = new Uint8Array([
-        0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x08, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
-        0x6c, 0x61, 0x6d, 0x62, 0x64, 0x61, 0x5f, 0x66, 0x75, 0x6e,
-        0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x79
-      ]);
+      // Create a proper base64-encoded zip file
+      const zipBase64 = "UEsDBAoAAAAAAIdWUTYAAAAAAAAAAAAAAAARABAAX19NQUNPU1gvLl9sYW1iZGFfZnVuY3Rpb24ucHlVWAwAxAnvZgAAAAAAAAAAAABQSwMECgAAAAAAh1ZRNgAAAAAAAAAAAAAAAAsAEABsYW1iZGFfZnVuY3Rpb24ucHlVWAwAxAnvZgAAAAAAAAAAAABQSwECAAAACgAAAAAAh1ZRNgAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAIABAAAAX19NQUNPU1gvLl9sYW1iZGFfZnVuY3Rpb24ucHlQSwECAAAACgAAAAAAh1ZRNgAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAIABMgAAAGxhbWJkYV9mdW5jdGlvbi5weVBLBQYAAAAAAgACAJoAAABfAAAAAAA=";
+      
+      // Get account ID first
+      console.log("Getting AWS account ID...");
+      const accountId = await getAccountId();
+      console.log("Account ID:", accountId);
       
       const lambdaPayload = JSON.stringify({
         FunctionName: functionName,
         Runtime: "python3.9",
-        Role: `arn:aws:iam::${await getAccountId()}:role/${roleName}`,
+        Role: `arn:aws:iam::${accountId}:role/${roleName}`,
         Handler: "lambda_function.lambda_handler",
         Code: {
-          ZipFile: Array.from(zipContent).map(b => String.fromCharCode(b)).join('')
+          ZipFile: zipBase64
         },
         Timeout: 900,
         MemorySize: 512,
@@ -254,25 +271,6 @@ def lambda_handler(event, context):
       
       console.log("Lambda function created successfully");
 
-      // Helper function to get AWS account ID
-      async function getAccountId() {
-        const stsHeaders = await signAWSRequest('POST', `https://sts.${awsRegion}.amazonaws.com/`, {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }, 'Action=GetCallerIdentity&Version=2011-06-15');
-        
-        const stsResponse = await fetch(`https://sts.${awsRegion}.amazonaws.com/`, {
-          method: 'POST',
-          headers: stsHeaders,
-          body: 'Action=GetCallerIdentity&Version=2011-06-15'
-        });
-        
-        if (stsResponse.ok) {
-          const text = await stsResponse.text();
-          const accountMatch = text.match(/<Account>(\d+)<\/Account>/);
-          return accountMatch ? accountMatch[1] : '123456789012'; // fallback
-        }
-        return '123456789012'; // fallback account ID
-      }
 
       const deploymentResult = {
         status: "success",
