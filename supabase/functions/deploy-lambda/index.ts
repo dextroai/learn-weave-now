@@ -66,8 +66,13 @@ serve(async (req) => {
       const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
       const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, '');
       
+      // Calculate payload hash
+      const payloadHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+      const payloadHashHex = Array.from(new Uint8Array(payloadHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      
       headers['Host'] = urlObj.hostname;
       headers['X-Amz-Date'] = amzDate;
+      headers['X-Amz-Content-Sha256'] = payloadHashHex;
       
       const canonicalHeaders = Object.keys(headers).sort().map(key => 
         `${key.toLowerCase()}:${headers[key]}\n`
@@ -76,9 +81,6 @@ serve(async (req) => {
       const signedHeaders = Object.keys(headers).sort().map(key => 
         key.toLowerCase()
       ).join(';');
-      
-      const payloadHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
-      const payloadHashHex = Array.from(new Uint8Array(payloadHash)).map(b => b.toString(16).padStart(2, '0')).join('');
       
       const canonicalRequest = [
         method,
