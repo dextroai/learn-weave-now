@@ -124,13 +124,22 @@ serve(async (req) => {
     try {
       // Step 1: Create S3 bucket
       console.log("Creating S3 bucket...");
+      
+      // Create location constraint XML for regions other than us-east-1
+      const locationConstraint = awsRegion === 'us-east-1' ? '' : 
+        `<?xml version="1.0" encoding="UTF-8"?>
+<CreateBucketConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <LocationConstraint>${awsRegion}</LocationConstraint>
+</CreateBucketConfiguration>`;
+      
       const s3Headers = await signAWSRequest('PUT', `https://s3.${awsRegion}.amazonaws.com/${bucketName}`, {
         'Content-Type': 'application/xml'
-      });
+      }, locationConstraint);
       
       const s3Response = await fetch(`https://s3.${awsRegion}.amazonaws.com/${bucketName}`, {
         method: 'PUT',
-        headers: s3Headers
+        headers: s3Headers,
+        body: locationConstraint || undefined
       });
       
       if (!s3Response.ok) {
