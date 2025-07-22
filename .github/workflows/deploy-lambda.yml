@@ -1,0 +1,179 @@
+name: Deploy Containerized Lambda to AWS
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+  push:
+    branches:
+      - main  # Auto-deploy on main branch push
+    paths:
+      - 'aws-lambda/**'
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  FUNCTION_NAME: blog-monitor-lambda
+  REPOSITORY_NAME: blog-monitor-lambda
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Get AWS Account ID
+      id: aws-account
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        echo "account-id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+        echo "repository-uri=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPOSITORY_NAME" >> $GITHUB_OUTPUT
+
+    - name: Create ECR repository if it doesn't exist
+      run: |
+        aws ecr create-repository \
+          --repository-name $REPOSITORY_NAME \
+          --region $AWS_REGION \
+          --image-scanning-configuration scanOnPush=true \
+          --image-tag-mutability MUTABLE \
+          2>/dev/null || echo "Repository already exists"
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build Docker image
+      working-directory: ./aws-lambda
+      run: |
+        docker build -t $REPOSITORY_NAME:latest .
+        docker tag $REPOSITORY_NAME:latest ${{ steps.aws-account.outputs.repository-uri }}:latest
+        docker tag $REPOSITORY_NAME:latest ${{ steps.aws-account.outputs.repository-uri }}:${{ github.sha }}
+
+    - name: Push Docker image to ECR
+      run: |
+        docker push ${{ steps.aws-account.outputs.repository-uri }}:latest
+        docker push ${{ steps.aws-account.outputs.repository-uri }}:${{ github.sha }}
+
+    - name: Create S3 bucket for cache
+      run: |
+        CACHE_BUCKET="blog-monitor-lambda-cache-$(date +%s)"
+        echo "CACHE_BUCKET=$CACHE_BUCKET" >> $GITHUB_ENV
+        aws s3 mb s3://$CACHE_BUCKET --region $AWS_REGION || echo "Bucket creation handled"
+
+    - name: Create IAM role for Lambda
+      run: |
+        ROLE_NAME="blog-monitor-lambda-role"
+        aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document '{
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }' 2>/dev/null || echo "Role already exists"
+        
+        # Attach policies
+        aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 2>/dev/null || true
+        aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess 2>/dev/null || true
+        
+        # Wait for role propagation
+        sleep 15
+
+    - name: Create or update Lambda function
+      run: |
+        ROLE_ARN="arn:aws:iam::${{ steps.aws-account.outputs.account-id }}:role/blog-monitor-lambda-role"
+        
+        # Try to create function
+        aws lambda create-function \
+          --function-name $FUNCTION_NAME \
+          --package-type Image \
+          --code ImageUri=${{ steps.aws-account.outputs.repository-uri }}:latest \
+          --role $ROLE_ARN \
+          --timeout 900 \
+          --memory-size 512 \
+          --environment Variables="{
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }},
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},
+            CACHE_BUCKET_NAME=$CACHE_BUCKET
+          }" \
+          2>/dev/null || {
+            echo "Function exists, updating..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --image-uri ${{ steps.aws-account.outputs.repository-uri }}:latest
+            
+            aws lambda update-function-configuration \
+              --function-name $FUNCTION_NAME \
+              --environment Variables="{
+                SUPABASE_URL=${{ secrets.SUPABASE_URL }},
+                SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},
+                CACHE_BUCKET_NAME=$CACHE_BUCKET
+              }"
+          }
+
+    - name: Set up EventBridge schedule
+      run: |
+        # Create EventBridge rule
+        aws events put-rule \
+          --name blog-monitor-daily \
+          --schedule-expression "rate(1 day)" \
+          --region $AWS_REGION
+        
+        # Add permission for EventBridge
+        aws lambda add-permission \
+          --function-name $FUNCTION_NAME \
+          --statement-id allow-eventbridge \
+          --action lambda:InvokeFunction \
+          --principal events.amazonaws.com \
+          --source-arn arn:aws:events:$AWS_REGION:${{ steps.aws-account.outputs.account-id }}:rule/blog-monitor-daily \
+          2>/dev/null || true
+        
+        # Add target
+        aws events put-targets \
+          --rule blog-monitor-daily \
+          --targets "Id"="1","Arn"="arn:aws:lambda:$AWS_REGION:${{ steps.aws-account.outputs.account-id }}:function:$FUNCTION_NAME" \
+          --region $AWS_REGION
+
+    - name: Test Lambda function
+      run: |
+        echo "Testing Lambda function..."
+        aws lambda invoke \
+          --function-name $FUNCTION_NAME \
+          --payload '{}' \
+          response.json
+        
+        echo "Lambda response:"
+        cat response.json
+
+    - name: Deployment Summary
+      run: |
+        echo "✅ Deployment completed successfully!"
+        echo ""
+        echo "📊 Resources created:"
+        echo "🐳 Docker Image: ${{ steps.aws-account.outputs.repository-uri }}:latest"
+        echo "⚡ Lambda Function: $FUNCTION_NAME"
+        echo "🪣 S3 Cache Bucket: $CACHE_BUCKET"
+        echo "⏰ Schedule: Daily execution"
+        echo ""
+        echo "🔗 AWS Console Links:"
+        echo "Lambda: https://console.aws.amazon.com/lambda/home?region=$AWS_REGION#/functions/$FUNCTION_NAME"
+        echo "ECR: https://console.aws.amazon.com/ecr/repositories/$REPOSITORY_NAME"
+        echo "S3: https://s3.console.aws.amazon.com/s3/buckets/$CACHE_BUCKET"

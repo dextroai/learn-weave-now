@@ -1,0 +1,54 @@
+version: 0.2
+
+env:
+  variables:
+    REPOSITORY_NAME: blog-monitor-lambda
+    FUNCTION_NAME: blog-monitor-lambda
+  parameter-store:
+    SUPABASE_URL: /blog-monitor/supabase-url
+    SUPABASE_SERVICE_ROLE_KEY: /blog-monitor/supabase-service-key
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPOSITORY_NAME
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - cd aws-lambda
+      - docker build -t $REPOSITORY_NAME:$IMAGE_TAG .
+      - docker tag $REPOSITORY_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+      - docker tag $REPOSITORY_NAME:$IMAGE_TAG $REPOSITORY_URI:latest
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+      - echo Creating/updating Lambda function...
+      - |
+        aws lambda create-function \
+          --function-name $FUNCTION_NAME \
+          --package-type Image \
+          --code ImageUri=$REPOSITORY_URI:latest \
+          --role arn:aws:iam::$AWS_ACCOUNT_ID:role/blog-monitor-lambda-role \
+          --timeout 900 \
+          --memory-size 512 \
+          --environment Variables="{
+            SUPABASE_URL=$SUPABASE_URL,
+            SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY,
+            CACHE_BUCKET_NAME=blog-monitor-cache-$AWS_ACCOUNT_ID
+          }" \
+          2>/dev/null || aws lambda update-function-code \
+            --function-name $FUNCTION_NAME \
+            --image-uri $REPOSITORY_URI:latest
+
+artifacts:
+  files:
+    - '**/*'
