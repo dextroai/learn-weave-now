@@ -3,6 +3,9 @@ import json
 import boto3
 import os
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from blog_monitor import BlogMonitor
 from supabase import create_client
@@ -26,11 +29,8 @@ def lambda_handler(event, context):
         s3_client = boto3.client('s3')
         cache_bucket = os.environ['CACHE_BUCKET_NAME']
         
-        # Initialize SES for notifications (optional)
-        ses_client = boto3.client('ses') if os.environ.get('NOTIFICATION_EMAIL') else None
-        
         # Create modified BlogMonitor class for Lambda
-        monitor = LambdaBlogMonitor(supabase, s3_client, ses_client, cache_bucket)
+        monitor = LambdaBlogMonitor(supabase, s3_client, cache_bucket)
         
         # Get all blogs from admin_blogs table
         blogs_response = supabase.table('admin_blogs').select('*').eq('is_active', True).execute()
@@ -104,11 +104,10 @@ class LambdaBlogMonitor(BlogMonitor):
     Modified BlogMonitor class for AWS Lambda execution
     """
     
-    def __init__(self, supabase_client, s3_client, ses_client, cache_bucket):
+    def __init__(self, supabase_client, s3_client, cache_bucket):
         super().__init__()
         self.supabase = supabase_client
         self.s3_client = s3_client
-        self.ses_client = ses_client
         self.cache_bucket = cache_bucket
     
     def load_cache_from_s3(self, blog_url):
@@ -216,22 +215,61 @@ class LambdaBlogMonitor(BlogMonitor):
         except:
             return None
     
-    def send_notifications(self, blog, new_posts):
-        """Send email notifications via SES"""
+    def send_smtp_email(self, to_email, subject, body):
+        """Send email via SMTP (Gmail)"""
         try:
-            if not self.ses_client:
-                self.logger.info("SES not configured, skipping email notifications")
-                return
-                
+            smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+            smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+            smtp_username = os.environ.get('SMTP_USERNAME')
+            smtp_password = os.environ.get('SMTP_PASSWORD')
+            
+            if not all([smtp_username, smtp_password]):
+                self.logger.info("SMTP credentials not configured, skipping email")
+                return False
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = smtp_username
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            # Add body to email
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Create SMTP session
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()  # Enable security
+            server.login(smtp_username, smtp_password)
+            
+            # Send email
+            text = msg.as_string()
+            server.sendmail(smtp_username, to_email, text)
+            server.quit()
+            
+            self.logger.info(f"Email sent successfully to {to_email}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error sending email: {str(e)}")
+            return False
+    
+    def send_notifications(self, blog, new_posts):
+        """Send email notifications via SMTP"""
+        try:
+            # Check if notifications are enabled
             notification_email = os.environ.get('NOTIFICATION_EMAIL')
             if not notification_email:
                 self.logger.info("No notification email configured, skipping notifications")
                 return
             
-            # Get users who have this blog and want notifications
+            # Get users who have this blog
             user_blogs_response = self.supabase.table('blogs').select(
                 'user_id, profiles!inner(*)'
             ).eq('url', blog['url']).execute()
+            
+            if not user_blogs_response.data:
+                self.logger.info("No users found for this blog")
+                return
             
             for user_blog in user_blogs_response.data:
                 user_email = user_blog['profiles']['email']
@@ -257,17 +295,8 @@ class LambdaBlogMonitor(BlogMonitor):
                         body += f"   Summary: {post['summary']}\n"
                     body += "\n" + "-"*40 + "\n\n"
                 
-                # Send email via SES
-                self.ses_client.send_email(
-                    Source=notification_email,
-                    Destination={'ToAddresses': [user_email]},
-                    Message={
-                        'Subject': {'Data': subject},
-                        'Body': {'Text': {'Data': body}}
-                    }
-                )
-                
-                self.logger.info(f"Notification sent to {user_email}")
+                # Send email via SMTP
+                self.send_smtp_email(user_email, subject, body)
                 
         except Exception as e:
             self.logger.error(f"Error sending notifications: {str(e)}")

@@ -12,6 +12,10 @@ provider:
     SUPABASE_SERVICE_ROLE_KEY: ${env:SUPABASE_SERVICE_ROLE_KEY}
     CACHE_BUCKET_NAME: ${self:service}-${self:provider.stage}-cache
     NOTIFICATION_EMAIL: ${env:NOTIFICATION_EMAIL, ''}
+    SMTP_SERVER: ${env:SMTP_SERVER, 'smtp.gmail.com'}
+    SMTP_PORT: ${env:SMTP_PORT, '587'}
+    SMTP_USERNAME: ${env:SMTP_USERNAME, ''}
+    SMTP_PASSWORD: ${env:SMTP_PASSWORD, ''}
   
   iamRoleStatements:
     - Effect: Allow
@@ -24,11 +28,6 @@ provider:
       Action:
         - s3:ListBucket
       Resource: "arn:aws:s3:::${self:provider.environment.CACHE_BUCKET_NAME}"
-    - Effect: Allow
-      Action:
-        - ses:SendEmail
-        - ses:SendRawEmail
-      Resource: "*"
 
 functions:
   blogMonitor:
