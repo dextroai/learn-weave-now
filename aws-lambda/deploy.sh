@@ -5,10 +5,11 @@
 
 echo "🚀 Deploying Blog Monitor Lambda Function..."
 
-# Check if environment variables are set
-if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$NOTIFICATION_EMAIL" ]; then
+# Check if required environment variables are set
+if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
     echo "❌ Error: Required environment variables not set"
-    echo "Please set: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, NOTIFICATION_EMAIL"
+    echo "Please set: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY"
+    echo "Optional: NOTIFICATION_EMAIL (for email notifications)"
     exit 1
 fi
 

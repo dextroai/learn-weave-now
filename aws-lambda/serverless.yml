@@ -11,7 +11,7 @@ provider:
     SUPABASE_URL: ${env:SUPABASE_URL}
     SUPABASE_SERVICE_ROLE_KEY: ${env:SUPABASE_SERVICE_ROLE_KEY}
     CACHE_BUCKET_NAME: ${self:service}-${self:provider.stage}-cache
-    NOTIFICATION_EMAIL: ${env:NOTIFICATION_EMAIL}
+    NOTIFICATION_EMAIL: ${env:NOTIFICATION_EMAIL, ''}
   
   iamRoleStatements:
     - Effect: Allow

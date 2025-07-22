@@ -26,8 +26,8 @@ def lambda_handler(event, context):
         s3_client = boto3.client('s3')
         cache_bucket = os.environ['CACHE_BUCKET_NAME']
         
-        # Initialize SES for notifications
-        ses_client = boto3.client('ses')
+        # Initialize SES for notifications (optional)
+        ses_client = boto3.client('ses') if os.environ.get('NOTIFICATION_EMAIL') else None
         
         # Create modified BlogMonitor class for Lambda
         monitor = LambdaBlogMonitor(supabase, s3_client, ses_client, cache_bucket)
@@ -219,6 +219,15 @@ class LambdaBlogMonitor(BlogMonitor):
     def send_notifications(self, blog, new_posts):
         """Send email notifications via SES"""
         try:
+            if not self.ses_client:
+                self.logger.info("SES not configured, skipping email notifications")
+                return
+                
+            notification_email = os.environ.get('NOTIFICATION_EMAIL')
+            if not notification_email:
+                self.logger.info("No notification email configured, skipping notifications")
+                return
+            
             # Get users who have this blog and want notifications
             user_blogs_response = self.supabase.table('blogs').select(
                 'user_id, profiles!inner(*)'
@@ -250,7 +259,7 @@ class LambdaBlogMonitor(BlogMonitor):
                 
                 # Send email via SES
                 self.ses_client.send_email(
-                    Source=os.environ['NOTIFICATION_EMAIL'],
+                    Source=notification_email,
                     Destination={'ToAddresses': [user_email]},
                     Message={
                         'Subject': {'Data': subject},
