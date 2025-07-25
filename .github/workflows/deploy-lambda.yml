@@ -120,6 +120,10 @@ jobs:
               --function-name $FUNCTION_NAME \
               --image-uri ${{ steps.aws-account.outputs.repository-uri }}:latest
             
+            echo "Waiting for function code update to complete..."
+            aws lambda wait function-updated \
+              --function-name $FUNCTION_NAME
+            
             aws lambda update-function-configuration \
               --function-name $FUNCTION_NAME \
               --environment Variables="{
