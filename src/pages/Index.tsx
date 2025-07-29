@@ -68,7 +68,7 @@ const Index = () => {
               onClick={handleHomeClick}
               className="text-xl font-semibold text-gray-900 hover:bg-gray-100 px-3 py-2"
             >
-              Dextro
+              Firenotes
             </Button>
           </div>
 
