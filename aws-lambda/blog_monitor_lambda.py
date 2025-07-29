@@ -56,6 +56,8 @@ def lambda_handler(event, context):
                 
                 # Check blog for updates
                 new_posts = monitor.check_blog_lambda(blog)
+
+                logger.info("I am alive")
                 
                 if new_posts:
                     updated_count += 1
