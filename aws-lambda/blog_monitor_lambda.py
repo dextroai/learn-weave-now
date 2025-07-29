@@ -256,14 +256,8 @@ class LambdaBlogMonitor(BlogMonitor):
             return False
     
     def send_notifications(self, blog, new_posts):
-        """Send email notifications via SMTP"""
+        """Send email notifications to specific users who own the blog"""
         try:
-            # Check if notifications are enabled
-            notification_email = os.environ.get('NOTIFICATION_EMAIL')
-            if not notification_email:
-                self.logger.info("No notification email configured, skipping notifications")
-                return
-            
             # Get users who have this blog
             user_blogs_response = self.supabase.table('blogs').select(
                 'user_id, profiles!inner(*)'
