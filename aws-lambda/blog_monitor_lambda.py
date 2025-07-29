@@ -260,15 +260,28 @@ class LambdaBlogMonitor(BlogMonitor):
         try:
             # Get users who have this blog
             user_blogs_response = self.supabase.table('blogs').select(
-                'user_id, profiles!inner(*)'
+                'user_id'
             ).eq('url', blog['url']).execute()
             
             if not user_blogs_response.data:
                 self.logger.info("No users found for this blog")
                 return
             
+            # Get user emails from profiles table
+            user_ids = [blog['user_id'] for blog in user_blogs_response.data]
+            profiles_response = self.supabase.table('profiles').select(
+                'id, email'
+            ).in_('id', user_ids).execute()
+            
+            if not profiles_response.data:
+                self.logger.info("No user profiles found for this blog")
+                return
+            
+            # Create a mapping of user_id to email
+            user_emails = {profile['id']: profile['email'] for profile in profiles_response.data}
+            
             for user_blog in user_blogs_response.data:
-                user_email = user_blog['profiles']['email']
+                user_email = user_emails.get(user_blog['user_id'])
                 if not user_email:
                     continue
                 
