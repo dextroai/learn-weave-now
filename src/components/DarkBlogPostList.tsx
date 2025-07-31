@@ -1,5 +1,5 @@
 import { Tables } from "@/integrations/supabase/types";
-import { Search, Paperclip, Mic, MapPin, Send } from "lucide-react";
+import { Search, Paperclip, Mic, MapPin, Send, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -34,28 +34,87 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
     );
   }
 
+  // Group posts by date
+  const groupPostsByDate = (posts: BlogPost[]) => {
+    const groups = posts.reduce((acc, post) => {
+      const date = new Date(post.detected_at || post.created_at).toDateString();
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(post);
+      return acc;
+    }, {} as Record<string, BlogPost[]>);
+
+    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+  };
+
+  const groupedPosts = groupPostsByDate(posts);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Content Area */}
       <div className="flex-1 px-6 pb-32">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {posts.map((post) => (
-            <div key={post.id} className="text-gray-300 space-y-4">
-              <div className="text-lg leading-relaxed">
-                {post.summary || post.title}
-              </div>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {groupedPosts.map(([date, datePosts]) => (
+            <div key={date} className="space-y-4">
+              {/* Date Header */}
+              <h2 className="text-lg font-medium text-gray-300 border-b border-gray-700 pb-2">
+                {formatDate(date)} ({datePosts.length})
+              </h2>
               
-              {post.content && (
-                <div className="text-base leading-relaxed">
-                  {post.content.split('\n').map((line, index) => (
-                    <div key={index} className="mb-2">
-                      {line}
+              {/* Posts for this date */}
+              <div className="space-y-6">
+                {datePosts.map((post) => (
+                  <div key={post.id} className="flex items-start justify-between group">
+                    <div className="flex-1 space-y-2">
+                      {/* Source domain */}
+                      <div className="flex items-center space-x-2 text-sm text-gray-400">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span>{post.blogs?.url?.replace(/^https?:\/\//, '') || 'Unknown source'}</span>
+                      </div>
+                      
+                      {/* Post title */}
+                      <h3 className="text-lg font-medium text-white hover:text-blue-400 transition-colors cursor-pointer">
+                        {post.title}
+                      </h3>
+                      
+                      {/* Post date */}
+                      <div className="text-sm text-gray-500">
+                        {new Date(post.detected_at || post.created_at).toLocaleDateString()}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="border-b border-gray-700 pb-6"></div>
+                    
+                    {/* Insight button */}
+                    <Button
+                      variant="ghost"
+                      className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Insight
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

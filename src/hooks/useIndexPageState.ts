@@ -5,7 +5,7 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 
 export const useIndexPageState = () => {
-  const [selectedTab, setSelectedTab] = useState("all-posts");
+  const [selectedTab, setSelectedTab] = useState("all");
   const [selectedSubTab, setSelectedSubTab] = useState("all");
   const [topicSubTab, setTopicSubTab] = useState("sources"); // Changed default to "sources"
   const [searchQuery, setSearchQuery] = useState("");
