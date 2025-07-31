@@ -11,13 +11,15 @@ interface AddToKnowledgeModalProps {
   onClose: () => void;
   onAddToKnowledgeBank: (topicId: string) => void;
   userTopics: UserTopic[];
+  isLoading?: boolean;
 }
 
 export function AddToKnowledgeModal({ 
   isOpen, 
   onClose, 
   onAddToKnowledgeBank, 
-  userTopics 
+  userTopics,
+  isLoading = false 
 }: AddToKnowledgeModalProps) {
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
 
@@ -75,20 +77,32 @@ export function AddToKnowledgeModal({
                 Choose a topic label for this post <span className="text-red-500">*</span>
               </label>
               
-              <Select value={selectedTopicId} onValueChange={setSelectedTopicId}>
+              <Select value={selectedTopicId} onValueChange={setSelectedTopicId} disabled={isLoading}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a topic label" />
+                  <SelectValue placeholder={
+                    isLoading 
+                      ? "Loading topics..." 
+                      : userTopics.length === 0 
+                        ? "No topics available" 
+                        : "Select a topic label"
+                  } />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-[70]">
-                  {userTopics.map((topic) => (
-                    <SelectItem 
-                      key={topic.id} 
-                      value={topic.topic_id.toString()}
-                      className="hover:bg-gray-100"
-                    >
-                      {topic.name}
-                    </SelectItem>
-                  ))}
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Loading topics...</SelectItem>
+                  ) : userTopics.length === 0 ? (
+                    <SelectItem value="empty" disabled>No topics available. Please create a topic first.</SelectItem>
+                  ) : (
+                    userTopics.map((topic) => (
+                      <SelectItem 
+                        key={topic.id} 
+                        value={topic.topic_id.toString()}
+                        className="hover:bg-gray-100"
+                      >
+                        {topic.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

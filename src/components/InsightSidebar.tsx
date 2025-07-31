@@ -25,7 +25,7 @@ interface InsightSidebarProps {
 export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
   const [isAddToKnowledgeModalOpen, setIsAddToKnowledgeModalOpen] = useState(false);
   const { addToKnowledgeBank } = useKnowledgeBank();
-  const { data: userTopics = [] } = useUserTopics();
+  const { data: userTopics = [], isLoading: isLoadingTopics } = useUserTopics();
   const { toast } = useToast();
 
   if (!isOpen || !post) return null;
@@ -151,6 +151,7 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
         onClose={() => setIsAddToKnowledgeModalOpen(false)}
         onAddToKnowledgeBank={handleAddToKnowledgeBank}
         userTopics={userTopics}
+        isLoading={isLoadingTopics}
       />
     </>
   );

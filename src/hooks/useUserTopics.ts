@@ -10,14 +10,20 @@ export const useUserTopics = () => {
   return useQuery({
     queryKey: ['userTopics'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('user_topics')
         .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
+    enabled: true,
   });
 };
 
