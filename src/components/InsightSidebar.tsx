@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { X, ThumbsUp, ThumbsDown, Plus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
+import { AddToKnowledgeModal } from "@/components/AddToKnowledgeModal";
+import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { useUserTopics } from "@/hooks/useUserTopics";
+import { useToast } from "@/hooks/use-toast";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -18,6 +23,11 @@ interface InsightSidebarProps {
 }
 
 export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
+  const [isAddToKnowledgeModalOpen, setIsAddToKnowledgeModalOpen] = useState(false);
+  const { addToKnowledgeBank } = useKnowledgeBank();
+  const { data: userTopics = [] } = useUserTopics();
+  const { toast } = useToast();
+
   if (!isOpen || !post) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -29,6 +39,28 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
   const handleReadFullArticle = () => {
     if (post.link) {
       window.open(post.link, '_blank');
+    }
+  };
+
+  const handleAddToKnowledgeClick = () => {
+    setIsAddToKnowledgeModalOpen(true);
+  };
+
+  const handleAddToKnowledgeBank = async (topicId: string) => {
+    try {
+      if (addToKnowledgeBank) {
+        addToKnowledgeBank(post);
+        toast({
+          title: "Added to Knowledge Bank",
+          description: "Post has been successfully added to your knowledge bank.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add post to knowledge bank.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -73,7 +105,12 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600">
               <ThumbsDown className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-blue-600 hover:text-blue-700"
+              onClick={handleAddToKnowledgeClick}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add to Knowledge
             </Button>
@@ -107,6 +144,14 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* Add to Knowledge Modal */}
+      <AddToKnowledgeModal
+        isOpen={isAddToKnowledgeModalOpen}
+        onClose={() => setIsAddToKnowledgeModalOpen(false)}
+        onAddToKnowledgeBank={handleAddToKnowledgeBank}
+        userTopics={userTopics}
+      />
     </>
   );
 }
