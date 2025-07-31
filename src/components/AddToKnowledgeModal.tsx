@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tables } from "@/integrations/supabase/types";
+import { AddNewTopicModal } from "@/components/AddNewTopicModal";
 
 type UserTopic = Tables<'user_topics'>;
 
@@ -12,6 +13,8 @@ interface AddToKnowledgeModalProps {
   onAddToKnowledgeBank: (topicId: string) => void;
   userTopics: UserTopic[];
   isLoading?: boolean;
+  onAddNewTopic?: (name: string, topicId: number) => void;
+  isAddingTopic?: boolean;
 }
 
 export function AddToKnowledgeModal({ 
@@ -19,9 +22,12 @@ export function AddToKnowledgeModal({
   onClose, 
   onAddToKnowledgeBank, 
   userTopics,
-  isLoading = false 
+  isLoading = false,
+  onAddNewTopic,
+  isAddingTopic = false
 }: AddToKnowledgeModalProps) {
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
+  const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -42,6 +48,13 @@ export function AddToKnowledgeModal({
   const handleCancel = () => {
     onClose();
     setSelectedTopicId("");
+  };
+
+  const handleAddNewTopic = (name: string, topicId: number) => {
+    if (onAddNewTopic) {
+      onAddNewTopic(name, topicId);
+    }
+    setIsNewTopicModalOpen(false);
   };
 
   return (
@@ -73,11 +86,24 @@ export function AddToKnowledgeModal({
           {/* Content */}
           <div className="p-6 space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Choose a topic label for this post <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Choose a topic label for this post <span className="text-red-500">*</span>
+                </label>
+                {onAddNewTopic && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsNewTopicModalOpen(true)}
+                    className="text-blue-600 hover:text-blue-700 p-1 h-auto"
+                    disabled={isLoading || isAddingTopic}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               
-              <Select value={selectedTopicId} onValueChange={setSelectedTopicId} disabled={isLoading}>
+              <Select value={selectedTopicId} onValueChange={setSelectedTopicId} disabled={isLoading || isAddingTopic}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={
                     isLoading 
@@ -127,6 +153,14 @@ export function AddToKnowledgeModal({
           </div>
         </div>
       </div>
+
+      {/* Add New Topic Modal */}
+      <AddNewTopicModal
+        isOpen={isNewTopicModalOpen}
+        onClose={() => setIsNewTopicModalOpen(false)}
+        onAddTopic={handleAddNewTopic}
+        isLoading={isAddingTopic}
+      />
     </>
   );
 }

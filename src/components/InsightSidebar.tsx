@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { AddToKnowledgeModal } from "@/components/AddToKnowledgeModal";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
-import { useUserTopics } from "@/hooks/useUserTopics";
+import { useUserTopics, useAddUserTopic } from "@/hooks/useUserTopics";
 import { useToast } from "@/hooks/use-toast";
 
 type BlogPost = Tables<'blog_posts'> & {
@@ -26,6 +26,7 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
   const [isAddToKnowledgeModalOpen, setIsAddToKnowledgeModalOpen] = useState(false);
   const { addToKnowledgeBank } = useKnowledgeBank();
   const { data: userTopics = [], isLoading: isLoadingTopics } = useUserTopics();
+  const addUserTopicMutation = useAddUserTopic();
   const { toast } = useToast();
 
   if (!isOpen || !post) return null;
@@ -59,6 +60,26 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
       toast({
         title: "Error",
         description: "Failed to add post to knowledge bank.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddNewTopic = async (name: string, topicId: number) => {
+    try {
+      await addUserTopicMutation.mutateAsync({
+        name,
+        topic_id: topicId,
+        is_active: true
+      });
+      toast({
+        title: "Topic Created",
+        description: `Topic "${name}" has been successfully created.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create new topic.",
         variant: "destructive",
       });
     }
@@ -152,6 +173,8 @@ export function InsightSidebar({ post, isOpen, onClose }: InsightSidebarProps) {
         onAddToKnowledgeBank={handleAddToKnowledgeBank}
         userTopics={userTopics}
         isLoading={isLoadingTopics}
+        onAddNewTopic={handleAddNewTopic}
+        isAddingTopic={addUserTopicMutation.isPending}
       />
     </>
   );
