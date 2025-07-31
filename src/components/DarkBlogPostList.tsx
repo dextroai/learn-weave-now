@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { Search, Paperclip, Mic, MapPin, Send, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InsightSidebar } from "@/components/InsightSidebar";
 
 type BlogPost = Tables<'blog_posts'> & {
   blogs: {
@@ -18,6 +20,20 @@ interface DarkBlogPostListProps {
 }
 
 export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [isInsightOpen, setIsInsightOpen] = useState(false);
+
+  const handleInsightClick = (post: BlogPost, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedPost(post);
+    setIsInsightOpen(true);
+  };
+
+  const handleCloseInsight = () => {
+    setIsInsightOpen(false);
+    setSelectedPost(null);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -131,6 +147,7 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={(e) => handleInsightClick(post, e)}
                         className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2 text-xs"
                       >
                         <Eye className="h-3 w-3 mr-1" />
@@ -171,6 +188,13 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
           </div>
         </div>
       </div>
+
+      {/* Insight Sidebar */}
+      <InsightSidebar
+        post={selectedPost}
+        isOpen={isInsightOpen}
+        onClose={handleCloseInsight}
+      />
     </div>
   );
 }
