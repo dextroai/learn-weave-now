@@ -4,6 +4,7 @@ import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
+import { DarkBlogPostList } from "@/components/DarkBlogPostList";
 import { Tables } from "@/integrations/supabase/types";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 import { useToast } from "@/hooks/use-toast";
@@ -87,68 +88,23 @@ export const MainContent = ({
     ? knowledgeBankPosts.filter(post => post.label_id === currentTopic.topic_id)
     : [];
 
-  // Handle All Posts views
-  if (selectedTab === "all-posts") {
-    if (selectedSubTab === "knowledge-bank") {
-      return (
-        <div className="flex flex-col min-h-screen">
-          {/* All Posts Sub Navigation */}
-          <div className="bg-white border-b border-gray-200">
-            <AllPostsSubNavigation 
-              activeSubTab={selectedSubTab} 
-              onSubTabChange={setSelectedSubTab}
-              knowledgeBankCount={knowledgeBankPosts.length}
-              allPostsCount={allBlogPosts.length}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
-          
-          {/* Knowledge Bank Content */}
-          <div className="flex-1">
-            <div className="max-w-4xl mx-auto p-6">
-              <BlogPostGrid
-                posts={knowledgeBankPosts}
-                isLoading={isLoading}
-                onMarkAsRead={handleMarkAsRead}
-                isKnowledgeBank={true}
-                onRemove={handleRemoveFromKnowledgeBank}
-                showSearch={false}
-                isTopicView={false}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
+  // Handle Posts tab (show all blog posts)
+  if (selectedTab === "all") {
     return (
-      <div className="flex flex-col min-h-screen">
-        {/* All Posts Sub Navigation */}
-        <div className="bg-white border-b border-gray-200">
-          <AllPostsSubNavigation 
-            activeSubTab={selectedSubTab} 
-            onSubTabChange={setSelectedSubTab}
-            knowledgeBankCount={knowledgeBankPosts.length}
-            allPostsCount={allBlogPosts.length}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-        </div>
-        
-        {/* All Posts Content */}
-        <div className="flex-1">
-          <div className="max-w-4xl mx-auto p-6">
-            <BlogPostGrid
-              posts={searchFilteredPosts}
-              isLoading={isLoading}
-              onMarkAsRead={handleMarkAsRead}
-              showSearch={false}
-              isTopicView={false}
-            />
-          </div>
-        </div>
-      </div>
+      <DarkBlogPostList
+        posts={allBlogPosts}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // Handle Knowledge Bank tab
+  if (selectedTab === "knowledge") {
+    return (
+      <DarkBlogPostList
+        posts={knowledgeBankPosts}
+        isLoading={isLoading}
+      />
     );
   }
 
