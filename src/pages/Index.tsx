@@ -137,7 +137,7 @@ const Index = () => {
       </div>
 
       {/* Main Title */}
-      <div className="px-6 py-8">
+      <div className="px-6 py-8 flex flex-col items-center">
         <h1 className="text-4xl font-bold text-white mb-8">Firenotes</h1>
         
         {/* Tab Navigation for Posts/Knowledge Bank */}
