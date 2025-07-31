@@ -68,50 +68,75 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
     }
   };
 
+  const getFaviconUrl = (url: string) => {
+    try {
+      const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    } catch {
+      return null;
+    }
+  };
+
   const groupedPosts = groupPostsByDate(posts);
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Content Area */}
       <div className="flex-1 px-6 pb-32">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           {groupedPosts.map(([date, datePosts]) => (
-            <div key={date} className="space-y-4">
+            <div key={date} className="space-y-6">
               {/* Date Header */}
               <h2 className="text-lg font-medium text-gray-300 border-b border-gray-700 pb-2">
                 {formatDate(date)} ({datePosts.length})
               </h2>
               
-              {/* Posts for this date */}
-              <div className="space-y-6">
+              {/* Posts Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {datePosts.map((post) => (
-                  <div key={post.id} className="flex items-start justify-between group">
-                    <div className="flex-1 space-y-2">
-                      {/* Source domain */}
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <span>{post.blogs?.url?.replace(/^https?:\/\//, '') || 'Unknown source'}</span>
-                      </div>
-                      
-                      {/* Post title */}
-                      <h3 className="text-lg font-medium text-white hover:text-blue-400 transition-colors cursor-pointer">
-                        {post.title}
-                      </h3>
-                      
-                      {/* Post date */}
-                      <div className="text-sm text-gray-500">
-                        {new Date(post.detected_at || post.created_at).toLocaleDateString()}
-                      </div>
+                  <div 
+                    key={post.id} 
+                    className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition-colors cursor-pointer border border-slate-700 group"
+                  >
+                    {/* Source with favicon */}
+                    <div className="flex items-center space-x-2 mb-3">
+                      {post.blogs?.url && getFaviconUrl(post.blogs.url) ? (
+                        <img 
+                          src={getFaviconUrl(post.blogs.url)!} 
+                          alt=""
+                          className="w-4 h-4 rounded"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-2 h-2 bg-orange-500 rounded-full ${getFaviconUrl(post.blogs?.url || '') ? 'hidden' : ''}`}></div>
+                      <span className="text-sm text-gray-400 truncate">
+                        {post.blogs?.url?.replace(/^https?:\/\//, '') || 'Unknown source'}
+                      </span>
                     </div>
                     
-                    {/* Insight button */}
-                    <Button
-                      variant="ghost"
-                      className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Insight
-                    </Button>
+                    {/* Post title */}
+                    <h3 className="text-white font-medium text-sm leading-tight line-clamp-3 mb-3">
+                      {post.title}
+                    </h3>
+                    
+                    {/* Date and Insight button */}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">
+                        {new Date(post.detected_at || post.created_at).toLocaleDateString()}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2 text-xs"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Insight
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
