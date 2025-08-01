@@ -24,6 +24,7 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   const [draggedBox, setDraggedBox] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedBox, setSelectedBox] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getCurrentDateTime = () => {
@@ -55,25 +56,28 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   }
 
   const createNewNoteBox = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const newBox: NoteBox = {
-        id: Date.now().toString(),
-        content: '',
-        x: Math.max(20, e.clientX - rect.left - 20),
-        y: Math.max(20, e.clientY - rect.top - 20),
-        width: 600,
-        height: 120,
-      };
-      addNoteBox(newBox);
-      // Auto-focus the new note
-      setTimeout(() => {
-        const textarea = document.querySelector(`[data-note-id="${newBox.id}"] textarea`) as HTMLTextAreaElement;
-        if (textarea) {
-          textarea.focus();
-        }
-      }, 100);
+    // Don't create new notes if we're dragging
+    if (isDragging || e.target !== e.currentTarget || !containerRef.current) {
+      return;
     }
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const newBox: NoteBox = {
+      id: Date.now().toString(),
+      content: '',
+      x: Math.max(20, e.clientX - rect.left - 20),
+      y: Math.max(20, e.clientY - rect.top - 20),
+      width: 600,
+      height: 120,
+    };
+    addNoteBox(newBox);
+    // Auto-focus the new note
+    setTimeout(() => {
+      const textarea = document.querySelector(`[data-note-id="${newBox.id}"] textarea`) as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.focus();
+      }
+    }, 100);
   };
 
   const updateNoteContent = (id: string, content: string) => {
@@ -88,6 +92,7 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
       e.preventDefault();
       e.stopPropagation();
       setDraggedBox(boxId);
+      setIsDragging(true);
       const box = noteBoxes.find(b => b.id === boxId);
       if (box && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -100,7 +105,8 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (draggedBox && containerRef.current) {
+    if (draggedBox && isDragging && containerRef.current) {
+      e.preventDefault();
       const rect = containerRef.current.getBoundingClientRect();
       const box = noteBoxes.find(b => b.id === draggedBox);
       if (box) {
@@ -113,6 +119,10 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
 
   const handleMouseUp = () => {
     setDraggedBox(null);
+    // Add a small delay before allowing new notes to be created
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 100);
   };
 
   if (isLoading) {
