@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -25,14 +25,9 @@ const App = () => (
         <BrowserRouter>
           <SidebarProvider>
             <div className="min-h-screen flex w-full">
-              {/* Global header with sidebar trigger */}
-              <header className="fixed top-0 left-0 right-0 h-12 flex items-center border-b bg-background z-50">
-                <SidebarTrigger className="ml-2" />
-              </header>
-
               <AppSidebar />
               
-              <main className="flex-1 pt-12">
+              <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />

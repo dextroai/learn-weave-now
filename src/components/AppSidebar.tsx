@@ -32,7 +32,7 @@ export function AppSidebar() {
     isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/50";
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="w-40">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
