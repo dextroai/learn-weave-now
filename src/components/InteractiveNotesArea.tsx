@@ -60,12 +60,19 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
       const newBox: NoteBox = {
         id: Date.now().toString(),
         content: '',
-        x: Math.max(0, e.clientX - rect.left - 150),
-        y: Math.max(0, e.clientY - rect.top - 50),
-        width: 300,
-        height: 100,
+        x: Math.max(20, e.clientX - rect.left - 20),
+        y: Math.max(20, e.clientY - rect.top - 20),
+        width: 600,
+        height: 120,
       };
       addNoteBox(newBox);
+      // Auto-focus the new note
+      setTimeout(() => {
+        const textarea = document.querySelector(`[data-note-id="${newBox.id}"] textarea`) as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+        }
+      }, 100);
     }
   };
 
@@ -136,26 +143,26 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
         </div>
       </div>
       
-      {/* OneNote-style Writing Area */}
+      {/* Blank lined writing area like OneNote */}
       <div 
         ref={containerRef}
-        className="relative w-full min-h-screen bg-white p-8"
+        className="relative w-full min-h-screen bg-white cursor-text"
         onClick={createNewNoteBox}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         style={{ 
           minHeight: 'calc(100vh - 140px)',
-          background: 'linear-gradient(to bottom, #ffffff 0%, #fafafa 100%)',
-          backgroundSize: '100% 30px',
-          backgroundImage: 'repeating-linear-gradient(transparent, transparent 29px, #e5e7eb 29px, #e5e7eb 30px)'
+          backgroundImage: 'repeating-linear-gradient(transparent, transparent 29px, #e5e7eb 29px, #e5e7eb 30px)',
+          backgroundSize: '100% 30px'
         }}
       >
         {noteBoxes.map((box) => (
           <div
             key={box.id}
-            className={`absolute bg-white border-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${
-              selectedBox === box.id ? 'border-blue-500 shadow-blue-200' : 'border-gray-200'
+            data-note-id={box.id}
+            className={`absolute bg-white border rounded-sm shadow-sm transition-all duration-200 ${
+              selectedBox === box.id ? 'border-gray-400' : 'border-gray-200'
             }`}
             style={{
               left: box.x,
@@ -169,56 +176,42 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
               setSelectedBox(box.id);
             }}
           >
-            {/* OneNote-style note header */}
-            <div className={`flex items-center justify-between p-2 bg-gray-50 rounded-t-lg border-b ${
-              selectedBox === box.id ? 'border-blue-200' : 'border-gray-200'
-            }`}>
-              <div className="drag-handle flex items-center gap-2 cursor-move flex-1 opacity-60 hover:opacity-100 transition-opacity">
-                <Move className="w-3 h-3 text-gray-500" />
-                <span className="text-xs text-gray-500 font-medium">Note</span>
+            {/* Simple header bar like OneNote */}
+            <div className={`flex items-center justify-end p-1 bg-gray-50 border-b ${
+              selectedBox === box.id ? 'border-gray-300' : 'border-gray-200'
+            } opacity-0 hover:opacity-100 transition-opacity`}>
+              <div className="drag-handle flex items-center gap-2 cursor-move flex-1">
+                <span className="text-xs text-gray-400 ml-2">···</span>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteNoteBox(box.id);
                 }}
-                className="opacity-60 hover:opacity-100 text-gray-500 hover:text-red-500 transition-all p-1 rounded hover:bg-red-50"
+                className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
               >
                 <X className="w-3 h-3" />
               </button>
             </div>
             
-            {/* OneNote-style textarea */}
+            {/* Simple textarea like pic2 */}
             <textarea
               value={box.content}
               onChange={(e) => updateNoteContent(box.id, e.target.value)}
               onClick={(e) => e.stopPropagation()}
               onFocus={() => setSelectedBox(box.id)}
-              placeholder="Start typing..."
-              className="w-full min-h-[80px] p-4 bg-white border-none resize-none focus:outline-none text-gray-800 leading-relaxed"
+              placeholder=""
+              className="w-full min-h-[100px] p-3 bg-white border-none resize-none focus:outline-none text-gray-900 leading-relaxed"
               style={{ 
-                fontSize: '15px', 
-                lineHeight: '1.6',
-                minHeight: `${box.height - 40}px`,
+                fontSize: '16px', 
+                lineHeight: '1.5',
+                minHeight: `${box.height - 20}px`,
                 fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif'
               }}
             />
           </div>
         ))}
         
-        {/* Welcome message when no notes exist */}
-        {noteBoxes.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center text-gray-400 bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
-                <Plus className="w-8 h-8 text-blue-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-600 mb-2">Start writing your notes</h3>
-              <p className="text-sm text-gray-500 mb-1">Click anywhere on the page to create a note</p>
-              <p className="text-xs text-gray-400">Drag notes around to organize your thoughts</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
