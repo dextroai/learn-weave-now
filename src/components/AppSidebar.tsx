@@ -30,11 +30,11 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className="w-16 bg-slate-900 border-r border-slate-800" collapsible="none">
+    <Sidebar className="w-12 bg-slate-900 border-r border-slate-800" collapsible="none">
       <SidebarContent className="bg-slate-900">
         {/* Logo/Brand */}
-        <div className="p-4 flex items-center justify-center">
-          <div className="w-6 h-6 bg-white rounded text-slate-900 flex items-center justify-center text-sm font-bold">
+        <div className="p-2 flex items-center justify-center">
+          <div className="w-5 h-5 bg-white rounded text-slate-900 flex items-center justify-center text-xs font-bold">
             F
           </div>
         </div>
@@ -45,7 +45,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12 px-4 mb-2">
+                  <SidebarMenuButton asChild className="h-10 px-2 mb-1">
                     <NavLink
                       to={item.url}
                       end
@@ -56,7 +56,7 @@ export function AppSidebar() {
                       }
                       title={item.title}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-4 w-4" />
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -72,7 +72,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {bottomItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="h-12 px-4 mb-2">
+                    <SidebarMenuButton asChild className="h-10 px-2 mb-1">
                       <NavLink
                         to={item.url}
                         className={({ isActive }) =>
@@ -83,7 +83,7 @@ export function AppSidebar() {
                         title={item.title}
                       >
                         <div className="relative">
-                          <item.icon className="h-5 w-5" />
+                          <item.icon className="h-4 w-4" />
                           {item.hasNotification && (
                             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
                           )}
