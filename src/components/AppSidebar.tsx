@@ -34,38 +34,20 @@ function TopicSection({ topic }: { topic: any }) {
 
   return (
     <div className="mb-1">
-      {/* Topic Header with collapse/expand */}
-      <div className="flex items-center w-full">
-        <SidebarMenuButton asChild className="h-8 px-1 flex-1">
-          <NavLink
-            to={`/?topic=${topic.topic_id}`}
-            className={({ isActive }) =>
-              `flex items-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors ${
-                isActive ? "text-white bg-slate-800" : ""
-              }`
-            }
-            title={topic.name}
-          >
-            <span className="text-xs font-medium w-4 text-center">
-              {topic.name.charAt(0).toUpperCase()}
-            </span>
-          </NavLink>
-        </SidebarMenuButton>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-4 text-gray-400 hover:text-white hover:bg-slate-800 rounded p-0"
-          onClick={() => setIsExpanded(!isExpanded)}
-          title={`${isExpanded ? 'Collapse' : 'Expand'} ${topic.name}`}
-        >
-          {isExpanded ? <ChevronDown className="h-2 w-2" /> : <ChevronRight className="h-2 w-2" />}
-        </Button>
-      </div>
+      {/* Collapse/expand trigger - invisible but clickable */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-full text-gray-400 hover:text-white hover:bg-slate-800 rounded p-0"
+        onClick={() => setIsExpanded(!isExpanded)}
+        title={`${isExpanded ? 'Collapse' : 'Expand'} ${topic.name}`}
+      >
+        {isExpanded ? <ChevronDown className="h-2 w-2" /> : <ChevronRight className="h-2 w-2" />}
+      </Button>
 
       {/* Expandable Pages List */}
       {isExpanded && (
-        <div className="ml-1 mt-1 space-y-1">
+        <div className="space-y-1">
           {/* Add Page Button */}
           <Button
             variant="ghost"
