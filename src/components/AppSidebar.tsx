@@ -39,54 +39,43 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
     }
   };
 
-  if (shouldShowPages) {
-    // Show + sign and page titles for selected topic
-    return (
-      <div className="mb-1 space-y-1">
-        {/* Add Page Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
-          onClick={handleAddPage}
-          title={`Add page to ${topic.name}`}
-        >
-          <Plus className="h-3 w-3" />
-        </Button>
-        
-        {/* Pages */}
-        {pages.map((page) => (
-          <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
-            <NavLink
-              to={`/?topic=${topic.topic_id}&page=${page.id}`}
-              className={({ isActive }) =>
-                `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
-                  isActive ? "text-white bg-slate-700" : ""
-                }`
-              }
-              title={page.title}
-            >
-              <span className="text-xs truncate w-full text-center">
-                {page.title.length > 8 ? page.title.substring(0, 8) + '...' : page.title}
-              </span>
-            </NavLink>
-          </SidebarMenuButton>
-        ))}
-      </div>
-    );
+  // Only render anything if this topic is selected from top navigation
+  if (!shouldShowPages) {
+    return null;
   }
 
-  // Show topic label when not selected from top
+  // Show + sign and page titles for selected topic
   return (
-    <div className="mb-1">
-      <div 
-        className="h-6 w-full flex items-center justify-center text-gray-400 rounded transition-colors"
-        title={topic.name}
+    <div className="mb-1 space-y-1">
+      {/* Add Page Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
+        onClick={handleAddPage}
+        title={`Add page to ${topic.name}`}
       >
-        <span className="text-xs font-medium">
-          {topic.name.charAt(0).toUpperCase()}
-        </span>
-      </div>
+        <Plus className="h-3 w-3" />
+      </Button>
+      
+      {/* Pages */}
+      {pages.map((page) => (
+        <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
+          <NavLink
+            to={`/?topic=${topic.topic_id}&page=${page.id}`}
+            className={({ isActive }) =>
+              `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
+                isActive ? "text-white bg-slate-700" : ""
+              }`
+            }
+            title={page.title}
+          >
+            <span className="text-xs truncate w-full text-center">
+              {page.title.length > 8 ? page.title.substring(0, 8) + '...' : page.title}
+            </span>
+          </NavLink>
+        </SidebarMenuButton>
+      ))}
     </div>
   );
 }
