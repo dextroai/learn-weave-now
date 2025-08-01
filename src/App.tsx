@@ -27,7 +27,7 @@ const App = () => (
             <div className="min-h-screen flex w-full">
               <AppSidebar />
               
-              <main className="flex-1">
+              <main className="flex-1 ml-12">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
