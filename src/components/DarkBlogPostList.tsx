@@ -103,7 +103,7 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
           {groupedPosts.map(([date, datePosts]) => (
             <div key={date} className="space-y-6">
               {/* Date Header */}
-              <h2 className="text-lg font-medium text-gray-300 border-b border-gray-700 pb-2 text-center">
+              <h2 className="text-lg font-medium text-gray-300 pb-2 text-center">
                 {formatDate(date)} ({datePosts.length})
               </h2>
               
@@ -165,7 +165,7 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
       </div>
 
       {/* Fixed Search Bar at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="relative flex items-center bg-slate-800 rounded-lg border border-slate-600 px-4 py-3">
             <Search className="h-5 w-5 text-gray-400 mr-3" />
