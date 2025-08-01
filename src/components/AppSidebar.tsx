@@ -16,25 +16,53 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Button } from "@/components/ui/button";
 
+import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { NavLink, useLocation, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserTopics } from "@/hooks/useUserTopics";
+import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
+import { Button } from "@/components/ui/button";
+
 // Component for individual topic
 function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTopicFromTop: string | null }) {
   // Show pages when this topic is selected from the top navigation
   const shouldShowPages = selectedTopicFromTop === `topic-${topic.topic_id}`;
   
-  // Create category name for database lookup (convert topic name to slug format)
-  const categoryName = topic.name.toLowerCase().replace(/\s+/g, '-');
+  // Create category name for database lookup (use topic name as-is or topic_id)
+  // You can adjust this based on how you want to store categories in your DB
+  const categoryName = `topic-${topic.topic_id}`; // Using topic-{id} format for consistency
   
-  const { pages, addPage } = useNotePagesDatabase(
+  const { pages, addPage, isLoading } = useNotePagesDatabase(
     shouldShowPages ? categoryName : ''
   );
+
+  console.log(`Topic ${topic.name} (ID: ${topic.topic_id}):`, {
+    shouldShowPages,
+    categoryName,
+    pagesCount: pages?.length || 0,
+    pages: pages,
+    isLoading
+  });
 
   const handleAddPage = () => {
     const pageTitle = prompt(`Enter page title for ${topic.name}:`);
     if (pageTitle && pageTitle.trim()) {
       const newPage = {
-        id: Date.now().toString(),
+        id: `page-${Date.now()}`, // More descriptive ID
         title: pageTitle.trim(),
       };
+      console.log('Adding new page:', newPage);
       addPage(newPage);
     }
   };
@@ -44,6 +72,17 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
     return null;
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="mb-1 space-y-1">
+        <div className="h-6 w-full flex items-center justify-center text-gray-500 text-xs">
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
   // Show + sign and page titles for selected topic
   return (
     <div className="mb-1 space-y-1">
@@ -51,7 +90,7 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
+        className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs flex items-center justify-center"
         onClick={handleAddPage}
         title={`Add page to ${topic.name}`}
       >
@@ -59,23 +98,30 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
       </Button>
       
       {/* Pages */}
-      {pages.map((page) => (
-        <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
-          <NavLink
-            to={`/?topic=${topic.topic_id}&page=${page.id}`}
-            className={({ isActive }) =>
-              `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
-                isActive ? "text-white bg-slate-700" : ""
-              }`
-            }
-            title={page.title}
-          >
-            <span className="text-xs truncate w-full text-center">
-              {page.title.length > 8 ? page.title.substring(0, 8) + '...' : page.title}
-            </span>
-          </NavLink>
-        </SidebarMenuButton>
-      ))}
+      {pages && pages.length > 0 ? (
+        pages.map((page) => (
+          <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
+            <NavLink
+              to={`/?topic=${topic.topic_id}&page=${page.id}`}
+              className={({ isActive }) =>
+                `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
+                  isActive ? "text-white bg-slate-700" : ""
+                }`
+              }
+              title={page.title}
+            >
+              <span className="text-xs truncate w-full text-center px-1">
+                {page.title.length > 10 ? page.title.substring(0, 10) + '...' : page.title}
+              </span>
+            </NavLink>
+          </SidebarMenuButton>
+        ))
+      ) : (
+        // Show message when no pages exist
+        <div className="h-6 w-full flex items-center justify-center text-gray-600 text-xs">
+          No pages
+        </div>
+      )}
     </div>
   );
 }
