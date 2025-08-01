@@ -12,11 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 
-const navigationItems = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Discover", url: "/discover", icon: Search },
-  { title: "Spaces", url: "/spaces", icon: Grid3X3 },
-];
+const navigationItems = [];
 
 const bottomItems = [
   { title: "Account", url: "/account", icon: User, hasIndicator: true },
