@@ -23,7 +23,24 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   const { noteBoxes, addNoteBox, updateNoteBox, deleteNoteBox, isLoading } = useNoteBoxesDatabase(category);
   const [draggedBox, setDraggedBox] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [selectedBox, setSelectedBox] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const date = now.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const time = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    return { date, time };
+  };
 
   // If user is not authenticated, show login message
   if (!user) {
@@ -102,39 +119,44 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
     );
   }
 
+  const { date, time } = getCurrentDateTime();
+
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="px-6 py-2 pb-1 border-b border-gray-200">
-        {pageTitle && (
-          <h1 className="text-xl font-semibold text-gray-900 mb-1">{pageTitle}</h1>
-        )}
-        <p className="text-gray-600 text-sm">
-          {new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </p>
-        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-          <Plus className="w-4 h-4" />
-          <span>Click anywhere to create a new note</span>
+      {/* OneNote-style Header */}
+      <div className="px-8 py-6 border-b border-gray-200 bg-white">
+        <div className="max-w-4xl">
+          <h1 className="text-3xl font-normal text-gray-900 mb-3 border-b border-gray-300 pb-2">
+            {pageTitle || category.charAt(0).toUpperCase() + category.slice(1)}
+          </h1>
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>{date}</span>
+            <span>{time}</span>
+          </div>
         </div>
       </div>
       
+      {/* OneNote-style Writing Area */}
       <div 
         ref={containerRef}
-        className="relative w-full min-h-screen p-6 cursor-crosshair"
+        className="relative w-full min-h-screen bg-white p-8"
         onClick={createNewNoteBox}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ minHeight: 'calc(100vh - 120px)' }}
+        style={{ 
+          minHeight: 'calc(100vh - 140px)',
+          background: 'linear-gradient(to bottom, #ffffff 0%, #fafafa 100%)',
+          backgroundSize: '100% 30px',
+          backgroundImage: 'repeating-linear-gradient(transparent, transparent 29px, #e5e7eb 29px, #e5e7eb 30px)'
+        }}
       >
         {noteBoxes.map((box) => (
           <div
             key={box.id}
-            className="absolute bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            className={`absolute bg-white border-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${
+              selectedBox === box.id ? 'border-blue-500 shadow-blue-200' : 'border-gray-200'
+            }`}
             style={{
               left: box.x,
               top: box.y,
@@ -142,43 +164,58 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
               minHeight: box.height,
             }}
             onMouseDown={(e) => handleMouseDown(e, box.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedBox(box.id);
+            }}
           >
-            <div className="flex items-center justify-between p-2 border-b border-yellow-200 bg-yellow-100 rounded-t-lg">
-              <div className="drag-handle flex items-center gap-1 cursor-move flex-1">
+            {/* OneNote-style note header */}
+            <div className={`flex items-center justify-between p-2 bg-gray-50 rounded-t-lg border-b ${
+              selectedBox === box.id ? 'border-blue-200' : 'border-gray-200'
+            }`}>
+              <div className="drag-handle flex items-center gap-2 cursor-move flex-1 opacity-60 hover:opacity-100 transition-opacity">
                 <Move className="w-3 h-3 text-gray-500" />
-                <span className="text-xs text-gray-600">Drag to move</span>
+                <span className="text-xs text-gray-500 font-medium">Note</span>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteNoteBox(box.id);
                 }}
-                className="text-gray-500 hover:text-red-500 transition-colors"
+                className="opacity-60 hover:opacity-100 text-gray-500 hover:text-red-500 transition-all p-1 rounded hover:bg-red-50"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3" />
               </button>
             </div>
+            
+            {/* OneNote-style textarea */}
             <textarea
               value={box.content}
               onChange={(e) => updateNoteContent(box.id, e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              placeholder="Type your notes here..."
-              className="w-full min-h-[60px] p-3 bg-transparent border-none resize-none focus:outline-none text-sm leading-relaxed"
+              onFocus={() => setSelectedBox(box.id)}
+              placeholder="Start typing..."
+              className="w-full min-h-[80px] p-4 bg-white border-none resize-none focus:outline-none text-gray-800 leading-relaxed"
               style={{ 
-                fontSize: '14px', 
-                lineHeight: '1.5',
-                minHeight: `${box.height - 40}px`
+                fontSize: '15px', 
+                lineHeight: '1.6',
+                minHeight: `${box.height - 40}px`,
+                fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif'
               }}
             />
           </div>
         ))}
         
+        {/* Welcome message when no notes exist */}
         {noteBoxes.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center text-gray-400">
-              <Plus className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-lg">Click anywhere to create your first note</p>
-              <p className="text-sm">Create multiple notes and drag them around</p>
+            <div className="text-center text-gray-400 bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+                <Plus className="w-8 h-8 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">Start writing your notes</h3>
+              <p className="text-sm text-gray-500 mb-1">Click anywhere on the page to create a note</p>
+              <p className="text-xs text-gray-400">Drag notes around to organize your thoughts</p>
             </div>
           </div>
         )}
