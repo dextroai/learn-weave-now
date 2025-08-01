@@ -1,199 +1,160 @@
-import { TabNavigation } from "@/components/TabNavigation";
-import { AddTopicDialog } from "@/components/AddTopicDialog";
-import { MainContent } from "@/components/MainContent";
-import { useIndexPageState } from "@/hooks/useIndexPageState";
-import { Settings, User, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-const Index = () => {
-  const {
-    selectedTab,
-    setSelectedTab,
-    selectedSubTab,
-    setSelectedSubTab,
-    topicSubTab,
-    setTopicSubTab,
-    searchQuery,
-    setSearchQuery,
-    isAddTopicDialogOpen,
-    setIsAddTopicDialogOpen,
-    userTopics,
-    knowledgeBankPosts,
-    allBlogPosts,
+interface NotePage {
+  id: string;
+  title: string;
+  createdAt: string;
+}
+
+export const useNotePagesDatabase = (category: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  console.log('useNotePagesDatabase called with:', { category, userId: user?.id });
+
+  // Fetch note pages from database
+  const { data: pages = [], isLoading, error } = useQuery({
+    queryKey: ['note-pages', category, user?.id],
+    queryFn: async () => {
+      if (!user?.id || !category) {
+        console.log('Skipping query - no user or category:', { userId: user?.id, category });
+        return [];
+      }
+
+      console.log('Fetching note pages for:', { userId: user.id, category });
+
+      const { data, error } = await supabase
+        .from('note_pages')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('category', category)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching note pages:', error);
+        throw error;
+      }
+
+      console.log('Fetched note pages data:', data);
+
+      // Transform database format to component format
+      const transformedPages = (data || []).map(page => ({
+        id: page.page_id,
+        title: page.title,
+        createdAt: page.created_at,
+      }));
+
+      console.log('Transformed pages:', transformedPages);
+      return transformedPages;
+    },
+    enabled: !!user?.id && !!category,
+  });
+
+  // Create note page mutation
+  const createPageMutation = useMutation({
+    mutationFn: async (page: { id: string; title: string }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      console.log('Creating page:', { userId: user.id, category, page });
+
+      const { data, error } = await supabase
+        .from('note_pages')
+        .insert({
+          user_id: user.id,
+          category,
+          page_id: page.id,
+          title: page.title,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating page:', error);
+        throw error;
+      }
+      
+      console.log('Created page successfully:', data);
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log('Page creation successful, invalidating queries');
+      queryClient.invalidateQueries({ queryKey: ['note-pages', category, user?.id] });
+    },
+    onError: (error) => {
+      console.error('Page creation failed:', error);
+    },
+  });
+
+  // Delete note page mutation
+  const deletePageMutation = useMutation({
+    mutationFn: async (pageId: string) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      console.log('Deleting page:', { userId: user.id, category, pageId });
+
+      // Also delete all note boxes for this page (if you have note_boxes table)
+      const pageCategory = `${category}-${pageId}`;
+      try {
+        await supabase
+          .from('note_boxes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('category', pageCategory);
+      } catch (error) {
+        console.log('No note_boxes to delete or table doesn\'t exist:', error);
+      }
+
+      const { error } = await supabase
+        .from('note_pages')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('category', category)
+        .eq('page_id', pageId);
+
+      if (error) {
+        console.error('Error deleting page:', error);
+        throw error;
+      }
+      
+      console.log('Deleted page successfully');
+    },
+    onSuccess: () => {
+      console.log('Page deletion successful, invalidating queries');
+      queryClient.invalidateQueries({ queryKey: ['note-pages', category, user?.id] });
+    },
+    onError: (error) => {
+      console.error('Page deletion failed:', error);
+    },
+  });
+
+  const addPage = (page: { id: string; title: string }) => {
+    console.log('addPage called with:', page);
+    createPageMutation.mutate(page);
+  };
+
+  const deletePage = (pageId: string) => {
+    console.log('deletePage called with:', pageId);
+    deletePageMutation.mutate(pageId);
+  };
+
+  // Log the current state
+  console.log('Hook state:', {
+    category,
+    pagesCount: pages.length,
     isLoading,
-    filteredPosts,
-    searchFilteredPosts,
-    handleMarkAsRead,
-    tabs,
-    handleAddTab
-  } = useIndexPageState();
+    error: error?.message,
+    isCreating: createPageMutation.isPending,
+    isDeleting: deletePageMutation.isPending,
+  });
 
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const handleHomeClick = () => {
-    setSelectedTab('all');
-    setSearchParams({}); // Clear URL parameters
+  return {
+    pages,
+    isLoading,
+    addPage,
+    deletePage,
+    isUpdating: createPageMutation.isPending || deletePageMutation.isPending,
+    error,
   };
-
-  const handleSettingsClick = () => {
-    navigate("/settings");
-  };
-
-  const handleAccountClick = () => {
-    if (user) {
-      signOut();
-    } else {
-      navigate("/auth");
-    }
-  };
-
-  const handleTopicClick = (topicId: number) => {
-    setSelectedTab(`topic-${topicId}`);
-    setTopicSubTab('notes');
-    // Update URL parameters to reflect the selected topic
-    setSearchParams({ topic: topicId.toString() });
-  };
-
-  return (
-    <div className="min-h-screen w-full bg-slate-900 text-white">
-      {/* Compact Modern Header */}
-      <div className="w-full bg-slate-900">
-        <div className="flex items-center px-4 py-2">
-          {/* Compact Navigation tabs */}
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              className="bg-orange-500 text-black hover:bg-orange-600 px-3 py-1.5 rounded text-sm font-medium h-8"
-              onClick={handleHomeClick}
-            >
-              Home
-            </Button>
-            {userTopics.map((topic) => (
-              <Button 
-                key={topic.id}
-                variant="ghost" 
-                className={`px-3 py-1.5 text-sm h-8 rounded ${
-                  selectedTab === `topic-${topic.topic_id}`
-                    ? "text-white bg-slate-700"
-                    : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
-                }`}
-                onClick={() => handleTopicClick(topic.topic_id)}
-              >
-                {topic.name}
-              </Button>
-            ))}
-          </div>
-          
-          {/* Settings and Account section */}
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSettingsClick}
-              className="h-9 w-9 text-gray-300 hover:text-white hover:bg-slate-700"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-300 hover:text-white hover:bg-slate-700">
-                  <User className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                {user ? (
-                  <>
-                    <DropdownMenuItem disabled className="text-gray-300">
-                      {user.email}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleAccountClick} className="text-gray-300 hover:bg-slate-700">
-                      Sign Out
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem onClick={handleAccountClick} className="text-gray-300 hover:bg-slate-700">
-                    Sign In
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Title - Only show for Home (all/knowledge tabs) */}
-      {(selectedTab === 'all' || selectedTab === 'knowledge') && (
-        <div className="px-6 py-8 flex flex-col items-center">
-          <h1 className="text-4xl font-bold text-white mb-8">Firenotes</h1>
-          
-          {/* Tab Navigation for Posts/Knowledge Bank */}
-          <div className="flex items-center space-x-8 mb-8">
-            <button
-              onClick={() => setSelectedTab('all')}
-              className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
-                selectedTab === 'all'
-                  ? "text-white border-red-500"
-                  : "text-gray-400 hover:text-white border-transparent"
-              }`}
-            >
-              <span className="text-red-500">📄</span>
-              <span>Posts</span>
-            </button>
-            
-            <button
-              onClick={() => setSelectedTab('knowledge')}
-              className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
-                selectedTab === 'knowledge'
-                  ? "text-white border-green-500"
-                  : "text-gray-400 hover:text-white border-transparent"
-              }`}
-            >
-              <span className="text-green-500">📁</span>
-              <span>Knowledge bank</span>
-              <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded">
-                {knowledgeBankPosts?.length || 0}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
-      
-      <main>
-        <MainContent
-          selectedTab={selectedTab}
-          selectedSubTab={selectedSubTab}
-          topicSubTab={topicSubTab}
-          setTopicSubTab={setTopicSubTab}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          userTopics={userTopics}
-          knowledgeBankPosts={knowledgeBankPosts}
-          allBlogPosts={allBlogPosts}
-          searchFilteredPosts={searchFilteredPosts}
-          filteredPosts={filteredPosts}
-          isLoading={isLoading}
-          handleMarkAsRead={handleMarkAsRead}
-          setSelectedSubTab={setSelectedSubTab}
-        />
-      </main>
-      
-      <AddTopicDialog 
-        open={isAddTopicDialogOpen}
-        onOpenChange={setIsAddTopicDialogOpen}
-      />
-    </div>
-  );
 };
-
-export default Index;
