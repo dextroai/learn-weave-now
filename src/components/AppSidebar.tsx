@@ -30,17 +30,13 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className={`${isCollapsed ? "w-14" : "w-60"} bg-slate-900 border-r border-slate-800`}>
+    <Sidebar className="w-16 bg-slate-900 border-r border-slate-800" collapsible="none">
       <SidebarContent className="bg-slate-900">
         {/* Logo/Brand */}
         <div className="p-4 flex items-center justify-center">
-          {!isCollapsed ? (
-            <div className="text-white font-bold text-xl">FN</div>
-          ) : (
-            <div className="w-6 h-6 bg-white rounded text-slate-900 flex items-center justify-center text-sm font-bold">
-              F
-            </div>
-          )}
+          <div className="w-6 h-6 bg-white rounded text-slate-900 flex items-center justify-center text-sm font-bold">
+            F
+          </div>
         </div>
 
         {/* Main Navigation */}
@@ -54,13 +50,13 @@ export function AppSidebar() {
                       to={item.url}
                       end
                       className={({ isActive }) =>
-                        `flex items-center gap-3 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
+                        `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
                           isActive ? "text-white bg-slate-800" : ""
                         }`
                       }
+                      title={item.title}
                     >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span className="text-sm">{item.title}</span>}
+                      <item.icon className="h-5 w-5" />
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -80,25 +76,21 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative ${
+                          `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative ${
                             isActive ? "text-white bg-slate-800" : ""
                           }`
                         }
+                        title={item.title}
                       >
                         <div className="relative">
-                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          <item.icon className="h-5 w-5" />
                           {item.hasNotification && (
                             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
                           )}
+                          {item.hasIndicator && user && (
+                            <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
+                          )}
                         </div>
-                        {!isCollapsed && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{item.title}</span>
-                            {item.hasIndicator && user && (
-                              <span className="text-xs text-green-400">✓</span>
-                            )}
-                          </div>
-                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
