@@ -65,7 +65,7 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
       {/* OneNote-style Header */}
       <div className="px-8 py-6 border-b border-slate-700 bg-slate-900">
         <div className="max-w-4xl">
-          <h1 className="text-3xl font-normal text-white mb-3 border-b border-slate-600 pb-2">
+          <h1 className="text-3xl font-normal text-white mb-3 pb-2">
             {pageTitle || category.charAt(0).toUpperCase() + category.slice(1)}
           </h1>
           <div className="flex items-center justify-between text-sm text-gray-300">
