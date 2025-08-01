@@ -43,7 +43,7 @@ function TopicSection({ topic }: { topic: any }) {
 
       {/* Expandable Pages List */}
       {isExpanded && (
-        <div className="space-y-1">
+        <div className="space-y-1 animate-accordion-down">
           {/* Add Page Button */}
           <Button
             variant="ghost"
