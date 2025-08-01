@@ -117,15 +117,31 @@ export function AppSidebar() {
         <SidebarGroup className="mt-8">
           <SidebarGroupContent>
             <SidebarMenu>
-              {userTopics.map((topic) => (
-                <SidebarMenuItem key={topic.id}>
-                  <TopicSection 
-                    topic={topic} 
-                    isSelected={selectedTopicId === topic.id}
-                    onSelect={() => handleTopicSelect(topic.id)}
-                  />
-                </SidebarMenuItem>
-              ))}
+              {selectedTopicId ? (
+                // Show only the selected topic's + button and pages
+                userTopics
+                  .filter((topic) => topic.id === selectedTopicId)
+                  .map((topic) => (
+                    <SidebarMenuItem key={topic.id}>
+                      <TopicSection 
+                        topic={topic} 
+                        isSelected={true}
+                        onSelect={() => {}}
+                      />
+                    </SidebarMenuItem>
+                  ))
+              ) : (
+                // Show all topic labels when none selected
+                userTopics.map((topic) => (
+                  <SidebarMenuItem key={topic.id}>
+                    <TopicSection 
+                      topic={topic} 
+                      isSelected={false}
+                      onSelect={() => handleTopicSelect(topic.id)}
+                    />
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
