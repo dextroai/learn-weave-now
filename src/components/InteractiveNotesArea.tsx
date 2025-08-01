@@ -75,14 +75,18 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
         </div>
       </div>
 
-      {/* Simple notepad-like writing area */}
-      <div className="w-full min-h-screen bg-white">
+      {/* Simple notepad-like writing area - no background lines */}
+      <div 
+        className="w-full bg-white"
+        onClick={() => textareaRef.current?.focus()}
+        style={{ minHeight: 'calc(100vh - 140px)' }}
+      >
         <textarea
           ref={textareaRef}
           value={notes}
           onChange={(e) => updateNotes(e.target.value)}
-          placeholder="Click here to start writing..."
-          className="w-full min-h-screen p-8 bg-white border-none resize-none focus:outline-none text-gray-900 leading-relaxed"
+          placeholder="Start typing..."
+          className="w-full h-full p-8 bg-white border-none resize-none focus:outline-none text-gray-900 leading-relaxed"
           style={{ 
             fontSize: '16px', 
             lineHeight: '1.6',
