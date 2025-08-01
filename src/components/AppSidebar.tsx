@@ -18,7 +18,10 @@ import { Button } from "@/components/ui/button";
 
 // Component for individual topic
 function TopicSection({ topic, isSelected, onSelect }: { topic: any; isSelected: boolean; onSelect: () => void }) {
-  const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
+  // Only fetch pages when topic is selected
+  const { pages, addPage } = useNotePagesDatabase(
+    isSelected ? topic.name.toLowerCase().replace(' ', '-') : ''
+  );
 
   const handleAddPage = () => {
     const pageTitle = prompt(`Enter page title for ${topic.name}:`);
