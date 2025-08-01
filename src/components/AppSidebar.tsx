@@ -16,8 +16,8 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Button } from "@/components/ui/button";
 
-// Component for individual topic with pages
-function TopicSection({ topic }: { topic: any }) {
+// Component for individual topic with expandable pages
+function TopicSection({ topic, isExpanded, onToggle }: { topic: any; isExpanded: boolean; onToggle: () => void }) {
   const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
 
   const handleAddPage = () => {
@@ -32,36 +32,52 @@ function TopicSection({ topic }: { topic: any }) {
   };
 
   return (
-    <div className="mb-1 space-y-1">
-      {/* Add Page Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
-        onClick={handleAddPage}
-        title={`Add page to ${topic.name}`}
+    <div className="mb-1">
+      {/* Topic Label - Clickable */}
+      <div 
+        className="h-6 w-full cursor-pointer flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+        onClick={onToggle}
+        title={topic.name}
       >
-        <Plus className="h-3 w-3" />
-      </Button>
-      
-      {/* Pages */}
-      {pages.map((page) => (
-        <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
-          <NavLink
-            to={`/?topic=${topic.topic_id}&page=${page.id}`}
-            className={({ isActive }) =>
-              `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
-                isActive ? "text-white bg-slate-700" : ""
-              }`
-            }
-            title={page.title}
+        <span className="text-xs font-medium">
+          {topic.name.charAt(0).toUpperCase()}
+        </span>
+      </div>
+
+      {/* Expandable Pages List - Only show if this topic is expanded */}
+      {isExpanded && (
+        <div className="space-y-1 animate-accordion-down mt-1">
+          {/* Add Page Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
+            onClick={handleAddPage}
+            title={`Add page to ${topic.name}`}
           >
-            <span className="text-xs truncate w-full text-center">
-              {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
-            </span>
-          </NavLink>
-        </SidebarMenuButton>
-      ))}
+            <Plus className="h-3 w-3" />
+          </Button>
+          
+          {/* Pages */}
+          {pages.map((page) => (
+            <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
+              <NavLink
+                to={`/?topic=${topic.topic_id}&page=${page.id}`}
+                className={({ isActive }) =>
+                  `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
+                    isActive ? "text-white bg-slate-700" : ""
+                  }`
+                }
+                title={page.title}
+              >
+                <span className="text-xs truncate w-full text-center">
+                  {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
+                </span>
+              </NavLink>
+            </SidebarMenuButton>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -78,7 +94,12 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { user } = useAuth();
   const { data: userTopics = [] } = useUserTopics();
+  const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
   const isCollapsed = state === "collapsed";
+
+  const handleTopicToggle = (topicId: string) => {
+    setExpandedTopicId(expandedTopicId === topicId ? null : topicId);
+  };
 
   return (
     <Sidebar className="w-12 bg-slate-900 border-r border-slate-700 h-screen fixed left-0 top-0 z-50" collapsible="none">
@@ -96,7 +117,11 @@ export function AppSidebar() {
             <SidebarMenu>
               {userTopics.map((topic) => (
                 <SidebarMenuItem key={topic.id}>
-                  <TopicSection topic={topic} />
+                  <TopicSection 
+                    topic={topic} 
+                    isExpanded={expandedTopicId === topic.id}
+                    onToggle={() => handleTopicToggle(topic.id)}
+                  />
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
