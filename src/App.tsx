@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -28,11 +28,6 @@ const App = () => (
               <AppSidebar />
               
               <main className="flex-1">
-                {/* Global sidebar trigger */}
-                <div className="h-12 flex items-center border-b border-slate-800 bg-slate-900">
-                  <SidebarTrigger className="ml-2 text-gray-400 hover:text-white" />
-                </div>
-                
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
