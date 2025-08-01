@@ -33,20 +33,22 @@ function TopicSection({ topic, isExpanded, onToggle }: { topic: any; isExpanded:
 
   return (
     <div className="mb-1">
-      {/* Topic Label - Clickable */}
-      <div 
-        className="h-6 w-full cursor-pointer flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
-        onClick={onToggle}
-        title={topic.name}
-      >
-        <span className="text-xs font-medium">
-          {topic.name.charAt(0).toUpperCase()}
-        </span>
-      </div>
+      {/* Topic Label - Only show when NOT expanded */}
+      {!isExpanded && (
+        <div 
+          className="h-6 w-full cursor-pointer flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+          onClick={onToggle}
+          title={topic.name}
+        >
+          <span className="text-xs font-medium">
+            {topic.name.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      )}
 
-      {/* Expandable Pages List - Only show if this topic is expanded */}
+      {/* Expandable Pages List - Only show + and pages when expanded */}
       {isExpanded && (
-        <div className="space-y-1 animate-accordion-down mt-1">
+        <div className="space-y-1 animate-accordion-down">{/* Add Page Button */}
           {/* Add Page Button */}
           <Button
             variant="ghost"
