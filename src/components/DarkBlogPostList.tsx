@@ -98,7 +98,7 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Content Area */}
-      <div className="flex-1 px-6 pb-32">
+      <div className="flex-1 pb-32">
         <div className="max-w-4xl mx-auto space-y-8">
           {groupedPosts.map(([date, datePosts]) => (
             <div key={date} className="space-y-6">

@@ -172,7 +172,7 @@ const Index = () => {
         </div>
       )}
       
-      <main className="px-6">
+      <main>
         <MainContent
           selectedTab={selectedTab}
           selectedSubTab={selectedSubTab}
