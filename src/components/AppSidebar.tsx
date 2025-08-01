@@ -1,4 +1,4 @@
-import { Home, Search, Grid3X3, User, ArrowUp, Download } from "lucide-react";
+import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -11,6 +11,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserTopics } from "@/hooks/useUserTopics";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [];
 
@@ -23,6 +25,7 @@ const bottomItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const { user } = useAuth();
+  const { data: userTopics = [] } = useUserTopics();
   const isCollapsed = state === "collapsed";
 
   return (
@@ -35,26 +38,41 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Main Navigation */}
+        {/* User Topics */}
         <SidebarGroup className="mt-8">
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-10 px-2 mb-1">
-                    <NavLink
-                      to={item.url}
-                      end
-                      className={({ isActive }) =>
-                        `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
-                          isActive ? "text-white bg-slate-800" : ""
-                        }`
-                      }
-                      title={item.title}
+              {userTopics.map((topic) => (
+                <SidebarMenuItem key={topic.id}>
+                  <div className="flex items-center gap-1 mb-1">
+                    <SidebarMenuButton asChild className="h-10 px-2 flex-1">
+                      <NavLink
+                        to={`/?topic=${topic.topic_id}`}
+                        className={({ isActive }) =>
+                          `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
+                            isActive ? "text-white bg-slate-800" : ""
+                          }`
+                        }
+                        title={topic.name}
+                      >
+                        <span className="text-xs font-medium truncate max-w-[24px] text-center">
+                          {topic.name.charAt(0).toUpperCase()}
+                        </span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-gray-400 hover:text-white hover:bg-slate-800 rounded"
+                      onClick={() => {
+                        // TODO: Add functionality to create new page for this topic
+                        console.log(`Add page for topic: ${topic.name}`);
+                      }}
+                      title={`Add page for ${topic.name}`}
                     >
-                      <item.icon className="h-4 w-4" />
-                    </NavLink>
-                  </SidebarMenuButton>
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

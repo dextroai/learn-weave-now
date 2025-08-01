@@ -71,38 +71,21 @@ const Index = () => {
               Home
             </Button>
             {userTopics.map((topic) => (
-              <div key={topic.id} className="flex items-center">
-                <Button 
-                  variant="ghost" 
-                  className={`px-3 py-1.5 text-sm h-8 rounded-l ${
-                    selectedTab === `topic-${topic.topic_id}`
-                      ? "text-white bg-slate-700"
-                      : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
-                  }`}
-                  onClick={() => {
-                    setSelectedTab(`topic-${topic.topic_id}`);
-                    setTopicSubTab('notes'); // Default to notes for user topics
-                  }}
-                >
-                  {topic.name}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-8 w-6 px-1 rounded-r border-l border-slate-600 ${
-                    selectedTab === `topic-${topic.topic_id}`
-                      ? "text-white bg-slate-700 hover:bg-slate-600"
-                      : "text-gray-400 bg-slate-800 hover:text-white hover:bg-slate-700"
-                  }`}
-                  onClick={() => {
-                    // TODO: Add functionality to create new page for this topic
-                    console.log(`Add page for topic: ${topic.name}`);
-                  }}
-                  title={`Add page for ${topic.name}`}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
+              <Button 
+                key={topic.id}
+                variant="ghost" 
+                className={`px-3 py-1.5 text-sm h-8 rounded ${
+                  selectedTab === `topic-${topic.topic_id}`
+                    ? "text-white bg-slate-700"
+                    : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
+                }`}
+                onClick={() => {
+                  setSelectedTab(`topic-${topic.topic_id}`);
+                  setTopicSubTab('notes'); // Default to notes for user topics
+                }}
+              >
+                {topic.name}
+              </Button>
             ))}
             <Button 
               variant="ghost" 
