@@ -16,9 +16,8 @@ import { useUserTopics } from "@/hooks/useUserTopics";
 import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Button } from "@/components/ui/button";
 
-// Component for individual topic with expandable pages
+// Component for individual topic with pages
 function TopicSection({ topic }: { topic: any }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
 
   const handleAddPage = () => {
@@ -33,48 +32,36 @@ function TopicSection({ topic }: { topic: any }) {
   };
 
   return (
-    <div className="mb-1">
-      {/* Invisible clickable area for expand/collapse */}
-      <div 
-        className="h-6 w-full cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-        title={`${isExpanded ? 'Collapse' : 'Expand'} ${topic.name}`}
-      />
-
-      {/* Expandable Pages List */}
-      {isExpanded && (
-        <div className="space-y-1 animate-accordion-down">
-          {/* Add Page Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
-            onClick={handleAddPage}
-            title={`Add page to ${topic.name}`}
+    <div className="mb-1 space-y-1">
+      {/* Add Page Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
+        onClick={handleAddPage}
+        title={`Add page to ${topic.name}`}
+      >
+        <Plus className="h-3 w-3" />
+      </Button>
+      
+      {/* Pages */}
+      {pages.map((page) => (
+        <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
+          <NavLink
+            to={`/?topic=${topic.topic_id}&page=${page.id}`}
+            className={({ isActive }) =>
+              `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
+                isActive ? "text-white bg-slate-700" : ""
+              }`
+            }
+            title={page.title}
           >
-            <Plus className="h-3 w-3" />
-          </Button>
-          
-          {/* Pages */}
-          {pages.map((page) => (
-            <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
-              <NavLink
-                to={`/?topic=${topic.topic_id}&page=${page.id}`}
-                className={({ isActive }) =>
-                  `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
-                    isActive ? "text-white bg-slate-700" : ""
-                  }`
-                }
-                title={page.title}
-              >
-                <span className="text-xs truncate w-full text-center">
-                  {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
-                </span>
-              </NavLink>
-            </SidebarMenuButton>
-          ))}
-        </div>
-      )}
+            <span className="text-xs truncate w-full text-center">
+              {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
+            </span>
+          </NavLink>
+        </SidebarMenuButton>
+      ))}
     </div>
   );
 }
