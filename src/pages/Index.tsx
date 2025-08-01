@@ -41,7 +41,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Handle URL parameters on component mount
+  // Handle URL parameters on component mount and when they change
   useEffect(() => {
     const topicParam = searchParams.get('topic');
     const pageParam = searchParams.get('page');
@@ -55,6 +55,11 @@ const Index = () => {
         console.log('Setting selected tab from URL:', `topic-${topicId}`);
         setSelectedTab(`topic-${topicId}`);
         setTopicSubTab('notes');
+      }
+    } else {
+      // If no topic param, default to 'all'
+      if (selectedTab.startsWith('topic-')) {
+        setSelectedTab('all');
       }
     }
   }, [searchParams, userTopics, setSelectedTab, setTopicSubTab]);
