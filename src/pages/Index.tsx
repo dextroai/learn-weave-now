@@ -87,14 +87,6 @@ const Index = () => {
                 {topic.name}
               </Button>
             ))}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-gray-400 hover:text-white hover:bg-slate-800 h-8 w-8 ml-1"
-              onClick={handleAddTab}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
           </div>
           
           {/* Settings and Account section */}
