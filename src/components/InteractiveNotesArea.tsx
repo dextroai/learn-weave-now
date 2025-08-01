@@ -38,10 +38,10 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   // If user is not authenticated, show login message
   if (!user) {
     return (
-      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+      <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
-          <p className="text-gray-600">Please sign in to access your notes.</p>
+          <h2 className="text-xl font-semibold text-white mb-2">Authentication Required</h2>
+          <p className="text-gray-300">Please sign in to access your notes.</p>
         </div>
       </div>
     );
@@ -49,10 +49,10 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
 
   if (isLoading) {
     return (
-      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+      <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading your notes...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+          <p className="text-gray-300">Loading your notes...</p>
         </div>
       </div>
     );
@@ -61,14 +61,14 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
   const { date, time } = getCurrentDateTime();
 
   return (
-    <div className="w-full min-h-screen bg-white">
+    <div className="w-full min-h-screen bg-slate-900">
       {/* OneNote-style Header */}
-      <div className="px-8 py-6 border-b border-gray-200 bg-white">
+      <div className="px-8 py-6 border-b border-slate-700 bg-slate-900">
         <div className="max-w-4xl">
-          <h1 className="text-3xl font-normal text-gray-900 mb-3 border-b border-gray-300 pb-2">
+          <h1 className="text-3xl font-normal text-white mb-3 border-b border-slate-600 pb-2">
             {pageTitle || category.charAt(0).toUpperCase() + category.slice(1)}
           </h1>
-          <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center justify-between text-sm text-gray-300">
             <span>{date}</span>
             <span>{time}</span>
           </div>
@@ -77,7 +77,7 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
 
       {/* Simple notepad-like writing area - no background lines */}
       <div 
-        className="w-full bg-white"
+        className="w-full bg-slate-900"
         onClick={() => textareaRef.current?.focus()}
         style={{ minHeight: 'calc(100vh - 140px)' }}
       >
@@ -86,7 +86,7 @@ export function InteractiveNotesArea({ category, pageTitle }: InteractiveNotesAr
           value={notes}
           onChange={(e) => updateNotes(e.target.value)}
           placeholder="Start typing..."
-          className="w-full h-full p-8 bg-white border-none resize-none focus:outline-none text-gray-900 leading-relaxed"
+          className="w-full h-full p-8 bg-slate-900 border-none resize-none focus:outline-none text-white leading-relaxed placeholder-gray-400"
           style={{ 
             fontSize: '16px', 
             lineHeight: '1.6',
