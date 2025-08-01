@@ -74,10 +74,10 @@ const Index = () => {
               <Button 
                 key={topic.id}
                 variant="ghost" 
-                className={`px-3 py-1.5 text-sm h-8 ${
+                className={`px-3 py-1.5 text-sm h-8 rounded ${
                   selectedTab === `topic-${topic.topic_id}`
                     ? "text-white bg-slate-700"
-                    : "text-gray-400 hover:text-white hover:bg-slate-800"
+                    : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
                 }`}
                 onClick={() => {
                   setSelectedTab(`topic-${topic.topic_id}`);
