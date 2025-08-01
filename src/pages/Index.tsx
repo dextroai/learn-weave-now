@@ -66,34 +66,30 @@ const Index = () => {
             <Button
               variant="ghost"
               className="bg-orange-500 text-black hover:bg-orange-600 px-3 py-1.5 rounded text-sm font-medium h-8"
+              onClick={() => setSelectedTab('all')}
             >
               Home
             </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              CTI
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              RAG
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              NLP
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              MLOPs
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              LLMs
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              Agents
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              Reinforcement
-            </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
-              Cloud and Big Data
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-slate-800 h-8 w-8 ml-1">
+            {userTopics.map((topic) => (
+              <Button 
+                key={topic.id}
+                variant="ghost" 
+                className={`px-3 py-1.5 text-sm h-8 ${
+                  selectedTab === `topic-${topic.topic_id}`
+                    ? "text-white bg-slate-700"
+                    : "text-gray-400 hover:text-white hover:bg-slate-800"
+                }`}
+                onClick={() => setSelectedTab(`topic-${topic.topic_id}`)}
+              >
+                {topic.name}
+              </Button>
+            ))}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-400 hover:text-white hover:bg-slate-800 h-8 w-8 ml-1"
+              onClick={handleAddTab}
+            >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
