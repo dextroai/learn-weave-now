@@ -34,16 +34,12 @@ function TopicSection({ topic }: { topic: any }) {
 
   return (
     <div className="mb-1">
-      {/* Collapse/expand trigger - invisible but clickable */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-full text-gray-400 hover:text-white hover:bg-slate-800 rounded p-0"
+      {/* Invisible clickable area for expand/collapse */}
+      <div 
+        className="h-6 w-full cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
         title={`${isExpanded ? 'Collapse' : 'Expand'} ${topic.name}`}
-      >
-        {isExpanded ? <ChevronDown className="h-2 w-2" /> : <ChevronRight className="h-2 w-2" />}
-      </Button>
+      />
 
       {/* Expandable Pages List */}
       {isExpanded && (
