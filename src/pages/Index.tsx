@@ -58,42 +58,42 @@ const Index = () => {
 
   return (
     <div className="min-h-screen w-full bg-slate-900 text-white">
-      {/* Dark Header Navigation */}
-      <div className="w-full bg-slate-800 border-b border-slate-700">
-        <div className="flex items-center px-6 py-3">
-          {/* Navigation tabs */}
-          <div className="flex items-center space-x-6">
+      {/* Compact Modern Header */}
+      <div className="w-full bg-slate-900 border-b border-slate-800">
+        <div className="flex items-center px-4 py-2">
+          {/* Compact Navigation tabs */}
+          <div className="flex items-center space-x-1">
             <Button
               variant="ghost"
-              className="bg-yellow-500 text-black hover:bg-yellow-600 px-4 py-2 rounded-md font-medium"
+              className="bg-orange-500 text-black hover:bg-orange-600 px-3 py-1.5 rounded text-sm font-medium h-8"
             >
               Home
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               CTI
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               RAG
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               NLP
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
-              MLOps
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
+              MLOPs
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               LLMs
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               Agents
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               Reinforcement
             </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-slate-700 px-3 py-2">
+            <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-slate-800 px-3 py-1.5 text-sm h-8">
               Cloud and Big Data
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white hover:bg-slate-700 h-9 w-9">
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-slate-800 h-8 w-8 ml-1">
               <Plus className="h-4 w-4" />
             </Button>
           </div>
