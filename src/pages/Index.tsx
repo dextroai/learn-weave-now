@@ -41,6 +41,13 @@ const Index = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Pre-fetch note pages for all topics to avoid conditional hook calls
+  const topicPagesData = userTopics.reduce((acc, topic) => {
+    const category = topic.name.toLowerCase().replace(' ', '-');
+    acc[topic.id] = useNotePagesDatabase(category);
+    return acc;
+  }, {} as Record<string, ReturnType<typeof useNotePagesDatabase>>);
+
   const handleHomeClick = () => {
     navigate("/");
   };
@@ -73,9 +80,11 @@ const Index = () => {
             </Button>
             {userTopics.map((topic) => {
               const isTopicSelected = selectedTab === `topic-${topic.topic_id}`;
+              const topicData = topicPagesData[topic.id];
+              
               if (isTopicSelected) {
                 // Show + and page titles for selected topic
-                const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
+                const { pages, addPage } = topicData;
                 
                 const handleAddPage = () => {
                   const pageTitle = prompt(`Enter page title for ${topic.name}:`);
