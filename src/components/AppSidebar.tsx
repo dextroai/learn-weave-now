@@ -1,5 +1,6 @@
-import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus } from "lucide-react";
+import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +13,93 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserTopics } from "@/hooks/useUserTopics";
+import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Button } from "@/components/ui/button";
+
+// Component for individual topic with expandable pages
+function TopicSection({ topic }: { topic: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
+
+  const handleAddPage = () => {
+    const pageTitle = prompt(`Enter page title for ${topic.name}:`);
+    if (pageTitle) {
+      const newPage = {
+        id: Date.now().toString(),
+        title: pageTitle,
+      };
+      addPage(newPage);
+    }
+  };
+
+  return (
+    <div className="mb-1">
+      {/* Topic Header with collapse/expand */}
+      <div className="flex items-center w-full">
+        <SidebarMenuButton asChild className="h-8 px-1 flex-1">
+          <NavLink
+            to={`/?topic=${topic.topic_id}`}
+            className={({ isActive }) =>
+              `flex items-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors ${
+                isActive ? "text-white bg-slate-800" : ""
+              }`
+            }
+            title={topic.name}
+          >
+            <span className="text-xs font-medium w-4 text-center">
+              {topic.name.charAt(0).toUpperCase()}
+            </span>
+          </NavLink>
+        </SidebarMenuButton>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-4 text-gray-400 hover:text-white hover:bg-slate-800 rounded p-0"
+          onClick={() => setIsExpanded(!isExpanded)}
+          title={`${isExpanded ? 'Collapse' : 'Expand'} ${topic.name}`}
+        >
+          {isExpanded ? <ChevronDown className="h-2 w-2" /> : <ChevronRight className="h-2 w-2" />}
+        </Button>
+      </div>
+
+      {/* Expandable Pages List */}
+      {isExpanded && (
+        <div className="ml-1 mt-1 space-y-1">
+          {/* Add Page Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-full text-gray-500 hover:text-white hover:bg-slate-800 rounded text-xs"
+            onClick={handleAddPage}
+            title={`Add page to ${topic.name}`}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+          
+          {/* Pages */}
+          {pages.map((page) => (
+            <SidebarMenuButton key={page.id} asChild className="h-6 px-1 w-full">
+              <NavLink
+                to={`/?topic=${topic.topic_id}&page=${page.id}`}
+                className={({ isActive }) =>
+                  `flex items-center text-gray-500 hover:text-white hover:bg-slate-700 rounded text-xs transition-colors truncate ${
+                    isActive ? "text-white bg-slate-700" : ""
+                  }`
+                }
+                title={page.title}
+              >
+                <span className="text-xs truncate w-full text-center">
+                  {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
+                </span>
+              </NavLink>
+            </SidebarMenuButton>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const navigationItems = [];
 
@@ -37,6 +124,19 @@ export function AppSidebar() {
             F
           </div>
         </div>
+
+        {/* User Topics */}
+        <SidebarGroup className="mt-8">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {userTopics.map((topic) => (
+                <SidebarMenuItem key={topic.id}>
+                  <TopicSection topic={topic} />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         {/* Bottom Navigation */}
         <div className="mt-auto pb-4">
