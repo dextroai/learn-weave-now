@@ -44,35 +44,21 @@ export function AppSidebar() {
             <SidebarMenu>
               {userTopics.map((topic) => (
                 <SidebarMenuItem key={topic.id}>
-                  <div className="flex items-center gap-1 mb-1">
-                    <SidebarMenuButton asChild className="h-10 px-2 flex-1">
-                      <NavLink
-                        to={`/?topic=${topic.topic_id}`}
-                        className={({ isActive }) =>
-                          `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
-                            isActive ? "text-white bg-slate-800" : ""
-                          }`
-                        }
-                        title={topic.name}
-                      >
-                        <span className="text-xs font-medium truncate max-w-[24px] text-center">
-                          {topic.name.charAt(0).toUpperCase()}
-                        </span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-gray-400 hover:text-white hover:bg-slate-800 rounded"
-                      onClick={() => {
-                        // TODO: Add functionality to create new page for this topic
-                        console.log(`Add page for topic: ${topic.name}`);
-                      }}
-                      title={`Add page for ${topic.name}`}
+                  <SidebarMenuButton asChild className="h-10 px-2 mb-1">
+                    <NavLink
+                      to={`/?topic=${topic.topic_id}`}
+                      className={({ isActive }) =>
+                        `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
+                          isActive ? "text-white bg-slate-800" : ""
+                        }`
+                      }
+                      title={topic.name}
                     >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
+                      <span className="text-xs font-medium truncate max-w-[24px] text-center">
+                        {topic.name.charAt(0).toUpperCase()}
+                      </span>
+                    </NavLink>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
