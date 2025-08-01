@@ -135,40 +135,42 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Title */}
-      <div className="px-6 py-8 flex flex-col items-center">
-        <h1 className="text-4xl font-bold text-white mb-8">Firenotes</h1>
-        
-        {/* Tab Navigation for Posts/Knowledge Bank */}
-        <div className="flex items-center space-x-8 mb-8">
-          <button
-            onClick={() => setSelectedTab('all')}
-            className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
-              selectedTab === 'all'
-                ? "text-white border-red-500"
-                : "text-gray-400 hover:text-white border-transparent"
-            }`}
-          >
-            <span className="text-red-500">📄</span>
-            <span>Posts</span>
-          </button>
+      {/* Main Title - Only show for Home (all/knowledge tabs) */}
+      {(selectedTab === 'all' || selectedTab === 'knowledge') && (
+        <div className="px-6 py-8 flex flex-col items-center">
+          <h1 className="text-4xl font-bold text-white mb-8">Firenotes</h1>
           
-          <button
-            onClick={() => setSelectedTab('knowledge')}
-            className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
-              selectedTab === 'knowledge'
-                ? "text-white border-green-500"
-                : "text-gray-400 hover:text-white border-transparent"
-            }`}
-          >
-            <span className="text-green-500">📁</span>
-            <span>Knowledge bank</span>
-            <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded">
-              {knowledgeBankPosts?.length || 0}
-            </span>
-          </button>
+          {/* Tab Navigation for Posts/Knowledge Bank */}
+          <div className="flex items-center space-x-8 mb-8">
+            <button
+              onClick={() => setSelectedTab('all')}
+              className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
+                selectedTab === 'all'
+                  ? "text-white border-red-500"
+                  : "text-gray-400 hover:text-white border-transparent"
+              }`}
+            >
+              <span className="text-red-500">📄</span>
+              <span>Posts</span>
+            </button>
+            
+            <button
+              onClick={() => setSelectedTab('knowledge')}
+              className={`flex items-center space-x-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
+                selectedTab === 'knowledge'
+                  ? "text-white border-green-500"
+                  : "text-gray-400 hover:text-white border-transparent"
+              }`}
+            >
+              <span className="text-green-500">📁</span>
+              <span>Knowledge bank</span>
+              <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded">
+                {knowledgeBankPosts?.length || 0}
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       
       <main className="px-6">
         <MainContent
