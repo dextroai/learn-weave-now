@@ -3,6 +3,7 @@ import { TabNavigation } from "@/components/TabNavigation";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { MainContent } from "@/components/MainContent";
 import { useIndexPageState } from "@/hooks/useIndexPageState";
+import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Settings, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,23 +71,71 @@ const Index = () => {
             >
               Home
             </Button>
-            {userTopics.map((topic) => (
-              <Button 
-                key={topic.id}
-                variant="ghost" 
-                className={`px-3 py-1.5 text-sm h-8 rounded ${
-                  selectedTab === `topic-${topic.topic_id}`
-                    ? "text-white bg-slate-700"
-                    : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
-                }`}
-                onClick={() => {
-                  setSelectedTab(`topic-${topic.topic_id}`);
-                  setTopicSubTab('notes'); // Default to notes for user topics
-                }}
-              >
-                {topic.name}
-              </Button>
-            ))}
+            {userTopics.map((topic) => {
+              const isTopicSelected = selectedTab === `topic-${topic.topic_id}`;
+              if (isTopicSelected) {
+                // Show + and page titles for selected topic
+                const { pages, addPage } = useNotePagesDatabase(topic.name.toLowerCase().replace(' ', '-'));
+                
+                const handleAddPage = () => {
+                  const pageTitle = prompt(`Enter page title for ${topic.name}:`);
+                  if (pageTitle) {
+                    const newPage = {
+                      id: Date.now().toString(),
+                      title: pageTitle,
+                    };
+                    addPage(newPage);
+                  }
+                };
+
+                return (
+                  <div key={topic.id} className="flex items-center space-x-1">
+                    {/* Add Page Button */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
+                      onClick={handleAddPage}
+                      title={`Add page to ${topic.name}`}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* Page Titles */}
+                    {pages.map((page) => (
+                      <Button
+                        key={page.id}
+                        variant="ghost"
+                        className="px-3 py-1.5 text-sm h-8 rounded text-white bg-slate-700"
+                        onClick={() => {
+                          // Navigate to specific page
+                          setSelectedTab(`topic-${topic.topic_id}`);
+                          setTopicSubTab('notes');
+                        }}
+                        title={page.title}
+                      >
+                        {page.title}
+                      </Button>
+                    ))}
+                  </div>
+                );
+              }
+              
+              // Show normal topic button when not selected
+              return (
+                <Button 
+                  key={topic.id}
+                  variant="ghost" 
+                  className="px-3 py-1.5 text-sm h-8 rounded text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
+                  onClick={() => {
+                    setSelectedTab(`topic-${topic.topic_id}`);
+                    setTopicSubTab('notes'); // Default to notes for user topics
+                  }}
+                >
+                  {topic.name}
+                </Button>
+              );
+            })}
           </div>
           
           {/* Settings and Account section */}
