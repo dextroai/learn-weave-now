@@ -38,33 +38,6 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* User Topics */}
-        <SidebarGroup className="mt-8">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {userTopics.map((topic) => (
-                <SidebarMenuItem key={topic.id}>
-                  <SidebarMenuButton asChild className="h-10 px-2 mb-1">
-                    <NavLink
-                      to={`/?topic=${topic.topic_id}`}
-                      className={({ isActive }) =>
-                        `flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ${
-                          isActive ? "text-white bg-slate-800" : ""
-                        }`
-                      }
-                      title={topic.name}
-                    >
-                      <span className="text-xs font-medium truncate max-w-[24px] text-center">
-                        {topic.name.charAt(0).toUpperCase()}
-                      </span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Bottom Navigation */}
         <div className="mt-auto pb-4">
           <SidebarGroup>
