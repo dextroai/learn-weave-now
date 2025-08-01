@@ -1,23 +1,5 @@
 import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { NavLink, useLocation, useSearchParams } from "react-router-dom";
-import { useState } from "react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserTopics } from "@/hooks/useUserTopics";
-import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
-import { Button } from "@/components/ui/button";
-
-import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   Sidebar,
@@ -39,9 +21,8 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
   // Show pages when this topic is selected from the top navigation
   const shouldShowPages = selectedTopicFromTop === `topic-${topic.topic_id}`;
   
-  // Create category name for database lookup (use topic name as-is or topic_id)
-  // You can adjust this based on how you want to store categories in your DB
-  const categoryName = `topic-${topic.topic_id}`; // Using topic-{id} format for consistency
+  // Create category name for database lookup using topic-{topic_id} format
+  const categoryName = `topic-${topic.topic_id}`;
   
   const { pages, addPage, isLoading } = useNotePagesDatabase(
     shouldShowPages ? categoryName : ''
@@ -59,7 +40,7 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
     const pageTitle = prompt(`Enter page title for ${topic.name}:`);
     if (pageTitle && pageTitle.trim()) {
       const newPage = {
-        id: `page-${Date.now()}`, // More descriptive ID
+        id: `page-${Date.now()}`,
         title: pageTitle.trim(),
       };
       console.log('Adding new page:', newPage);
@@ -111,7 +92,7 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
               title={page.title}
             >
               <span className="text-xs truncate w-full text-center px-1">
-                {page.title.length > 10 ? page.title.substring(0, 10) + '...' : page.title}
+                {page.title.length > 8 ? page.title.substring(0, 8) + '...' : page.title}
               </span>
             </NavLink>
           </SidebarMenuButton>
@@ -125,8 +106,6 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
     </div>
   );
 }
-
-const navigationItems = [];
 
 const bottomItems = [
   { title: "Account", url: "/account", icon: User, hasIndicator: true },
