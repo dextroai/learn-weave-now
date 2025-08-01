@@ -30,8 +30,8 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className="w-12 bg-slate-900 border-r border-slate-800" collapsible="none">
-      <SidebarContent className="bg-slate-900">
+    <Sidebar className="w-12 bg-slate-900 border-r border-slate-700 h-screen" collapsible="none">
+      <SidebarContent className="bg-slate-900 h-full flex flex-col">
         {/* Logo/Brand */}
         <div className="p-2 flex items-center justify-center">
           <div className="w-5 h-5 bg-white rounded text-slate-900 flex items-center justify-center text-xs font-bold">
