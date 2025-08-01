@@ -59,7 +59,7 @@ const Index = () => {
   return (
     <div className="min-h-screen w-full bg-slate-900 text-white">
       {/* Compact Modern Header */}
-      <div className="w-full bg-slate-900 border-b border-slate-800">
+      <div className="w-full bg-slate-900">
         <div className="flex items-center px-4 py-2">
           {/* Compact Navigation tabs */}
           <div className="flex items-center space-x-1">
