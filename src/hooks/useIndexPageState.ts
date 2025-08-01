@@ -7,7 +7,7 @@ import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
 export const useIndexPageState = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [selectedSubTab, setSelectedSubTab] = useState("all");
-  const [topicSubTab, setTopicSubTab] = useState("sources"); // Changed default to "sources"
+  const [topicSubTab, setTopicSubTab] = useState("notes"); // Default to notes for OneNote-like experience
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   const [showAddPageDialog, setShowAddPageDialog] = useState(false);
@@ -23,7 +23,7 @@ export const useIndexPageState = () => {
       const { topicId } = event.detail;
       if (topicId) {
         setSelectedTab(`topic-${topicId}`);
-        setTopicSubTab("sources"); // Default to Knowledge Bank when switching to topic
+        setTopicSubTab("notes"); // Default to notes when switching to topic
       }
     };
 

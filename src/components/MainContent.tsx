@@ -4,6 +4,7 @@ import { TopicBlogPostGrid } from "@/components/TopicBlogPostGrid";
 import { AllPostsSubNavigation } from "@/components/AllPostsSubNavigation";
 import { TopicSubNavigation } from "@/components/TopicSubNavigation";
 import { PageBasedNotesArea } from "@/components/PageBasedNotesArea";
+import { InteractiveNotesArea } from "@/components/InteractiveNotesArea";
 import { DarkBlogPostList } from "@/components/DarkBlogPostList";
 import { Tables } from "@/integrations/supabase/types";
 import { useKnowledgeBank } from "@/hooks/useKnowledgeBank";
@@ -108,63 +109,19 @@ export const MainContent = ({
     );
   }
 
-  // Handle Topic-specific views
+  // Handle Topic-specific views - show notes directly like OneNote
   if (currentTopic) {
-    // Always show the TopicSubNavigation for topic views with consistent search
-    const renderTopicSubNavigation = () => (
-      <TopicSubNavigation 
-        activeSubTab={topicSubTab}
-        onSubTabChange={setTopicSubTab}
-        notesCount={0}
-        sourcesCount={topicKnowledgeBankPosts.length}
-        topicName={currentTopic.name}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        showSearch={true}
-      />
+    return (
+      <div className="flex flex-col min-h-screen">
+        {/* Notes Content - Full screen OneNote-like experience */}
+        <div className="flex-1">
+          <InteractiveNotesArea 
+            category={currentTopic.name} 
+            pageTitle={`${currentTopic.name} Notes`}
+          />
+        </div>
+      </div>
     );
-
-    if (topicSubTab === "notes") {
-      return (
-        <div className="flex flex-col min-h-screen">
-          {/* Topic Sub Navigation */}
-          <div className="bg-white border-b border-gray-200">
-            {renderTopicSubNavigation()}
-          </div>
-          
-          {/* Notes Content */}
-          <div className="flex-1">
-            <div className="max-w-6xl mx-auto p-6">
-              <PageBasedNotesArea category={currentTopic.name} />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Knowledge Bank view for the topic (sources)
-    if (topicSubTab === "sources") {
-      return (
-        <div className="flex flex-col min-h-screen">
-          {/* Topic Sub Navigation */}
-          <div className="bg-white border-b border-gray-200">
-            {renderTopicSubNavigation()}
-          </div>
-          
-          {/* Knowledge Bank Content */}
-          <div className="flex-1">
-            <div className="max-w-4xl mx-auto p-6">
-              <TopicBlogPostGrid
-                posts={topicKnowledgeBankPosts}
-                isLoading={isLoading}
-                onMarkAsRead={handleMarkAsRead}
-                topicName={currentTopic.name}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
   }
 
   return null;

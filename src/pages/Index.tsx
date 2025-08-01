@@ -79,7 +79,10 @@ const Index = () => {
                     ? "text-white bg-slate-700"
                     : "text-gray-400 hover:text-white hover:bg-slate-800"
                 }`}
-                onClick={() => setSelectedTab(`topic-${topic.topic_id}`)}
+                onClick={() => {
+                  setSelectedTab(`topic-${topic.topic_id}`);
+                  setTopicSubTab('notes'); // Default to notes for user topics
+                }}
               >
                 {topic.name}
               </Button>
