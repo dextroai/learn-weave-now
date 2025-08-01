@@ -1,4 +1,3 @@
-
 import { TabNavigation } from "@/components/TabNavigation";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { MainContent } from "@/components/MainContent";
@@ -12,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Index = () => {
   const {
@@ -39,9 +38,11 @@ const Index = () => {
 
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleHomeClick = () => {
-    navigate("/");
+    setSelectedTab('all');
+    setSearchParams({}); // Clear URL parameters
   };
 
   const handleSettingsClick = () => {
@@ -56,6 +57,13 @@ const Index = () => {
     }
   };
 
+  const handleTopicClick = (topicId: number) => {
+    setSelectedTab(`topic-${topicId}`);
+    setTopicSubTab('notes');
+    // Update URL parameters to reflect the selected topic
+    setSearchParams({ topic: topicId.toString() });
+  };
+
   return (
     <div className="min-h-screen w-full bg-slate-900 text-white">
       {/* Compact Modern Header */}
@@ -66,7 +74,7 @@ const Index = () => {
             <Button
               variant="ghost"
               className="bg-orange-500 text-black hover:bg-orange-600 px-3 py-1.5 rounded text-sm font-medium h-8"
-              onClick={() => setSelectedTab('all')}
+              onClick={handleHomeClick}
             >
               Home
             </Button>
@@ -79,10 +87,7 @@ const Index = () => {
                     ? "text-white bg-slate-700"
                     : "text-gray-300 bg-slate-800 hover:text-white hover:bg-slate-700"
                 }`}
-                onClick={() => {
-                  setSelectedTab(`topic-${topic.topic_id}`);
-                  setTopicSubTab('notes'); // Default to notes for user topics
-                }}
+                onClick={() => handleTopicClick(topic.topic_id)}
               >
                 {topic.name}
               </Button>
