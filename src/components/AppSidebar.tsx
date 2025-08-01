@@ -20,16 +20,20 @@ import { Button } from "@/components/ui/button";
 function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTopicFromTop: string | null }) {
   // Show pages when this topic is selected from the top navigation
   const shouldShowPages = selectedTopicFromTop === `topic-${topic.topic_id}`;
+  
+  // Create category name for database lookup (convert topic name to slug format)
+  const categoryName = topic.name.toLowerCase().replace(/\s+/g, '-');
+  
   const { pages, addPage } = useNotePagesDatabase(
-    shouldShowPages ? topic.name.toLowerCase().replace(' ', '-') : ''
+    shouldShowPages ? categoryName : ''
   );
 
   const handleAddPage = () => {
     const pageTitle = prompt(`Enter page title for ${topic.name}:`);
-    if (pageTitle) {
+    if (pageTitle && pageTitle.trim()) {
       const newPage = {
         id: Date.now().toString(),
-        title: pageTitle,
+        title: pageTitle.trim(),
       };
       addPage(newPage);
     }
@@ -63,7 +67,7 @@ function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTop
               title={page.title}
             >
               <span className="text-xs truncate w-full text-center">
-                {page.title.length > 3 ? page.title.substring(0, 3) + '...' : page.title}
+                {page.title.length > 8 ? page.title.substring(0, 8) + '...' : page.title}
               </span>
             </NavLink>
           </SidebarMenuButton>
@@ -105,6 +109,10 @@ export function AppSidebar() {
   // Get current selected topic from URL params (when topic is selected from top navigation)
   const topicParam = searchParams.get('topic');
   const selectedTopicFromTop = topicParam ? `topic-${topicParam}` : null;
+
+  console.log('Current topic param:', topicParam);
+  console.log('Selected topic from top:', selectedTopicFromTop);
+  console.log('User topics:', userTopics);
 
   return (
     <Sidebar className="w-12 bg-slate-900 border-r border-slate-700 h-screen fixed left-0 top-0 z-50" collapsible="none">
