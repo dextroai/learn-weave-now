@@ -99,17 +99,17 @@ export function DarkBlogPostList({ posts, isLoading }: DarkBlogPostListProps) {
     <div className="flex flex-col min-h-screen">
       {/* Content Area */}
       <div className="flex-1 px-6 pb-32">
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-8">
           {groupedPosts.map(([date, datePosts]) => (
             <div key={date} className="space-y-6">
               {/* Date Header */}
-              <h2 className="text-lg font-medium text-gray-300 border-b border-gray-700 pb-2">
+              <h2 className="text-lg font-medium text-gray-300 border-b border-gray-700 pb-2 text-center">
                 {formatDate(date)} ({datePosts.length})
               </h2>
               
               {/* Posts Grid */}
               <div className="flex justify-center">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
                 {datePosts.map((post) => (
                   <div 
                     key={post.id} 
