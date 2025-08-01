@@ -1,5 +1,5 @@
 import { Home, Search, Grid3X3, User, ArrowUp, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import {
   Sidebar,
@@ -17,10 +17,11 @@ import { useNotePagesDatabase } from "@/hooks/useNotePagesDatabase";
 import { Button } from "@/components/ui/button";
 
 // Component for individual topic
-function TopicSection({ topic, isSelected, onSelect }: { topic: any; isSelected: boolean; onSelect: () => void }) {
-  // Only fetch pages when topic is selected
+function TopicSection({ topic, selectedTopicFromTop }: { topic: any; selectedTopicFromTop: string | null }) {
+  // Show pages when this topic is selected from the top navigation
+  const shouldShowPages = selectedTopicFromTop === `topic-${topic.topic_id}`;
   const { pages, addPage } = useNotePagesDatabase(
-    isSelected ? topic.name.toLowerCase().replace(' ', '-') : ''
+    shouldShowPages ? topic.name.toLowerCase().replace(' ', '-') : ''
   );
 
   const handleAddPage = () => {
@@ -34,7 +35,7 @@ function TopicSection({ topic, isSelected, onSelect }: { topic: any; isSelected:
     }
   };
 
-  if (isSelected) {
+  if (shouldShowPages) {
     // Show + sign and page titles for selected topic
     return (
       <div className="mb-1 space-y-1">
@@ -71,12 +72,11 @@ function TopicSection({ topic, isSelected, onSelect }: { topic: any; isSelected:
     );
   }
 
-  // Show topic label when not selected
+  // Show topic label when not selected from top
   return (
     <div className="mb-1">
       <div 
-        className="h-6 w-full cursor-pointer flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
-        onClick={onSelect}
+        className="h-6 w-full flex items-center justify-center text-gray-400 rounded transition-colors"
         title={topic.name}
       >
         <span className="text-xs font-medium">
@@ -99,12 +99,12 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { user } = useAuth();
   const { data: userTopics = [] } = useUserTopics();
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
   const isCollapsed = state === "collapsed";
-
-  const handleTopicSelect = (topicId: string) => {
-    setSelectedTopicId(topicId);
-  };
+  
+  // Get current selected topic from URL params (when topic is selected from top navigation)
+  const topicParam = searchParams.get('topic');
+  const selectedTopicFromTop = topicParam ? `topic-${topicParam}` : null;
 
   return (
     <Sidebar className="w-12 bg-slate-900 border-r border-slate-700 h-screen fixed left-0 top-0 z-50" collapsible="none">
@@ -120,31 +120,14 @@ export function AppSidebar() {
         <SidebarGroup className="mt-8">
           <SidebarGroupContent>
             <SidebarMenu>
-              {selectedTopicId ? (
-                // Show only the selected topic's + button and pages
-                userTopics
-                  .filter((topic) => topic.id === selectedTopicId)
-                  .map((topic) => (
-                    <SidebarMenuItem key={topic.id}>
-                      <TopicSection 
-                        topic={topic} 
-                        isSelected={true}
-                        onSelect={() => {}}
-                      />
-                    </SidebarMenuItem>
-                  ))
-              ) : (
-                // Show all topic labels when none selected
-                userTopics.map((topic) => (
-                  <SidebarMenuItem key={topic.id}>
-                    <TopicSection 
-                      topic={topic} 
-                      isSelected={false}
-                      onSelect={() => handleTopicSelect(topic.id)}
-                    />
-                  </SidebarMenuItem>
-                ))
-              )}
+              {userTopics.map((topic) => (
+                <SidebarMenuItem key={topic.id}>
+                  <TopicSection 
+                    topic={topic} 
+                    selectedTopicFromTop={selectedTopicFromTop}
+                  />
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
